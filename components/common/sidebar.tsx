@@ -15,7 +15,8 @@ import {
   Menu, 
   X, 
   ChevronDown, 
-  FileSpreadsheet
+  FileSpreadsheet,
+  UserPlus
 } from 'lucide-react'
 
 export function Sidebar() {
@@ -47,6 +48,7 @@ export function Sidebar() {
       { label: 'Manga List', href: '/dashboard', icon: BookOpen },
       { label: 'Review Proposals', href: '/dashboard/reviews', icon: PenTool },
       { label: 'Reader Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+      { label: 'Create Account', href: '/signup', icon: UserPlus },
     ],
   }
 
@@ -62,7 +64,7 @@ export function Sidebar() {
         {/* Brand Header */}
         <div className="flex items-center gap-3 px-2">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="MangaFlow Logo"
             width={32}
             height={32}
@@ -185,7 +187,7 @@ export function Sidebar() {
       <header className="lg:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-40">
         <div className="flex items-center gap-2">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="MangaFlow Logo"
             width={28}
             height={28}

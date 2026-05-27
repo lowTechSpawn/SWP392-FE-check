@@ -82,7 +82,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="MangaFlow Logo"
               width={32}
               height={32}
@@ -329,7 +329,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="MangaFlow Logo"
               width={28}
               height={28}

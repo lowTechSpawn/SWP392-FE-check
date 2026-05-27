@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Minimalist stylized M ribbon representing Manga & Flow -->
+  <path d="M20 75V35C20 26.7 26.7 20 35 20C42.5 20 48.5 25.5 50 32C51.5 25.5 57.5 20 65 20C73.3 20 80 26.7 80 35V75" stroke="black" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Subtly flowing wave stroke in the middle -->
+  <path d="M28 50C38 58 45 42 50 50C55 58 62 42 72 50" stroke="black" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
