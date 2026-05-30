@@ -178,12 +178,41 @@ function saveTasks(tasks: Task[]): void {
 
 // ---------- Public Store API ----------
 
+// Dynamically load approved proposals as active series to sync dashboard flows
+function loadSeries(): Series[] {
+  const list = [...SEED_SERIES]
+  if (typeof window === 'undefined') return list
+  try {
+    const rawProposals = localStorage.getItem('mangaflow_proposals')
+    if (rawProposals) {
+      const proposals = JSON.parse(rawProposals)
+      proposals.forEach((p: any) => {
+        if (p.status === 'Approved') {
+          const exists = list.some(s => s.id === p.id || s.title.toLowerCase() === p.title.toLowerCase())
+          if (!exists) {
+            list.push({
+              id: p.id,
+              title: p.title,
+              mangakaId: p.mangakaId,
+              coverColor: 'from-emerald-400 to-teal-500',
+              status: 'Active'
+            })
+          }
+        }
+      })
+    }
+  } catch (e) {
+    console.error("Failed to load proposals dynamically in chapters-store", e)
+  }
+  return list
+}
+
 export function getSeries(): Series[] {
-  return SEED_SERIES
+  return loadSeries()
 }
 
 export function getSeriesByMangaka(mangakaId: string): Series[] {
-  return SEED_SERIES.filter(s => s.mangakaId === mangakaId)
+  return loadSeries().filter(s => s.mangakaId === mangakaId)
 }
 
 export function getChapters(seriesId?: string): Chapter[] {
