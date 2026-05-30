@@ -34,7 +34,7 @@ export function Sidebar() {
       { label: 'My Proposals', href: '/dashboard/series', icon: PenTool },
       { label: 'New Proposal', href: '/dashboard/series/new', icon: UserPlus },
       { label: 'Manuscripts', href: '/dashboard/manuscripts', icon: Layers },
-      { label: 'Tasks', href: '/dashboard/chapters', icon: ClipboardList },
+      { label: 'Chapter&Tasks', href: '/dashboard/chapters', icon: ClipboardList },
     ],
     Assistant: [
       { label: 'Manga List', href: '/dashboard', icon: BookOpen },
