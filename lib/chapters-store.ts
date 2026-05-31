@@ -36,6 +36,12 @@ export interface Task {
   feedback?: string // Feedback comments from Mangaka
   assignedAt?: string
   updatedAt?: string
+  dueDate?: string
+  pageStart?: number
+  pageEnd?: number
+  attachments?: { name: string; size: string; type: string }[]
+  submittedFiles?: { name: string; size: string; type: string }[]
+  submitDescription?: string
 }
 
 export interface Chapter {
@@ -304,7 +310,9 @@ export function updateTaskStatus(
   taskId: string, 
   status: TaskStatus, 
   feedback?: string, 
-  submittedWorkUrl?: string
+  submittedWorkUrl?: string,
+  submitDescription?: string,
+  submittedFiles?: { name: string; size: string; type: string }[]
 ): boolean {
   const tasks = loadTasks()
   const idx = tasks.findIndex(t => t.id === taskId)
@@ -318,6 +326,8 @@ export function updateTaskStatus(
     status,
     feedback: feedback !== undefined ? feedback : oldTask.feedback,
     submittedWorkUrl: submittedWorkUrl !== undefined ? submittedWorkUrl : oldTask.submittedWorkUrl,
+    submitDescription: submitDescription !== undefined ? submitDescription : oldTask.submitDescription,
+    submittedFiles: submittedFiles !== undefined ? submittedFiles : oldTask.submittedFiles,
     updatedAt: new Date().toISOString()
   }
   

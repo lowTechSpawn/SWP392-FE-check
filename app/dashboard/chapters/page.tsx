@@ -77,6 +77,8 @@ export default function ChaptersPage() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
   const [activeTaskToReview, setActiveTaskToReview] = useState<Task | null>(null)
+  const [isViewDetailModalOpen, setIsViewDetailModalOpen] = useState(false)
+  const [activeTaskToView, setActiveTaskToView] = useState<Task | null>(null)
 
   // Form states for creating chapter (Matching SubmitChapterPage.jsx)
   const [newChapterSeriesId, setNewChapterSeriesId] = useState('')
@@ -91,10 +93,13 @@ export default function ChaptersPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Form states for creating task
-  const [newTaskType, setNewTaskType] = useState('Line Art')
-  const [newTaskPages, setNewTaskPages] = useState('1-3')
+  const [newTaskTypes, setNewTaskTypes] = useState<string[]>(['Line Art'])
+  const [newTaskPageStart, setNewTaskPageStart] = useState<number>(1)
+  const [newTaskPageEnd, setNewTaskPageEnd] = useState<number>(3)
   const [newTaskDesc, setNewTaskDesc] = useState('')
   const [newTaskAssistantId, setNewTaskAssistantId] = useState('Unassigned')
+  const [newTaskDueDate, setNewTaskDueDate] = useState<string>('')
+  const [newTaskAttachments, setNewTaskAttachments] = useState<{ name: string; size: string; type: string }[]>([])
 
   // Review states (Approve / Reject)
   const [reviewFeedback, setReviewFeedback] = useState('')
@@ -106,6 +111,7 @@ export default function ChaptersPage() {
   const [activeTaskToSubmit, setActiveTaskToSubmit] = useState<Task | null>(null)
   const [submitWorkUrl, setSubmitWorkUrl] = useState('')
   const [submitComment, setSubmitComment] = useState('')
+  const [submittedFiles, setSubmittedFiles] = useState<{ name: string; size: string; type: string }[]>([])
 
   // Trigger Toast Notification helper
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -228,6 +234,53 @@ export default function ChaptersPage() {
     }
   }
 
+  // Upload giả lập cho Task
+  const handleTaskMockUpload = () => {
+    const extensions = ['pdf', 'jpg', 'zip', 'png']
+    const ext = extensions[Math.floor(Math.random() * extensions.length)]
+    const name = `Ref_${selectedChapter?.title.replace(/\s+/g, '_') || 'Chapter'}_Task_${newTaskAttachments.length + 1}.${ext}`
+    const newFile = {
+      name,
+      size: `${Math.floor(Math.random() * 5) + 1} MB`,
+      type: ext
+    }
+    setNewTaskAttachments(prev => [...prev, newFile])
+  }
+
+  const removeTaskAttachment = (index: number) => {
+    setNewTaskAttachments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const getMangaTitleForTask = (task: Task) => {
+    const chapter = getChapterById(task.chapterId)
+    if (!chapter) return 'Unknown Manga'
+    const seriesList = getSeries()
+    const series = seriesList.find(s => s.id === chapter.seriesId)
+    return series ? series.title : 'Unknown Manga'
+  }
+
+  const getChapterInfoForTask = (task: Task) => {
+    const chapter = getChapterById(task.chapterId)
+    if (!chapter) return ''
+    return `Ch. ${chapter.number}: ${chapter.title}`
+  }
+
+  const handleAssistantMockUpload = () => {
+    const extensions = ['jpg', 'png', 'zip', 'psd', 'clip']
+    const ext = extensions[Math.floor(Math.random() * extensions.length)]
+    const name = `Work_${activeTaskToSubmit?.type.replace(/[\s,]+/g, '_') || 'Task'}_Page_${activeTaskToSubmit?.pages || '1'}_v1.${ext}`
+    const newFile = {
+      name,
+      size: `${Math.floor(Math.random() * 15) + 5} MB`,
+      type: ext
+    }
+    setSubmittedFiles(prev => [...prev, newFile])
+  }
+
+  const removeAssistantSubmittedFile = (index: number) => {
+    setSubmittedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
   // Điền dữ liệu mẫu (demo quy trình thực)
   const handleFillSample = () => {
     const activeSeriesList = mangakaSeries.filter(s => s.status === 'Active')
@@ -339,6 +392,14 @@ export default function ChaptersPage() {
   // 2. Tạo Task & Giao việc cho Assistant
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault()
+    if (newTaskTypes.length === 0) {
+      showToast('Vui lòng chọn ít nhất một loại task!', 'error')
+      return
+    }
+    if (newTaskPageStart > newTaskPageEnd) {
+      showToast('Trang bắt đầu không thể lớn hơn trang kết thúc!', 'error')
+      return
+    }
     if (!newTaskDesc.trim()) {
       showToast('Vui lòng nhập mô tả công việc!', 'error')
       return
@@ -346,15 +407,24 @@ export default function ChaptersPage() {
 
     createTask({
       chapterId: selectedChapterId,
-      type: newTaskType,
-      pages: newTaskPages,
+      type: newTaskTypes.join(', '),
+      pages: `${newTaskPageStart}-${newTaskPageEnd}`,
+      pageStart: newTaskPageStart,
+      pageEnd: newTaskPageEnd,
       description: newTaskDesc,
-      assistantId: newTaskAssistantId
+      assistantId: newTaskAssistantId,
+      dueDate: newTaskDueDate || undefined,
+      attachments: newTaskAttachments.length > 0 ? newTaskAttachments : undefined
     })
 
     showToast(`Đã tạo task và giao việc thành công!`)
     setIsTaskModalOpen(false)
     setNewTaskDesc('')
+    setNewTaskTypes(['Line Art'])
+    setNewTaskPageStart(1)
+    setNewTaskPageEnd(3)
+    setNewTaskDueDate('')
+    setNewTaskAttachments([])
     refreshData()
 
     // Cập nhật trạng thái chapter sang "In Progress" nếu đang là "Draft"
@@ -408,8 +478,10 @@ export default function ChaptersPage() {
     updateTaskStatus(
       activeTaskToSubmit.id,
       'Submitted',
+      undefined,
+      workUrl,
       submitComment || 'Đã hoàn thành công việc, gửi Mangaka duyệt.',
-      workUrl
+      submittedFiles
     )
 
     showToast('Đã nộp kết quả công việc thành công! Chờ Mangaka phê duyệt.')
@@ -417,6 +489,7 @@ export default function ChaptersPage() {
     setActiveTaskToSubmit(null)
     setSubmitWorkUrl('')
     setSubmitComment('')
+    setSubmittedFiles([])
     refreshData()
   }
 
@@ -858,13 +931,23 @@ export default function ChaptersPage() {
                 assistantTasks.map((task) => (
                   <div key={task.id} className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 hover:bg-muted/10 transition-colors">
                     <div className="space-y-2 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                          {task.type} (Pages {task.pages})
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                          Manga: {getMangaTitleForTask(task)} — {getChapterInfoForTask(task)}
                         </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getTaskStatusClass(task.status)}`}>
-                          {task.status}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                            {task.type} (Pages {task.pages})
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getTaskStatusClass(task.status)}`}>
+                            {task.status}
+                          </span>
+                          {task.dueDate && (
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                              📅 Hạn chót: {task.dueDate}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <h4 className="text-sm font-bold text-foreground leading-snug">
@@ -880,6 +963,16 @@ export default function ChaptersPage() {
 
                     {/* Action buttons based on task status */}
                     <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
+                      <button
+                        onClick={() => {
+                          setActiveTaskToView(task)
+                          setIsViewDetailModalOpen(true)
+                        }}
+                        className="inline-flex items-center gap-1.5 bg-muted hover:bg-muted/80 text-foreground text-xs font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer border border-border"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View Details
+                      </button>
+
                       {task.status === 'Pending' && (
                         <button
                           onClick={() => handleStartTask(task.id)}
@@ -1320,7 +1413,7 @@ export default function ChaptersPage() {
       {/* B. Create / Assign Task Modal (Mangaka) */}
       {isTaskModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
                 <Plus className="w-5 h-5 text-primary" /> Assign Drawing Task
@@ -1334,63 +1427,138 @@ export default function ChaptersPage() {
             </div>
 
             <form onSubmit={handleCreateTask} className="space-y-4">
+              {/* Task Types Multiselect Checkboxes */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground">Task Types (Chọn một hoặc nhiều)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 bg-muted/40 border border-border rounded-xl">
+                  {['Line Art', 'Coloring', 'Background Art', 'Screentoning', 'Clean-up'].map((t) => {
+                    const checked = newTaskTypes.includes(t)
+                    return (
+                      <label key={t} className="flex items-center gap-2 text-xs font-semibold cursor-pointer text-foreground select-none">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            if (checked) {
+                              setNewTaskTypes(prev => prev.filter(x => x !== t))
+                            } else {
+                              setNewTaskTypes(prev => [...prev, t])
+                            }
+                          }}
+                          className="rounded border-border text-primary focus:ring-primary/20 w-3.5 h-3.5 accent-primary"
+                        />
+                        {t}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Pages Range: Start & End */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground">Task Type</label>
-                  <select
-                    value={newTaskType}
-                    onChange={(e) => setNewTaskType(e.target.value)}
-                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
-                  >
-                    <option value="Line Art">Line Art</option>
-                    <option value="Coloring">Coloring</option>
-                    <option value="Background Art">Background Art</option>
-                    <option value="Screentoning">Screentoning</option>
-                    <option value="Clean-up">Clean-up</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground">Pages Range</label>
+                  <label className="text-xs font-bold text-muted-foreground">Page Start</label>
                   <input
-                    type="text"
-                    placeholder="e.g. 1-3 or 4"
-                    value={newTaskPages}
-                    onChange={(e) => setNewTaskPages(e.target.value)}
+                    type="number"
+                    min={1}
+                    max={selectedChapter?.totalPages || 100}
+                    value={newTaskPageStart}
+                    onChange={(e) => setNewTaskPageStart(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground">Page End</label>
+                  <input
+                    type="number"
+                    min={newTaskPageStart}
+                    max={selectedChapter?.totalPages || 100}
+                    value={newTaskPageEnd}
+                    onChange={(e) => setNewTaskPageEnd(Math.max(newTaskPageStart, parseInt(e.target.value) || newTaskPageStart))}
                     className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground">Select Assistant</label>
-                <select
-                  value={newTaskAssistantId}
-                  onChange={(e) => setNewTaskAssistantId(e.target.value)}
-                  className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
-                >
-                  <option value="Unassigned">Leave Unassigned</option>
-                  {assistants.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({a.specialty}) — Active Tasks: {a.activeTasks}
-                    </option>
-                  ))}
-                </select>
+              {/* Due Date & Select Assistant */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                    <CalendarDays className="w-3.5 h-3.5 text-primary" /> Due Date (Hạn nộp)
+                  </label>
+                  <input
+                    type="date"
+                    value={newTaskDueDate}
+                    onChange={(e) => setNewTaskDueDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground">Select Assistant</label>
+                  <select
+                    value={newTaskAssistantId}
+                    onChange={(e) => setNewTaskAssistantId(e.target.value)}
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                  >
+                    <option value="Unassigned">Leave Unassigned</option>
+                    {assistants.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} ({a.specialty}) — Active Tasks: {a.activeTasks}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
+              {/* Instructions / Description */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground">Instruction & Description</label>
                 <textarea
                   placeholder="Describe details: Pagoda background, light direction, character expression..."
                   value={newTaskDesc}
                   onChange={(e) => setNewTaskDesc(e.target.value)}
-                  className="w-full h-24 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
+                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                   required
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              {/* Attach Reference Files input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                  <Upload className="w-3.5 h-3.5 text-primary" /> Reference & Guidelines Files (Tài liệu đính kèm)
+                </label>
+                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
+                  <p className="text-xs text-muted-foreground">Đính kèm các file tài liệu hướng dẫn vẽ</p>
+                  <button
+                    type="button"
+                    onClick={handleTaskMockUpload}
+                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" /> Attach Mock File
+                  </button>
+                </div>
+                {newTaskAttachments.length > 0 && (
+                  <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
+                    {newTaskAttachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-xl border border-border text-xs">
+                        <span className="truncate max-w-[280px] font-medium text-foreground">📄 {file.name} ({file.size})</span>
+                        <button
+                          type="button"
+                          onClick={() => removeTaskAttachment(idx)}
+                          className="text-red-500 hover:text-red-700 font-bold hover:underline cursor-pointer"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setIsTaskModalOpen(false)}
@@ -1430,11 +1598,11 @@ export default function ChaptersPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Left Side: Mock Image Preview */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <label className="text-xs font-bold text-muted-foreground">Submitted Work Preview</label>
-                <div className="relative border border-border rounded-xl overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group">
+                <div className="relative border border-border rounded-xl overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group shadow-inner">
                   {activeTaskToReview.submittedWorkUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -1446,22 +1614,50 @@ export default function ChaptersPage() {
                     <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
                   )}
                 </div>
+
+                {/* Submitted Files List */}
+                {activeTaskToReview.submittedFiles && activeTaskToReview.submittedFiles.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-muted-foreground">Submitted Files ({activeTaskToReview.submittedFiles.length})</label>
+                    <div className="space-y-1 max-h-36 overflow-y-auto">
+                      {activeTaskToReview.submittedFiles.map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-xs">
+                          <span className="font-medium text-emerald-800 dark:text-emerald-400 truncate max-w-[200px]">🖼️ {file.name}</span>
+                          <span className="text-muted-foreground text-[10px] bg-muted px-1.5 py-0.5 rounded shrink-0">{file.size}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground italic bg-muted/40 p-2.5 rounded-xl border border-border">
+                    Không có file đính kèm nào được nộp
+                  </div>
+                )}
               </div>
 
               {/* Right Side: Task Details & Actions */}
               <div className="space-y-4 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                    {activeTaskToReview.type} (Pages {activeTaskToReview.pages})
-                  </span>
-                  <p className="text-sm font-bold text-foreground">
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                      Manga: {getMangaTitleForTask(activeTaskToReview)}
+                    </span>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded inline-block">
+                      {activeTaskToReview.type} (Pages {activeTaskToReview.pages})
+                    </span>
+                  </div>
+                  
+                  <p className="text-sm font-bold text-foreground leading-snug">
                     {activeTaskToReview.description}
                   </p>
+                  
                   <p className="text-xs text-muted-foreground">
                     Submitted by: <strong>{activeTaskToReview.assistantName}</strong>
                   </p>
-                  <div className="p-3 bg-muted rounded-xl text-xs leading-relaxed text-muted-foreground">
-                    <strong>Assistant comment:</strong> Code updated and ready for review.
+                  
+                  <div className="p-3 bg-muted/50 rounded-xl text-xs leading-relaxed text-foreground border border-border">
+                    <p className="font-bold text-muted-foreground mb-1 text-[10px] uppercase">Assistant Notes & Edits:</p>
+                    <p className="italic whitespace-pre-line">{activeTaskToReview.submitDescription || 'Đã hoàn thành công việc, gửi Mangaka duyệt.'}</p>
                   </div>
                 </div>
 
@@ -1475,16 +1671,16 @@ export default function ChaptersPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 justify-end pt-2">
+                <div className="flex items-center gap-2.5 justify-end pt-2 border-t border-border">
                   <button
                     onClick={() => handleRejectTask(activeTaskToReview)}
-                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center"
+                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center shadow-sm"
                   >
                     Reject (Revision Needed)
                   </button>
                   <button
                     onClick={() => handleApproveTask(activeTaskToReview)}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center"
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center shadow-sm"
                   >
                     Approve & Sign-off
                   </button>
@@ -1498,7 +1694,7 @@ export default function ChaptersPage() {
       {/* D. Submit Task Deliverable Modal (Assistant) */}
       {isSubmitWorkModalOpen && activeTaskToSubmit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-primary" /> Submit Drawing Work
@@ -1509,6 +1705,7 @@ export default function ChaptersPage() {
                   setActiveTaskToSubmit(null)
                   setSubmitWorkUrl('')
                   setSubmitComment('')
+                  setSubmittedFiles([])
                 }}
                 className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
               >
@@ -1517,13 +1714,49 @@ export default function ChaptersPage() {
             </div>
 
             <form onSubmit={handleSubmitWork} className="space-y-4">
-              <div className="space-y-1 bg-muted/40 p-3 rounded-xl border border-border/50 text-xs">
+              <div className="space-y-1.5 bg-muted/40 p-3.5 rounded-xl border border-border/50 text-xs">
+                <p className="font-extrabold uppercase tracking-wider text-muted-foreground text-[9px]">
+                  Manga: {getMangaTitleForTask(activeTaskToSubmit)}
+                </p>
                 <p className="font-bold text-foreground">Task: {activeTaskToSubmit.type} (Pages {activeTaskToSubmit.pages})</p>
                 <p className="text-muted-foreground mt-0.5">{activeTaskToSubmit.description}</p>
               </div>
 
+              {/* Upload area for submittedFiles */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground">Work Image URL (Mock upload)</label>
+                <label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                  <Upload className="w-3.5 h-3.5 text-primary" /> Upload Work Files (Nộp file bản vẽ)
+                </label>
+                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
+                  <p className="text-xs text-muted-foreground">Kéo thả file vẽ hoặc click để chọn</p>
+                  <button
+                    type="button"
+                    onClick={handleAssistantMockUpload}
+                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" /> Attach Work File
+                  </button>
+                </div>
+                {submittedFiles.length > 0 && (
+                  <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
+                    {submittedFiles.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-xl border border-border text-xs">
+                        <span className="truncate max-w-[280px] font-medium text-foreground">🖼️ {file.name} ({file.size})</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAssistantSubmittedFile(idx)}
+                          className="text-red-500 hover:text-red-700 font-bold hover:underline cursor-pointer"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground">Work Image URL (For Preview)</label>
                 <input
                   type="url"
                   placeholder="https://example.com/drawing.jpg (leave blank for sample image)"
@@ -1534,16 +1767,16 @@ export default function ChaptersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground">Comments for Mangaka</label>
+                <label className="text-xs font-bold text-muted-foreground">Description & Comments for Mangaka (Mô tả chỉnh sửa)</label>
                 <textarea
-                  placeholder="I have drawn the lines, pagoda details match reference, please review."
+                  placeholder="Describe your edits: e.g., line art completed, shading applied, shadows adjusted..."
                   value={submitComment}
                   onChange={(e) => setSubmitComment(e.target.value)}
                   className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => {
@@ -1551,6 +1784,7 @@ export default function ChaptersPage() {
                     setActiveTaskToSubmit(null)
                     setSubmitWorkUrl('')
                     setSubmitComment('')
+                    setSubmittedFiles([])
                   }}
                   className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
                 >
@@ -1564,6 +1798,128 @@ export default function ChaptersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* E. View Task Details Modal (Read-only for Assistant/General) */}
+      {isViewDetailModalOpen && activeTaskToView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
+                <Info className="w-5 h-5 text-primary" /> Task Detailed Information
+              </h3>
+              <button
+                onClick={() => {
+                  setIsViewDetailModalOpen(false)
+                  setActiveTaskToView(null)
+                }}
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-sm">
+              {/* Manga & Chapter Info */}
+              <div className="p-3.5 bg-muted/40 border border-border rounded-xl space-y-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Manga Series</p>
+                <p className="font-bold text-foreground text-base">{getMangaTitleForTask(activeTaskToView)}</p>
+                <p className="text-xs text-muted-foreground font-semibold">{getChapterInfoForTask(activeTaskToView)}</p>
+              </div>
+
+              {/* Task Grid Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground">Task Types</p>
+                  <p className="font-semibold text-foreground bg-primary/5 border border-primary/10 px-2.5 py-1.5 rounded-lg inline-block">
+                    {activeTaskToView.type}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground">Pages Range</p>
+                  <p className="font-semibold text-foreground bg-muted px-2.5 py-1.5 rounded-lg inline-block">
+                    Pages {activeTaskToView.pages}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground">Due Date (Hạn nộp)</p>
+                  <p className="font-semibold text-amber-600 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1.5 rounded-lg inline-block">
+                    {activeTaskToView.dueDate || 'Không giới hạn'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-muted-foreground">Assigned Status</p>
+                  <p className={`font-semibold px-2.5 py-1.5 rounded-lg inline-block text-xs ${getTaskStatusClass(activeTaskToView.status)}`}>
+                    {activeTaskToView.status}
+                  </p>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-muted-foreground">Instruction & Description</p>
+                <div className="p-3 bg-muted/30 border border-border rounded-xl text-foreground whitespace-pre-line text-xs leading-relaxed">
+                  {activeTaskToView.description}
+                </div>
+              </div>
+
+              {/* Reference Files from Mangaka */}
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-muted-foreground">Attached Reference Files</p>
+                {activeTaskToView.attachments && activeTaskToView.attachments.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {activeTaskToView.attachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2.5 bg-muted/60 rounded-xl border border-border text-xs">
+                        <span className="font-medium text-foreground truncate max-w-[340px]">📄 {file.name}</span>
+                        <span className="text-muted-foreground shrink-0 text-[10px] bg-muted px-1.5 py-0.5 rounded">{file.size}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">Không có file đính kèm nào</p>
+                )}
+              </div>
+
+              {/* Assistant Submission details if submitted/approved */}
+              {activeTaskToView.submitDescription && (
+                <div className="space-y-2 border-t border-border pt-3">
+                  <p className="text-xs font-bold text-muted-foreground">Assistant Submission Notes</p>
+                  <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-foreground text-xs leading-relaxed">
+                    {activeTaskToView.submitDescription}
+                  </div>
+                </div>
+              )}
+
+              {activeTaskToView.submittedFiles && activeTaskToView.submittedFiles.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-bold text-muted-foreground">Submitted Work Files</p>
+                  {activeTaskToView.submittedFiles.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-xs">
+                      <span className="font-medium text-emerald-800 dark:text-emerald-400 truncate max-w-[340px]">🖼️ {file.name}</span>
+                      <span className="text-muted-foreground text-[10px] bg-muted px-1.5 py-0.5 rounded">{file.size}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end pt-2 border-t border-border">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsViewDetailModalOpen(false)
+                  setActiveTaskToView(null)
+                }}
+                className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Close Details
+              </button>
+            </div>
           </div>
         </div>
       )}
