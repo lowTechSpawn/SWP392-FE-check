@@ -17,7 +17,7 @@ export const MOCK_USER: User = {
 };
 
 export const authService = {
-  login: async (credentials: any) => {
+  login: async (credentials?: any) => {
     return fetchWithFallback<any>("/api/auth/login", { success: true, token: "mock_token", user: MOCK_USER });
   },
   logout: async () => {
