@@ -251,6 +251,7 @@ export default function ChaptersPage() {
     setNewTaskAttachments(prev => prev.filter((_, i) => i !== index))
   }
 
+  // Tra cứu Tên Manga (Series Title) dựa vào task.chapterId và series.id
   const getMangaTitleForTask = (task: Task) => {
     const chapter = getChapterById(task.chapterId)
     if (!chapter) return 'Unknown Manga'
@@ -259,12 +260,15 @@ export default function ChaptersPage() {
     return series ? series.title : 'Unknown Manga'
   }
 
+  // Lấy thông tin số chương và tiêu đề chương tương ứng với task.chapterId
   const getChapterInfoForTask = (task: Task) => {
     const chapter = getChapterById(task.chapterId)
     if (!chapter) return ''
     return `Ch. ${chapter.number}: ${chapter.title}`
   }
 
+  // Giả lập tải lên file sản phẩm của Assistant.
+  // Tạo ngẫu nhiên định dạng (jpg, png, zip, psd, clip), dung lượng và tên file mô phỏng theo Task.
   const handleAssistantMockUpload = () => {
     const extensions = ['jpg', 'png', 'zip', 'psd', 'clip']
     const ext = extensions[Math.floor(Math.random() * extensions.length)]
@@ -277,6 +281,7 @@ export default function ChaptersPage() {
     setSubmittedFiles(prev => [...prev, newFile])
   }
 
+  // Xóa file vẽ sản phẩm khỏi danh sách chuẩn bị nộp của Assistant
   const removeAssistantSubmittedFile = (index: number) => {
     setSubmittedFiles(prev => prev.filter((_, i) => i !== index))
   }

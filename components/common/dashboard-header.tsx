@@ -74,6 +74,7 @@ export function DashboardHeader() {
     'Tantou Editor': 'bg-sky-500/10 text-sky-600 border-sky-500/20',
     'Editorial Board': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
     'Editor-in-Chief': 'bg-red-500/10 text-red-600 border-red-500/20',
+    Admin: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   }
 
   return (

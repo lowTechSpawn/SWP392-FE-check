@@ -18,7 +18,8 @@ import {
   FileSpreadsheet,
   UserPlus,
   LayoutDashboard,
-  Trophy
+  Trophy,
+  Users
 } from 'lucide-react'
 
 export function Sidebar() {
@@ -28,7 +29,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [showRoleSelector, setShowRoleSelector] = useState(false)
 
-  const roles = ['Mangaka', 'Assistant', 'Tantou Editor', 'Editorial Board', 'Editor-in-Chief'] as const
+  const roles = ['Mangaka', 'Assistant', 'Tantou Editor', 'Editorial Board', 'Editor-in-Chief', 'Admin'] as const
 
   const menuItems = {
     Mangaka: [
@@ -64,6 +65,9 @@ export function Sidebar() {
       { label: 'Manga List', href: '/dashboard/manga-list', icon: BookOpen },
       { label: 'Review Proposals', href: '/dashboard/reviews', icon: PenTool },
       { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
+    ],
+    Admin: [
+      { label: 'Account Management', href: '/dashboard/admin', icon: Users },
     ],
   }
 

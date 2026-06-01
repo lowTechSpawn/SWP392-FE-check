@@ -36,12 +36,12 @@ export interface Task {
   feedback?: string // Feedback comments from Mangaka
   assignedAt?: string
   updatedAt?: string
-  dueDate?: string
-  pageStart?: number
-  pageEnd?: number
-  attachments?: { name: string; size: string; type: string }[]
-  submittedFiles?: { name: string; size: string; type: string }[]
-  submitDescription?: string
+  dueDate?: string // Ngày hạn chót nộp task để Mangaka theo dõi tiến độ
+  pageStart?: number // Số trang bắt đầu vẽ
+  pageEnd?: number // Số trang kết thúc vẽ
+  attachments?: { name: string; size: string; type: string }[] // Tài liệu hướng dẫn đính kèm từ Mangaka
+  submittedFiles?: { name: string; size: string; type: string }[] // Các file hình ảnh/sản phẩm Assistant đã nộp
+  submitDescription?: string // Lời nhắn hoặc mô tả chỉnh sửa từ Assistant khi nộp bài
 }
 
 export interface Chapter {
@@ -306,6 +306,11 @@ export function createTask(data: Omit<Task, 'id' | 'status' | 'assistantName'>):
   return newTask
 }
 
+/**
+ * Cập nhật trạng thái và các dữ liệu liên quan của một Task.
+ * Hàm này hỗ trợ cả luồng của Mangaka (phê duyệt/từ chối, ghi feedback)
+ * và luồng của Assistant (nộp bài, gửi danh sách file và lời nhắn mô tả).
+ */
 export function updateTaskStatus(
   taskId: string, 
   status: TaskStatus, 
@@ -321,6 +326,7 @@ export function updateTaskStatus(
   const oldTask = tasks[idx]
   const oldStatus = oldTask.status
 
+  // Tạo đối tượng Task mới kế thừa dữ liệu cũ và ghi đè bằng các thuộc tính mới nhận được
   tasks[idx] = {
     ...oldTask,
     status,

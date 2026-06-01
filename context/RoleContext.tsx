@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
-type Role = 'Mangaka' | 'Assistant' | 'Tantou Editor' | 'Editorial Board' | 'Editor-in-Chief'
+type Role = 'Mangaka' | 'Assistant' | 'Tantou Editor' | 'Editorial Board' | 'Editor-in-Chief' | 'Admin'
 
 interface RoleContextType {
   role: Role
@@ -16,7 +16,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('user-role') as Role
-    if (saved && ['Mangaka', 'Assistant', 'Tantou Editor', 'Editorial Board', 'Editor-in-Chief'].includes(saved)) {
+    if (saved && ['Mangaka', 'Assistant', 'Tantou Editor', 'Editorial Board', 'Editor-in-Chief', 'Admin'].includes(saved)) {
       setRoleState(saved)
     }
   }, [])
