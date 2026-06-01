@@ -17,7 +17,8 @@ import {
   ChevronDown,
   FileSpreadsheet,
   UserPlus,
-  LayoutDashboard
+  LayoutDashboard,
+  Trophy
 } from 'lucide-react'
 
 export function Sidebar() {
@@ -36,28 +37,33 @@ export function Sidebar() {
       { label: 'New Proposal', href: '/dashboard/series/new', icon: UserPlus },
       { label: 'Manuscripts', href: '/dashboard/manuscripts', icon: Layers },
       { label: 'Chapter&Tasks', href: '/dashboard/chapters', icon: ClipboardList },
+      { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     Assistant: [
       { label: 'Dashboard', href: '/dashboard/assistant', icon: LayoutDashboard },
       { label: 'Manga List', href: '/dashboard', icon: BookOpen },
       { label: 'My Tasks', href: '/dashboard/chapters', icon: ClipboardList },
+      { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     'Tantou Editor': [
       { label: 'Dashboard', href: '/dashboard/tantou-editor', icon: LayoutDashboard },
       { label: 'Manga List', href: '/dashboard', icon: BookOpen },
       { label: 'Assign Tasks', href: '/dashboard/chapters', icon: ClipboardList },
       { label: 'Review Drafts', href: '/dashboard/manuscripts', icon: Layers },
+      { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     'Editorial Board': [
       { label: 'Manga List', href: '/dashboard', icon: BookOpen },
       { label: 'Review Proposals', href: '/dashboard/reviews', icon: PenTool },
       { label: 'Reader Analytics', href: '/dashboard/analytics', icon: BarChart3 },
       { label: 'Create Account', href: '/signup', icon: UserPlus },
+      { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     'Editor-in-Chief': [
       { label: 'Dashboard', href: '/dashboard/editor-in-chief', icon: LayoutDashboard },
       { label: 'Manga List', href: '/dashboard', icon: BookOpen },
       { label: 'Review Proposals', href: '/dashboard/reviews', icon: PenTool },
+      { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
   }
 
