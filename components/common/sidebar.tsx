@@ -73,9 +73,40 @@ export function Sidebar() {
 
   const currentLinks = menuItems[role] || []
 
+  const handleRoleChange = (newRole: typeof roles[number]) => {
+    setRole(newRole)
+    setShowRoleSelector(false)
+
+    // Redirect to the landing page of the new role
+    switch (newRole) {
+      case 'Admin':
+        router.push('/dashboard/admin')
+        break
+      case 'Mangaka':
+        router.push('/dashboard/mangaka')
+        break
+      case 'Assistant':
+        router.push('/dashboard/assistant')
+        break
+      case 'Tantou Editor':
+        router.push('/dashboard/tantou-editor')
+        break
+      case 'Editorial Board':
+        router.push('/dashboard/manga-list')
+        break
+      case 'Editor-in-Chief':
+        router.push('/dashboard/editor-in-chief')
+        break
+      default:
+        router.push('/dashboard')
+        break
+    }
+  }
+
   const handleLogout = () => {
     router.push('/login')
   }
+
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full justify-between bg-card text-foreground p-5 border-r border-border">
@@ -142,10 +173,7 @@ export function Sidebar() {
               {roles.map((r) => (
                 <button
                   key={r}
-                  onClick={() => {
-                    setRole(r)
-                    setShowRoleSelector(false)
-                  }}
+                  onClick={() => handleRoleChange(r)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-muted transition-colors ${role === r ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
@@ -155,6 +183,7 @@ export function Sidebar() {
             </div>
           )}
         </div>
+
 
         {/* User Card */}
         <div className="flex items-center justify-between p-1.5 bg-muted/40 border border-border/30 rounded-xl">
