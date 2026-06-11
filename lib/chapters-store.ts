@@ -4,6 +4,7 @@
  */
 
 import { fetchAPI } from '@/services/api'
+import { getUsers } from './users-store'
 
 export type ChapterStatus = 'Draft' | 'In Progress' | 'Ready for Editor' | 'Published'
 
@@ -66,85 +67,39 @@ export interface Chapter {
 const STORAGE_CHAPTERS_KEY = 'mangaflow_chapters'
 const STORAGE_TASKS_KEY = 'mangaflow_tasks'
 
-// Pre-seeded assistants list
-export const SEED_ASSISTANTS: Assistant[] = [
-  { id: 'A01', name: 'Sato Takashi', avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100', specialty: 'Background Art & Line Art', activeTasks: 1 },
-  { id: 'A02', name: 'Suzuki Mei', avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', specialty: 'Coloring & Lighting Effects', activeTasks: 1 },
-  { id: 'A03', name: 'Watanabe Ren', avatarUrl: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100', specialty: 'Screentoning & Clean-up', activeTasks: 0 },
-]
+export const SEED_ASSISTANTS: Assistant[] = []
 
-// Pre-seeded active series for Tanaka Yuki (U01) and Oda Kenji (U02)
-const SEED_SERIES: Series[] = [
-  { id: 'S01', title: 'Sakura Knights', mangakaId: 'U01', coverColor: 'from-pink-500 to-purple-600', status: 'Active' },
-  { id: 'S02', title: 'Whispers of the Deep', mangakaId: 'U02', coverColor: 'from-sky-400 to-indigo-600', status: 'Active' }
-]
-
-const SEED_CHAPTERS: Chapter[] = [
+export const TASK_TYPE_SUGGESTIONS = [
   {
-    id: 'CH01',
-    seriesId: 'S01',
-    number: 1,
-    title: 'The Resonance of Blades',
-    status: 'Published',
-    totalPages: 10,
-    publicationDate: '2026-05-15',
-    deadline: '2026-05-01',
-    createdAt: '2026-04-20T10:00:00.000Z',
+    name: 'Line Art',
+    description: 'Phác thảo nét vẽ và vẽ viền cho nhân vật/bối cảnh.',
+    template: 'Yêu cầu đi nét vẽ chi tiết cho nhân vật chính ở trang {pages}. Chú ý độ dày nét viền mặt và tóc.'
   },
   {
-    id: 'CH02',
-    seriesId: 'S01',
-    number: 2,
-    title: 'Cherry Blossom Magitech',
-    status: 'In Progress',
-    totalPages: 12,
-    publicationDate: '2026-06-15',
-    deadline: '2026-06-01',
-    createdAt: '2026-05-15T09:00:00.000Z',
+    name: 'Coloring',
+    description: 'Tô màu, đánh bóng và xử lý nguồn sáng cảnh tranh.',
+    template: 'Thực hiện tô màu kỹ thuật số cho trang {pages}. Sử dụng tông màu hoàng hôn vàng ấm áp theo moodboard.'
+  },
+  {
+    name: 'Background Art',
+    description: 'Vẽ bối cảnh, môi trường và cảnh nền chi tiết.',
+    template: 'Vẽ chi tiết bối cảnh ngôi đền cổ ở hậu cảnh cho các trang {pages}. Tập trung vào họa tiết mái ngói.'
+  },
+  {
+    name: 'Screentoning',
+    description: 'Dán lưới tông màu và tạo hiệu ứng chiều sâu cho trang truyện.',
+    template: 'Dán lưới screentone tạo chiều sâu bóng râm và vân sáng cho trang {pages}.'
+  },
+  {
+    name: 'Clean-up',
+    description: 'Làm sạch nét vẽ phác thảo thô, căn chỉnh các khung tranh.',
+    template: 'Tẩy xóa nét nháp thô thừa và chuẩn hóa kích thước khung hình cho trang {pages}.'
   }
 ]
 
-const SEED_TASKS: Task[] = [
-  {
-    id: 'T01',
-    chapterId: 'CH02',
-    type: 'Line Art',
-    pages: '1-3',
-    description: 'Sketch and ink the opening battle sequence in the Sakura Dojo.',
-    assistantId: 'A01',
-    assistantName: 'Sato Takashi',
-    status: 'Approved',
-    submittedWorkUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800',
-    feedback: 'Amazing job on the dynamic lines! Ready for coloring.',
-    assignedAt: '2026-05-16T10:00:00.000Z',
-    updatedAt: '2026-05-18T14:30:00.000Z'
-  },
-  {
-    id: 'T02',
-    chapterId: 'CH02',
-    type: 'Coloring',
-    pages: '4-8',
-    description: 'Apply pastel sakura tones and sunset glow for the romance scene.',
-    assistantId: 'A02',
-    assistantName: 'Suzuki Mei',
-    status: 'Submitted',
-    submittedWorkUrl: 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800',
-    assignedAt: '2026-05-16T10:15:00.000Z',
-    updatedAt: '2026-05-29T16:00:00.000Z'
-  },
-  {
-    id: 'T03',
-    chapterId: 'CH02',
-    type: 'Background Art',
-    pages: '9-12',
-    description: 'Draw the detailed pagoda ruins and distant mountain range.',
-    assistantId: 'A03',
-    assistantName: 'Watanabe Ren',
-    status: 'In-Progress',
-    assignedAt: '2026-05-16T10:20:00.000Z',
-    updatedAt: '2026-05-16T10:20:00.000Z'
-  }
-]
+const SEED_SERIES: Series[] = []
+const SEED_CHAPTERS: Chapter[] = []
+const SEED_TASKS: Task[] = []
 
 // ---------- Storage Helpers ----------
 function loadChapters(): Chapter[] {
@@ -155,7 +110,9 @@ function loadChapters(): Chapter[] {
       localStorage.setItem(STORAGE_CHAPTERS_KEY, JSON.stringify(SEED_CHAPTERS))
       return SEED_CHAPTERS
     }
-    return JSON.parse(raw) as Chapter[]
+    const parsed = JSON.parse(raw) as Chapter[]
+    // Filter out mock chapters based on seriesId length
+    return parsed.filter(c => c.seriesId.length > 3)
   } catch {
     return SEED_CHAPTERS
   }
@@ -174,7 +131,9 @@ function loadTasks(): Task[] {
       localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(SEED_TASKS))
       return SEED_TASKS
     }
-    return JSON.parse(raw) as Task[]
+    const parsed = JSON.parse(raw) as Task[]
+    // Filter out mock tasks based on assistantId length or assignment state
+    return parsed.filter(t => t.assistantId.length > 3 || t.assistantId === 'Unassigned')
   } catch {
     return SEED_TASKS
   }
@@ -379,18 +338,21 @@ export function updateTaskStatus(
     // 1. Assistant submits task work
     if (status === 'Submitted' && oldStatus !== 'Submitted') {
       const payload = {
-        note: submitDescription || 'Nộp trang vẽ',
-        submittedFileAssetId: '88888888-8888-8888-8888-888888888888' // Default file asset ID
+        pageTaskId: taskId,
+        versionNo: 1,
+        submittedFileAssetId: '88888888-8888-8888-8888-888888888888', // Default file asset ID
+        note: submitDescription || 'Nộp trang vẽ'
       }
-      fetchAPI<any>(`/api/page-tasks/${taskId}/submissions`, {
+      fetchAPI<any>('/api/submissions', {
         method: 'POST',
         body: JSON.stringify(payload)
       }).then(res => {
-        if (res && res.data) {
+        const data = res.data || res;
+        if (data) {
           const currentTasks = loadTasks()
           const foundIdx = currentTasks.findIndex(t => t.id === taskId)
           if (foundIdx !== -1) {
-            currentTasks[foundIdx].submissionId = res.data.submissionId || res.data.id
+            currentTasks[foundIdx].submissionId = data.submissionId || data.id
             saveTasks(currentTasks)
           }
         }
@@ -400,8 +362,12 @@ export function updateTaskStatus(
     }
     // 2. Mangaka approves drawing task submission
     else if (status === 'Approved' && oldTask.submissionId) {
-      fetchAPI<any>(`/api/page-tasks/submissions/${oldTask.submissionId}/approve`, {
-        method: 'POST'
+      const payload = {
+        status: 'Approved'
+      }
+      fetchAPI<any>(`/api/submissions/${oldTask.submissionId}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
       }).then(res => {
         console.log("Approved submission on backend successfully", res)
       }).catch(err => {
@@ -411,10 +377,11 @@ export function updateTaskStatus(
     // 3. Mangaka rejects drawing task submission
     else if (status === 'Rejected' && oldTask.submissionId) {
       const payload = {
+        status: 'Rejected',
         rejectReason: feedback || 'Cần vẽ lại chi tiết hơn.'
       }
-      fetchAPI<any>(`/api/page-tasks/submissions/${oldTask.submissionId}/reject`, {
-        method: 'POST',
+      fetchAPI<any>(`/api/submissions/${oldTask.submissionId}`, {
+        method: 'PUT',
         body: JSON.stringify(payload)
       }).then(res => {
         console.log("Rejected submission on backend successfully", res)
@@ -478,13 +445,17 @@ export function assignTask(taskId: string, assistantId: string): boolean {
 export function getAssistants(): Assistant[] {
   // We can load active task counts dynamically by looking at loadTasks()
   const tasks = loadTasks()
-  return SEED_ASSISTANTS.map(assistant => {
+  const users = getUsers().filter(u => u.role === 'Assistant')
+  return users.map(u => {
     const activeTasks = tasks.filter(
-      t => t.assistantId === assistant.id && 
+      t => t.assistantId === u.id && 
       (t.status === 'Pending' || t.status === 'In-Progress' || t.status === 'Submitted' || t.status === 'Rejected')
     ).length
     return {
-      ...assistant,
+      id: u.id,
+      name: u.name,
+      avatarUrl: u.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+      specialty: 'Assistant',
       activeTasks
     }
   })

@@ -22,7 +22,11 @@ import {
   Layers,
   X,
   Clock,
-  ClipboardList
+  ClipboardList,
+  Edit3,
+  Trash2,
+  Plus,
+  Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -49,10 +53,21 @@ import {
   createUser,
   updateUserStatus,
   assignEditorToMangaka,
+  saveUsers,
   type User
 } from '@/lib/users-store'
 import { authService } from '@/services/authService'
-import { ROLE_IDS } from '@/lib/roles'
+import { userService } from '@/services/userService'
+import { systemService, type RoleResponse, type GenreResponse } from '@/services/systemService'
+import {
+  getSeriesByMangaka,
+  getChapters,
+  getTasks,
+  createTask,
+  TASK_TYPE_SUGGESTIONS,
+  type Series,
+  type Chapter
+} from '@/lib/chapters-store'
 
 export default function AdminPage() {
   const { role } = useRole()
@@ -60,7 +75,7 @@ export default function AdminPage() {
 
   // State variables
   const [usersList, setUsersList] = useState<User[]>([])
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list')
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'system'>('list')
 
   // Filter and Search states
   const [searchTerm, setSearchTerm] = useState('')
@@ -75,7 +90,7 @@ export default function AdminPage() {
   const [formName, setFormName] = useState('')
   const [formUsername, setFormUsername] = useState('')
   const [formEmail, setFormEmail] = useState('')
-  const [formRole, setFormRole] = useState<'Mangaka' | 'Assistant' | 'Tantou Editor' | 'Editorial Board' | 'Editor-in-Chief' | 'Admin'>('Mangaka')
+  const [formRoleId, setFormRoleId] = useState('')
   const [formEditorId, setFormEditorId] = useState('')
   const [formPassword, setFormPassword] = useState('')
   const [formConfirmPassword, setFormConfirmPassword] = useState('')
@@ -98,13 +113,95 @@ export default function AdminPage() {
   const [selectedMangaka, setSelectedMangaka] = useState<any>(null)
   const [mangakaSeriesList, setMangakaSeriesList] = useState<Series[]>([])
 
+  // --- States for System Management (Roles/Genres CRUD) ---
+  const [rolesList, setRolesList] = useState<RoleResponse[]>([])
+  const [genresList, setGenresList] = useState<GenreResponse[]>([])
+  const [systemLoading, setSystemLoading] = useState(false)
+
+  const [roleSearch, setRoleSearch] = useState('')
+  const [genreSearch, setGenreSearch] = useState('')
+
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
+  const [editingRole, setEditingRole] = useState<RoleResponse | null>(null)
+  const [formRoleName, setFormRoleName] = useState('')
+
+  const [isGenreModalOpen, setIsGenreModalOpen] = useState(false)
+  const [editingGenre, setEditingGenre] = useState<GenreResponse | null>(null)
+  const [formGenreTitle, setFormGenreTitle] = useState('')
+
+  // Fetch Roles and Genres from Backend
+  const refreshRolesAndGenres = async () => {
+    setSystemLoading(true)
+    try {
+      const [rData, gData] = await Promise.all([
+        systemService.getRoles(),
+        systemService.getGenres()
+      ])
+      setRolesList(rData)
+      setGenresList(gData)
+      if (rData.length > 0) {
+        const defaultRole = rData.find(r => r.roleName.toLowerCase() === 'mangaka') || rData[0]
+        setFormRoleId(defaultRole.roleId)
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch roles or genres from backend", err)
+      toast.error("Không thể tải danh sách vai trò hoặc thể loại từ hệ thống.")
+      setRolesList([])
+      setGenresList([])
+      setFormRoleId('')
+    } finally {
+      setSystemLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'system') {
+      refreshRolesAndGenres()
+    }
+  }, [activeTab])
+
   useEffect(() => {
     setMounted(true)
     refreshUsers()
+    refreshRolesAndGenres()
   }, [])
 
-  const refreshUsers = () => {
-    setUsersList(getUsers())
+  const refreshUsers = async () => {
+    try {
+      const response = await userService.getUsers()
+      if (response && response.data) {
+        const mappedUsers: User[] = response.data.map((u) => {
+          const id = u.userId || "default"
+          const code = id.charCodeAt(id.length - 1) || 0
+          let roleName = u.roleName;
+          if (roleName === 'TantouEditor') roleName = 'Tantou Editor';
+          else if (roleName === 'EditorialBoard') roleName = 'Editorial Board';
+          else if (roleName === 'EditorInChief') roleName = 'Editor-in-Chief';
+          const role = roleName as any
+          const status = u.deletedAt === null ? 'Active' : 'Inactive'
+
+          const localUser: User = {
+            id: u.userId,
+            username: u.userName,
+            name: u.displayName,
+            email: u.email,
+            role,
+            status,
+            avatarUrl: `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`,
+            editorId: u.assignedEditorId || undefined
+          }
+
+          return localUser
+        })
+
+        saveUsers(mappedUsers)
+        setUsersList(mappedUsers)
+        return
+      }
+    } catch (err) {
+      console.warn("Failed to fetch users from backend", err)
+    }
+    setUsersList(getUsers().filter(u => u.id.length > 3))
   }
 
   const handleOpenAssignTaskModal = (assistantUser: User) => {
@@ -141,6 +238,10 @@ export default function AdminPage() {
 
   const handleAssignTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!selectedAssistant) {
+      toast.error('Không tìm thấy thông tin trợ lý!')
+      return
+    }
     if (!selectedChapterId) {
       toast.error('Vui lòng chọn chapter!')
       return
@@ -158,7 +259,7 @@ export default function AdminPage() {
       return
     }
 
-    const targetEmail = selectedAssistant.email.toLowerCase()
+    const targetEmail = selectedAssistant.email?.toLowerCase() || ''
     let assistantId = 'A01'
     if (targetEmail.includes('suzuki')) assistantId = 'A02'
     else if (targetEmail.includes('watanabe')) assistantId = 'A03'
@@ -213,14 +314,15 @@ export default function AdminPage() {
   }, [usersList, searchTerm, roleFilter, statusFilter])
 
   // Handle account status toggle (Active/Inactive)
-  const handleToggleStatus = (userId: string, currentStatus: 'Active' | 'Inactive') => {
-    const nextStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
-    const success = updateUserStatus(userId, nextStatus)
-    if (success) {
-      toast.success(`Đã cập nhật trạng thái tài khoản thành ${nextStatus === 'Active' ? 'Hoạt động' : 'Tạm khóa'}.`)
-      refreshUsers()
-    } else {
-      toast.error('Cập nhật trạng thái tài khoản thất bại.')
+  const handleToggleStatus = async (userId: string, currentStatus: 'Active' | 'Inactive') => {
+    if (currentStatus === 'Active') {
+      try {
+        await userService.deleteUser(userId)
+        toast.success('Đã khóa tài khoản thành công!')
+        refreshUsers()
+      } catch (err: any) {
+        toast.error(err.message || 'Khóa tài khoản thất bại.')
+      }
     }
   }
 
@@ -231,19 +333,15 @@ export default function AdminPage() {
   }
 
   // Submit editor assignment
-  const handleConfirmAssignment = (e: React.FormEvent) => {
+  const handleConfirmAssignment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!assigningMangaka) return
 
     try {
-      const success = assignEditorToMangaka(assigningMangaka.id, selectedEditorId)
-      if (success) {
-        toast.success(`Đã gán Editor thành công cho Mangaka ${assigningMangaka.name}!`)
-        setAssigningMangaka(null)
-        refreshUsers()
-      } else {
-        toast.error('Gán Editor thất bại.')
-      }
+      await userService.assignEditorToMangaka(assigningMangaka.id, selectedEditorId)
+      toast.success(`Đã gán Editor thành công cho Mangaka ${assigningMangaka.name}!`)
+      setAssigningMangaka(null)
+      refreshUsers()
     } catch (err: any) {
       toast.error(err.message || 'Đã xảy ra lỗi khi gán Editor.')
     }
@@ -270,19 +368,21 @@ export default function AdminPage() {
     }
 
     try {
-      const selectedRoleId = ROLE_IDS[formRole as keyof typeof ROLE_IDS]
-      if (!selectedRoleId) {
-        toast.error('Vai trò không hợp lệ hoặc chưa được ánh xạ UUID.')
+      const selectedRoleObj = rolesList.find(r => r.roleId === formRoleId)
+      if (!selectedRoleObj) {
+        toast.error('Vui lòng chọn vai trò hệ thống hợp lệ.')
         return
       }
+      const selectedRoleName = selectedRoleObj.roleName
+      const isMangaka = selectedRoleName.toLowerCase() === 'mangaka'
 
       await authService.register({
         userName: formUsername.trim(),
         email: formEmail.trim(),
         displayName: formName.trim(),
         password: formPassword,
-        roleId: selectedRoleId,
-        assignedFromUserId: formRole === 'Mangaka' && formEditorId.trim() ? formEditorId.trim() : undefined
+        roleId: formRoleId,
+        assignedFromUserId: isMangaka && formEditorId.trim() ? formEditorId.trim() : undefined
       })
 
       // Also fallback update mock store to see it in Frontend list
@@ -291,8 +391,8 @@ export default function AdminPage() {
           name: formName.trim(),
           username: formUsername.trim(),
           email: formEmail.trim(),
-          role: formRole,
-          editorId: formRole === 'Mangaka' && formEditorId.trim() ? formEditorId.trim() : undefined
+          role: selectedRoleName as any,
+          editorId: isMangaka && formEditorId.trim() ? formEditorId.trim() : undefined
         })
       } catch (_) {
         // Suppress mock creation errors if already exists locally
@@ -304,7 +404,8 @@ export default function AdminPage() {
       setFormName('')
       setFormUsername('')
       setFormEmail('')
-      setFormRole('Mangaka')
+      const defaultRole = rolesList.find(r => r.roleName.toLowerCase() === 'mangaka') || rolesList[0]
+      setFormRoleId(defaultRole?.roleId || '')
       setFormEditorId('')
       setFormPassword('')
       setFormConfirmPassword('')
@@ -316,6 +417,86 @@ export default function AdminPage() {
       toast.error(err.message || 'Tạo tài khoản thất bại.')
     }
   }
+
+  // Handle Role Creation & Modification
+  const handleRoleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formRoleName.trim()) {
+      toast.error('Vui lòng nhập tên vai trò!')
+      return
+    }
+
+    try {
+      if (editingRole) {
+        await systemService.updateRole(editingRole.roleId, formRoleName.trim())
+        toast.success(`Đã cập nhật vai trò thành công!`)
+      } else {
+        await systemService.createRole(formRoleName.trim())
+        toast.success(`Đã tạo vai trò "${formRoleName}" thành công!`)
+      }
+      setIsRoleModalOpen(false)
+      setEditingRole(null)
+      setFormRoleName('')
+      refreshRolesAndGenres()
+    } catch (err: any) {
+      toast.error(err.message || 'Thao tác vai trò thất bại.')
+    }
+  }
+
+  // Handle Role Delete (soft-delete)
+  const handleDeleteRole = async (roleId: string, roleName: string) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa vai trò "${roleName}" không?`)) return
+    try {
+      await systemService.deleteRole(roleId)
+      toast.success(`Đã xóa vai trò "${roleName}" thành công!`)
+      refreshRolesAndGenres()
+    } catch (err: any) {
+      toast.error(err.message || 'Xóa vai trò thất bại.')
+    }
+  }
+
+  // Handle Genre Creation & Modification
+  const handleGenreSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formGenreTitle.trim()) {
+      toast.error('Vui lòng nhập tên thể loại!')
+      return
+    }
+
+    try {
+      if (editingGenre) {
+        await systemService.updateGenre(editingGenre.genreId, formGenreTitle.trim())
+        toast.success(`Đã cập nhật thể loại thành công!`)
+      } else {
+        await systemService.createGenre(formGenreTitle.trim())
+        toast.success(`Đã tạo thể loại "${formGenreTitle}" thành công!`)
+      }
+      setIsGenreModalOpen(false)
+      setEditingGenre(null)
+      setFormGenreTitle('')
+      refreshRolesAndGenres()
+    } catch (err: any) {
+      toast.error(err.message || 'Thao tác thể loại thất bại.')
+    }
+  }
+
+  // Handle Genre Delete (soft-delete)
+  const handleDeleteGenre = async (genreId: string, title: string) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa thể loại "${title}" không?`)) return
+    try {
+      await systemService.deleteGenre(genreId)
+      toast.success(`Đã xóa thể loại "${title}" thành công!`)
+      refreshRolesAndGenres()
+    } catch (err: any) {
+      toast.error(err.message || 'Xóa thể loại thất bại.')
+    }
+  }
+
+  const selectedFormRoleName = useMemo(() => {
+    return rolesList.find(r => r.roleId === formRoleId)?.roleName || ''
+  }, [rolesList, formRoleId])
+
+  const isMangakaSelected = selectedFormRoleName.toLowerCase() === 'mangaka'
 
   if (!mounted) return null
 
@@ -359,8 +540,8 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab('list')}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'list'
-                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
             >
               <Users className="w-3.5 h-3.5" /> Danh sách Tài khoản
@@ -368,11 +549,20 @@ export default function AdminPage() {
             <button
               onClick={() => setActiveTab('create')}
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'create'
-                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
             >
               <UserPlus className="w-3.5 h-3.5" /> Tạo Tài khoản mới
+            </button>
+            <button
+              onClick={() => setActiveTab('system')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'system'
+                ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                }`}
+            >
+              <Layers className="w-3.5 h-3.5" /> Quản lý Hệ thống
             </button>
           </div>
         )}
@@ -530,25 +720,16 @@ export default function AdminPage() {
                             {role === 'Admin' ? (
                               user.id === 'U10' ? (
                                 <span className="text-[10px] text-muted-foreground italic">Hệ thống</span>
-                              ) : (
+                              ) : user.status === 'Active' ? (
                                 <Button
                                   onClick={() => handleToggleStatus(user.id, user.status)}
                                   variant="outline"
-                                  className={`text-[10px] font-bold px-3 py-1.5 rounded-xl border cursor-pointer transition-all flex items-center gap-1 mx-auto ${user.status === 'Active'
-                                      ? 'hover:bg-rose-500/10 hover:text-rose-600 border-rose-500/20 text-rose-500/80'
-                                      : 'hover:bg-emerald-500/10 hover:text-emerald-600 border-emerald-500/20 text-emerald-500/80'
-                                    }`}
+                                  className="text-[10px] font-bold px-3 py-1.5 rounded-xl border cursor-pointer transition-all flex items-center gap-1 mx-auto hover:bg-rose-500/10 hover:text-rose-600 border-rose-500/20 text-rose-500/80"
                                 >
-                                  {user.status === 'Active' ? (
-                                    <>
-                                      <UserX className="w-3 h-3" /> Tạm khóa
-                                    </>
-                                  ) : (
-                                    <>
-                                      <UserCheck className="w-3 h-3" /> Mở khóa
-                                    </>
-                                  )}
+                                  <UserX className="w-3 h-3" /> Tạm khóa
                                 </Button>
+                              ) : (
+                                <span className="text-[10px] text-rose-600/85 font-semibold">Đã khóa</span>
                               )
                             ) : role === 'Mangaka' && user.role === 'Assistant' ? (
                               <Button
@@ -577,7 +758,7 @@ export default function AdminPage() {
             </div>
           </Card>
         </div>
-      ) : (
+      ) : activeTab === 'create' ? (
         <Card className="max-w-2xl mx-auto p-6 bg-card border border-border rounded-2xl shadow-lg animate-in fade-in duration-200">
           <div className="flex items-center gap-2 border-b border-border pb-4 mb-4">
             <UserPlus className="w-5 h-5 text-primary" />
@@ -639,36 +820,37 @@ export default function AdminPage() {
                   Vai trò hệ thống <span className="text-destructive">*</span>
                 </label>
                 <select
-                  value={formRole}
+                  value={formRoleId}
                   onChange={(e) => {
-                    setFormRole(e.target.value as any)
+                    setFormRoleId(e.target.value)
                     setFormEditorId('')
                   }}
                   className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer focus:border-primary/50"
                 >
-                  <option value="Mangaka">Mangaka</option>
-                  <option value="Tantou Editor">Tantou Editor</option>
-                  <option value="Editorial Board">Editorial Board</option>
-                  <option value="Editor-in-Chief">Editor-in-Chief</option>
-                  <option value="Assistant">Assistant</option>
-                  <option value="Admin">Admin</option>
+                  <option value="" disabled>-- Chọn Vai Trò --</option>
+                  {rolesList.map(r => (
+                    <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
+                  ))}
                 </select>
               </div>
 
-              {/* Conditionally Render Editor Assignment Input (if role === Mangaka) */}
-              {formRole === 'Mangaka' && (
+              {/* Conditionally Render Editor Assignment Dropdown (if role === Mangaka) */}
+              {isMangakaSelected && (
                 <div className="space-y-1.5 animate-in slide-in-from-top-1 duration-200">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                    <LinkIcon className="w-3.5 h-3.5 text-primary" /> UUID của Tantou Editor Phụ Trách <span className="text-destructive">*</span>
+                    <LinkIcon className="w-3.5 h-3.5 text-primary" /> Chọn Tantou Editor Phụ Trách <span className="text-destructive">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: b6c7d8e9-2345-5678-90ab-cdef01234568"
+                  <select
                     value={formEditorId}
                     onChange={(e) => setFormEditorId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                    className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer focus:border-primary/50"
                     required
-                  />
+                  >
+                    <option value="">-- Chọn Tantou Editor --</option>
+                    {editors.map(ed => (
+                      <option key={ed.id} value={ed.id}>{ed.name} ({ed.username})</option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
@@ -714,6 +896,217 @@ export default function AdminPage() {
             </Button>
           </form>
         </Card>
+      ) : (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Roles Management Card */}
+            <Card className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col space-y-4">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-foreground">Quản lý Vai trò</h2>
+                    <p className="text-xs text-muted-foreground">Phân quyền vai trò hệ thống</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    setEditingRole(null);
+                    setFormRoleName('');
+                    setIsRoleModalOpen(true);
+                  }}
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Thêm vai trò
+                </Button>
+              </div>
+
+              {/* Search Roles */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm vai trò..."
+                  value={roleSearch}
+                  onChange={(e) => setRoleSearch(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                />
+              </div>
+
+              {/* Roles Table */}
+              <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-muted/30 border-b border-border">
+                    <TableRow>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Tên Vai trò</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground w-1/3">UUID</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground text-center w-24">Hành động</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border">
+                    {systemLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground">
+                          Đang tải dữ liệu...
+                        </TableCell>
+                      </TableRow>
+                    ) : rolesList.filter(r => r.roleName.toLowerCase().includes(roleSearch.toLowerCase())).length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground italic">
+                          Không tìm thấy vai trò nào.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      rolesList
+                        .filter(r => r.roleName.toLowerCase().includes(roleSearch.toLowerCase()))
+                        .map((r) => (
+                          <TableRow key={r.roleId} className="border-b border-border hover:bg-muted/10 transition-colors">
+                            <TableCell className="font-bold text-xs text-foreground py-3">{r.roleName}</TableCell>
+                            <TableCell className="text-[10px] font-mono text-muted-foreground py-3 max-w-[120px] truncate" title={r.roleId}>
+                              {r.roleId}
+                            </TableCell>
+                            <TableCell className="text-center py-3">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setEditingRole(r);
+                                    setFormRoleName(r.roleName);
+                                    setIsRoleModalOpen(true);
+                                  }}
+                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
+                                  title="Chỉnh sửa"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRole(r.roleId, r.roleName)}
+                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
+                                  title="Xóa"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+
+            {/* Genres Management Card */}
+            <Card className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col space-y-4">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-foreground">Quản lý Thể loại</h2>
+                    <p className="text-xs text-muted-foreground">Cấu hình thể loại manga</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    setEditingGenre(null);
+                    setFormGenreTitle('');
+                    setIsGenreModalOpen(true);
+                  }}
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Thêm thể loại
+                </Button>
+              </div>
+
+              {/* Search Genres */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm thể loại..."
+                  value={genreSearch}
+                  onChange={(e) => setGenreSearch(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                />
+              </div>
+
+              {/* Genres Table */}
+              <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="bg-muted/30 border-b border-border">
+                    <TableRow>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Tên Thể loại</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground w-1/4">Trạng thái</TableHead>
+                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground text-center w-24">Hành động</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border">
+                    {systemLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground">
+                          Đang tải dữ liệu...
+                        </TableCell>
+                      </TableRow>
+                    ) : genresList.filter(g => g.title.toLowerCase().includes(genreSearch.toLowerCase())).length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground italic">
+                          Không tìm thấy thể loại nào.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      genresList
+                        .filter(g => g.title.toLowerCase().includes(genreSearch.toLowerCase()))
+                        .map((g) => (
+                          <TableRow key={g.genreId} className="border-b border-border hover:bg-muted/10 transition-colors">
+                            <TableCell className="font-bold text-xs text-foreground py-3">{g.title}</TableCell>
+                            <TableCell className="py-3">
+                              {g.deletedAt ? (
+                                <Badge className="bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                  Đã ẩn (Deleted)
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                  Kích hoạt (Active)
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center py-3">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setEditingGenre(g);
+                                    setFormGenreTitle(g.title);
+                                    setIsGenreModalOpen(true);
+                                  }}
+                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
+                                  title="Chỉnh sửa"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteGenre(g.genreId, g.title)}
+                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
+                                  title="Xóa"
+                                  disabled={g.deletedAt !== null}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+
+          </div>
+        </div>
       )}
 
       {/* Editor Assignment Dialog Modal */}
@@ -897,8 +1290,8 @@ export default function AdminPage() {
                           setNewTaskDesc(suggestion.template.replace('{pages}', pagesText));
                         }}
                         className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col gap-1 cursor-pointer ${isSelected
-                            ? 'bg-primary/10 border-primary text-foreground'
-                            : 'bg-muted/40 border-border/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground'
+                          ? 'bg-primary/10 border-primary text-foreground'
+                          : 'bg-muted/40 border-border/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground'
                           }`}
                       >
                         <div className="flex items-center justify-between">
@@ -978,6 +1371,96 @@ export default function AdminPage() {
                 className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
               >
                 Giao việc
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Role Add/Edit Dialog Modal */}
+      <Dialog open={isRoleModalOpen} onOpenChange={(open) => !open && setIsRoleModalOpen(false)}>
+        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+              <Shield className="w-5 h-5 text-amber-500" />
+              {editingRole ? `Cập nhật vai trò "${editingRole.roleName}"` : 'Thêm vai trò mới'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleRoleSubmit} className="space-y-4 pt-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Tên vai trò <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Ví dụ: Moderator, Translator..."
+                value={formRoleName}
+                onChange={(e) => setFormRoleName(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+              <Button
+                type="button"
+                onClick={() => setIsRoleModalOpen(false)}
+                variant="outline"
+                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                {editingRole ? 'Lưu thay đổi' : 'Thêm mới'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Genre Add/Edit Dialog Modal */}
+      <Dialog open={isGenreModalOpen} onOpenChange={(open) => !open && setIsGenreModalOpen(false)}>
+        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+              <Layers className="w-5 h-5 text-indigo-500" />
+              {editingGenre ? `Cập nhật thể loại "${editingGenre.title}"` : 'Thêm thể loại mới'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleGenreSubmit} className="space-y-4 pt-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Tên thể loại <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Ví dụ: Comedy, Isekai..."
+                value={formGenreTitle}
+                onChange={(e) => setFormGenreTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+              <Button
+                type="button"
+                onClick={() => setIsGenreModalOpen(false)}
+                variant="outline"
+                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                {editingGenre ? 'Lưu thay đổi' : 'Thêm mới'}
               </Button>
             </div>
           </form>

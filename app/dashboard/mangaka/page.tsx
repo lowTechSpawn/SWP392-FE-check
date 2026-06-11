@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  PenTool,
+  PencilLine,
   Plus,
   BookOpen,
   Clock,
@@ -26,8 +26,7 @@ import {
   type ProposalStatus,
 } from '@/lib/proposals-store'
 
-const MOCK_MANGAKA_ID = 'U01'
-const MANGAKA_NAME = 'Tanaka Yuki'
+const DEFAULT_MANGAKA_ID = 'U01'
 
 const STATUS_CONFIG: Record<ProposalStatus, { label: string; className: string; icon: React.ElementType }> = {
   Draft: { label: 'Draft', className: 'bg-slate-500/10 text-slate-500 border-slate-500/20', icon: FileEdit },
@@ -35,6 +34,7 @@ const STATUS_CONFIG: Record<ProposalStatus, { label: string; className: string; 
   'Under Review': { label: 'Under Review', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: Eye },
   Approved: { label: 'Approved', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
   Rejected: { label: 'Rejected', className: 'bg-red-500/10 text-red-600 border-red-500/20', icon: XCircle },
+  Active: { label: 'Approved & Active', className: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20', icon: CheckCircle2 },
 }
 
 function formatDateShort(iso: string) {
@@ -44,15 +44,44 @@ function formatDateShort(iso: string) {
 export default function MangakaDashboardPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [mounted, setMounted] = useState(false)
+  const [mangakaName, setMangakaName] = useState('Mangaka')
+  const [mangakaId, setMangakaId] = useState(DEFAULT_MANGAKA_ID)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [assignedEditor, setAssignedEditor] = useState<{ name: string; email: string } | null>(null)
 
   useEffect(() => {
-    setProposals(getProposalsByMangaka(MOCK_MANGAKA_ID))
-    setMounted(true)
+    const saved = localStorage.getItem('user-info')
+    let currentId = DEFAULT_MANGAKA_ID
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed?.name) {
+          setMangakaName(parsed.name)
+        }
+        if (parsed?.id) {
+          setMangakaId(parsed.id)
+          currentId = parsed.id
+        }
+        if (parsed?.assignedEditorName) {
+          setAssignedEditor({
+            name: parsed.assignedEditorName,
+            email: parsed.assignedEditorEmail || ''
+          })
+        }
+      } catch {}
+    }
+    
+    getProposalsByMangaka(currentId).then((list) => {
+      setProposals(list)
+      hasPendingProposal(currentId).then((blocked) => {
+        setIsBlocked(blocked)
+        setMounted(true)
+      })
+    })
   }, [])
 
   if (!mounted) return null
 
-  const isBlocked = hasPendingProposal(MOCK_MANGAKA_ID)
   const recent = [...proposals].sort((a, b) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   ).slice(0, 3)
@@ -77,11 +106,17 @@ export default function MangakaDashboardPage() {
               <Sparkles className="w-3 h-3" /> Mangaka Portal
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-              Welcome back, {MANGAKA_NAME}
+              Welcome back, {mangakaName}
             </h1>
             <p className="text-sm text-muted-foreground">
               Manage your series proposals and track their review status.
             </p>
+            {assignedEditor && (
+              <div className="mt-2.5 inline-flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-xl text-xs font-medium text-muted-foreground">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Assigned Editor: <strong className="text-foreground">{assignedEditor.name}</strong> {assignedEditor.email ? `(${assignedEditor.email})` : ''}</span>
+              </div>
+            )}
           </div>
 
           {isBlocked ? (
@@ -104,7 +139,7 @@ export default function MangakaDashboardPage() {
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total Proposals', value: counts.total, icon: PenTool, color: 'text-foreground', bg: 'bg-primary/8' },
+          { label: 'Total Proposals', value: counts.total, icon: PencilLine, color: 'text-foreground', bg: 'bg-primary/8' },
           { label: 'In Review', value: counts.pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/8' },
           { label: 'Approved', value: counts.approved, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/8' },
           { label: 'Rejected', value: counts.rejected, icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/8' },
@@ -141,7 +176,7 @@ export default function MangakaDashboardPage() {
           <div className="divide-y divide-border">
             {recent.length === 0 ? (
               <div className="p-10 text-center space-y-2">
-                <PenTool className="w-8 h-8 text-muted-foreground/30 mx-auto" />
+                <PencilLine className="w-8 h-8 text-muted-foreground/30 mx-auto" />
                 <p className="text-sm text-muted-foreground">No proposals yet</p>
                 <Link
                   href="/dashboard/series/new"

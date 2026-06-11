@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
-  PenTool,
+  PencilLine,
   Clock,
   CheckCircle2,
   XCircle,
@@ -57,6 +57,11 @@ const STATUS_CONFIG: Record<
     className: 'bg-red-500/10 text-red-600 border-red-500/20',
     icon: XCircle,
   },
+  Active: {
+    label: 'Approved & Active',
+    className: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+    icon: CheckCircle2,
+  },
 }
 
 const ALL_FILTERS: (ProposalStatus | 'All')[] = [
@@ -65,6 +70,7 @@ const ALL_FILTERS: (ProposalStatus | 'All')[] = [
   'Under Review',
   'Approved',
   'Rejected',
+  'Active',
 ]
 
 function formatDateShort(iso: string) {
@@ -82,8 +88,9 @@ export default function ReviewProposalsPage() {
   const [mounted, setMounted] = useState(false)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const loadProposals = useCallback(() => {
-    setProposals(getProposals())
+  const loadProposals = useCallback(async () => {
+    const list = await getProposals()
+    setProposals(list)
   }, [])
 
   useEffect(() => {
@@ -96,9 +103,9 @@ export default function ReviewProposalsPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  const handleStatusChange = (id: string, newStatus: ProposalStatus) => {
+  const handleStatusChange = async (id: string, newStatus: ProposalStatus) => {
     const proposal = proposals.find(p => p.id === id)
-    const success = updateProposalStatus(id, newStatus)
+    const success = await updateProposalStatus(id, newStatus)
     if (success) {
       showNotification(`Proposal status updated to "${newStatus}"!`)
       
@@ -133,7 +140,7 @@ export default function ReviewProposalsPage() {
         }
       }
       
-      loadProposals()
+      await loadProposals()
     } else {
       showNotification(`Failed to update proposal status.`, 'error')
     }
@@ -182,7 +189,7 @@ export default function ReviewProposalsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2.5">
-            <PenTool className="w-7 h-7 text-primary" />
+            <PencilLine className="w-7 h-7 text-primary" />
             Review Series Proposals
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -196,8 +203,8 @@ export default function ReviewProposalsPage() {
         <div
           className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm border shadow-lg animate-in fade-in slide-in-from-bottom-5 duration-200 ${
             notification.type === 'success'
-              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
-              : 'bg-destructive/10 text-destructive border-destructive/30'
+              ? 'bg-emerald-500/10 text-slate-900 dark:text-slate-100 border-emerald-500/30'
+              : 'bg-destructive/10 text-slate-900 dark:text-slate-100 border-destructive/30'
           }`}
         >
           {notification.type === 'success' ? (
@@ -318,9 +325,20 @@ export default function ReviewProposalsPage() {
                     <span className="bg-primary/5 text-primary text-xs font-semibold px-2.5 py-0.5 rounded-lg border border-primary/10">
                       {proposal.publicationType}
                     </span>
-                    <span className="bg-amber-500/5 text-amber-600 text-xs font-semibold px-2.5 py-0.5 rounded-lg border border-amber-500/10">
-                      {proposal.samplePages} sample pages
-                    </span>
+                    {proposal.sampleFileUrl ? (
+                      <a
+                        href={proposal.sampleFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-primary/5 text-primary text-xs font-bold px-2.5 py-0.5 rounded-lg border border-primary/10 hover:underline"
+                      >
+                        View Sample File
+                      </a>
+                    ) : (
+                      <span className="bg-amber-500/5 text-amber-600 text-xs font-semibold px-2.5 py-0.5 rounded-lg border border-amber-500/10">
+                        No File
+                      </span>
+                    )}
                   </div>
 
                   {/* Synopsis section */}

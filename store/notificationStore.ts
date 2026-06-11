@@ -12,45 +12,7 @@ export interface AppNotification {
 
 const STORAGE_KEY = 'mangaflow_notifications'
 
-// Seed mock notifications
-const SEED_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: 'n1',
-    title: 'Proposal Approved',
-    message: 'Your proposal "Whispers of the Deep" has been approved and activated! Tantou Editor Nakamura Takeshi is confirmed.',
-    role: 'Mangaka',
-    read: false,
-    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
-    type: 'success',
-  },
-  {
-    id: 'n2',
-    title: 'New Proposal Submitted',
-    message: 'Mangaka Tanaka Yuki has submitted a new proposal "Sakura Knights" for review.',
-    role: 'Editorial Board',
-    read: false,
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
-    type: 'info',
-  },
-  {
-    id: 'n3',
-    title: 'New Proposal Submitted',
-    message: 'Mangaka Tanaka Yuki has submitted a new proposal "Sakura Knights" for review.',
-    role: 'Editor-in-Chief',
-    read: false,
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
-    type: 'info',
-  },
-  {
-    id: 'n4',
-    title: 'Manuscript Draft Uploaded',
-    message: 'Mangaka Oda Kenji uploaded a new manuscript draft for "Spy x Family: Secret Mission".',
-    role: 'Tantou Editor',
-    read: true,
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-    type: 'info',
-  }
-]
+const SEED_NOTIFICATIONS: AppNotification[] = []
 
 type Listener = (notifications: AppNotification[]) => void
 const listeners = new Set<Listener>()
@@ -65,7 +27,8 @@ function loadNotifications(): AppNotification[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_NOTIFICATIONS))
       return SEED_NOTIFICATIONS
     }
-    return JSON.parse(raw) as AppNotification[]
+    const parsed = JSON.parse(raw) as AppNotification[]
+    return parsed.filter(n => !n.id.startsWith('n') || n.id.startsWith('NT'))
   } catch {
     return SEED_NOTIFICATIONS
   }

@@ -23,7 +23,7 @@ import {
   FileText,
   Upload,
   PlusCircle,
-  PenTool,
+  PencilLine,
   ScrollText,
   CalendarDays,
   Hash,
@@ -47,6 +47,7 @@ import {
   getSeriesByMangaka,
   SEED_ASSISTANTS,
   syncTasksFromBackend,
+  TASK_TYPE_SUGGESTIONS,
   type Chapter,
   type Task,
   type Assistant,
@@ -56,40 +57,22 @@ import {
 } from '@/lib/chapters-store'
 import { calculateChapterDeadline, calculateChapterProgress } from '@/lib/business-logic'
 
-const TASK_TYPE_SUGGESTIONS = [
-  {
-    name: 'Line Art',
-    description: 'Phác thảo nét vẽ và vẽ viền cho nhân vật/bối cảnh.',
-    template: 'Yêu cầu đi nét vẽ chi tiết cho nhân vật chính ở trang {pages}. Chú ý độ dày nét viền mặt và tóc.'
-  },
-  {
-    name: 'Coloring',
-    description: 'Tô màu, đánh bóng và xử lý nguồn sáng cảnh tranh.',
-    template: 'Thực hiện tô màu kỹ thuật số cho trang {pages}. Sử dụng tông màu hoàng hôn vàng ấm áp theo moodboard.'
-  },
-  {
-    name: 'Background Art',
-    description: 'Vẽ bối cảnh, môi trường và cảnh nền chi tiết.',
-    template: 'Vẽ chi tiết bối cảnh ngôi đền cổ ở hậu cảnh cho các trang {pages}. Tập trung vào họa tiết mái ngói.'
-  },
-  {
-    name: 'Screentoning',
-    description: 'Dán lưới tông màu và tạo hiệu ứng chiều sâu cho trang truyện.',
-    template: 'Dán lưới screentone tạo chiều sâu bóng râm và vân sáng cho trang {pages}.'
-  },
-  {
-    name: 'Clean-up',
-    description: 'Làm sạch nét vẽ phác thảo thô, căn chỉnh các khung tranh.',
-    template: 'Tẩy xóa nét nháp thô thừa và chuẩn hóa kích thước khung hình cho trang {pages}.'
-  }
-]
-
-// Mock current logged in mangaka ID (matches seed data)
-const MOCK_MANGAKA_ID = 'U01'
-
 export default function ChaptersPage() {
   const { role } = useRole()
   const [mounted, setMounted] = useState(false)
+  const [mangakaId, setMangakaId] = useState('U01')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user-info')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed?.id) {
+          setMangakaId(parsed.id)
+        }
+      } catch {}
+    }
+  }, [])
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   // --- State for Mangaka Role ---
@@ -152,11 +135,11 @@ export default function ChaptersPage() {
   useEffect(() => {
     setMounted(true)
     refreshData()
-  }, [role, selectedSeriesId, selectedChapterId, selectedAssistantId])
+  }, [role, selectedSeriesId, selectedChapterId, selectedAssistantId, mangakaId])
 
   const refreshData = () => {
     // 1. Load active series and select default
-    const seriesList = getSeriesByMangaka(MOCK_MANGAKA_ID)
+    const seriesList = getSeriesByMangaka(mangakaId)
     setMangakaSeries(seriesList)
 
     let currentSeriesId = selectedSeriesId
@@ -385,7 +368,7 @@ export default function ChaptersPage() {
 
     // Eligibility check
     const selectedSeries = mangakaSeries.find(s => s.id === newChapterSeriesId)
-    if (selectedSeries && !canCreateChapter(MOCK_MANGAKA_ID, selectedSeries)) {
+    if (selectedSeries && !canCreateChapter(mangakaId, selectedSeries)) {
       errs.seriesId = 'Chỉ Mangaka chủ sở hữu của series đang Active mới được tạo chapter'
     }
 
@@ -1123,7 +1106,7 @@ export default function ChaptersPage() {
                   onClick={handleFillSample}
                   className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg hover:bg-primary/20 transition-all cursor-pointer"
                 >
-                  <PenTool className="w-3.5 h-3.5" /> Điền Dữ Liệu Mẫu
+                  <PencilLine className="w-3.5 h-3.5" /> Điền Dữ Liệu Mẫu
                 </button>
               </div>
               <button

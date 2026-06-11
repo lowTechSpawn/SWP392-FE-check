@@ -10,7 +10,11 @@ import {
   AlertTriangle,
   Info,
   Sparkles,
+  LogOut,
+  ChevronDown
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { authService } from '@/services/authService'
 import { useNotifications } from '@/hooks/useNotifications'
 import { useRole } from '@/context/RoleContext'
 import { cn } from '@/lib/utils'
@@ -19,15 +23,15 @@ import { cn } from '@/lib/utils'
 function formatRelativeTime(isoString: string) {
   const date = new Date(isoString)
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
-  
+
   if (seconds < 60) return 'just now'
-  
+
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `${minutes}m ago`
-  
+
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}h ago`
-  
+
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
@@ -37,11 +41,42 @@ export function DashboardHeader() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  const router = useRouter()
+  const [userInfo, setUserInfo] = useState<{ name: string; email: string; avatarUrl?: string } | null>(null)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Load from localStorage first
+    const saved = localStorage.getItem('user-info')
+    if (saved) {
+      try {
+        setUserInfo(JSON.parse(saved))
+      } catch { }
+    }
+
+    // Fetch updated info from backend
+    authService.getCurrentUser().then((user) => {
+      if (user) {
+        setUserInfo({
+          name: user.name,
+          email: user.email,
+          avatarUrl: user.avatarUrl
+        })
+      }
+    }).catch((err) => {
+      console.warn("Failed to fetch current user profile on mount", err)
+    })
+  }, [])
+
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false)
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -77,12 +112,19 @@ export function DashboardHeader() {
     Admin: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   }
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch { }
+    router.push('/login')
+  }
+
   return (
     <header className="h-16 border-b border-border bg-card/50 backdrop-blur-md flex items-center justify-between px-6 sm:px-8 lg:px-10 sticky top-0 z-40">
       {/* Left section: Welcome context */}
       <div className="flex items-center gap-3">
         <span className="text-sm font-extrabold tracking-tight text-muted-foreground capitalize">
-          Workspace
+          Dashboard
         </span>
         <span className="text-muted-foreground/30 text-xs">/</span>
         <span className={cn(
@@ -93,110 +135,180 @@ export function DashboardHeader() {
         </span>
       </div>
 
-      {/* Right section: Notifications Bell */}
-      <div className="relative" ref={dropdownRef}>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            "p-2.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none",
-            isOpen && "bg-muted text-foreground border-border/40"
-          )}
-          aria-label="Open Notifications"
-        >
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 text-[10px] font-black text-white flex items-center justify-center border-2 border-card animate-in zoom-in duration-100">
-              {unreadCount}
-            </span>
-          )}
-        </button>
+      {/* Right section: Notifications Bell & User Profile Dropdown */}
+      <div className="flex items-center gap-4">
+        {/* Notifications Bell */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={cn(
+              "p-2.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none",
+              isOpen && "bg-muted text-foreground border-border/40"
+            )}
+            aria-label="Open Notifications"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-600 text-[10px] font-black text-white flex items-center justify-center border-2 border-card animate-in zoom-in duration-100">
+                {unreadCount}
+              </span>
+            )}
+          </button>
 
-        {/* Dropdown Popup */}
-        {isOpen && (
-          <div className="absolute right-0 mt-2.5 w-80 sm:w-96 bg-card border border-border rounded-2xl shadow-2xl p-1 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-            {/* Header */}
-            <div className="flex items-center justify-between p-3.5 border-b border-border/60">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm text-foreground">Alerts & Notifications</span>
-                {unreadCount > 0 && (
-                  <span className="bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    {unreadCount} new
-                  </span>
+          {/* Dropdown Popup */}
+          {isOpen && (
+            <div className="absolute right-0 mt-2.5 w-80 sm:w-96 bg-card border border-border rounded-2xl shadow-2xl p-1 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* Header */}
+              <div className="flex items-center justify-between p-3.5 border-b border-border/60">
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-sm text-foreground">Alerts & Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
+
+                {notifications.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={markAllRead}
+                      className="p-1.5 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors flex items-center gap-1"
+                      title="Mark all as read"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" /> Read All
+                    </button>
+                    <button
+                      onClick={clearAll}
+                      className="p-1.5 text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg transition-colors flex items-center gap-1"
+                      title="Clear all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Clear
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {notifications.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={markAllRead}
-                    className="p-1.5 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors flex items-center gap-1"
-                    title="Mark all as read"
-                  >
-                    <CheckCheck className="w-3.5 h-3.5" /> Read All
-                  </button>
-                  <button
-                    onClick={clearAll}
-                    className="p-1.5 text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg transition-colors flex items-center gap-1"
-                    title="Clear all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Clear
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* List */}
-            <div className="max-h-80 overflow-y-auto divide-y divide-border/65">
-              {notifications.length > 0 ? (
-                notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    onClick={(e) => !n.read && handleMarkAsRead(n.id, e)}
-                    className={cn(
-                      "p-4 flex gap-3 hover:bg-muted/40 cursor-pointer transition-colors relative group",
-                      !n.read && "bg-primary/5 hover:bg-primary/10"
-                    )}
-                  >
-                    {/* Icon indicator */}
-                    <div className="mt-0.5 shrink-0">
-                      {getIcon(n.type)}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 space-y-1 pr-4">
-                      <div className="flex items-center justify-between">
-                        <p className={cn("text-xs font-bold text-foreground leading-tight", !n.read && "text-primary")}>
-                          {n.title}
-                        </p>
-                        <span className="text-[9px] text-muted-foreground/80 flex items-center gap-0.5 shrink-0">
-                          {formatRelativeTime(n.createdAt)}
-                        </span>
+              {/* List */}
+              <div className="max-h-80 overflow-y-auto divide-y divide-border/65">
+                {notifications.length > 0 ? (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={(e) => !n.read && handleMarkAsRead(n.id, e)}
+                      className={cn(
+                        "p-4 flex gap-3 hover:bg-muted/40 cursor-pointer transition-colors relative group",
+                        !n.read && "bg-primary/5 hover:bg-primary/10"
+                      )}
+                    >
+                      {/* Icon indicator */}
+                      <div className="mt-0.5 shrink-0">
+                        {getIcon(n.type)}
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        {n.message}
-                      </p>
-                    </div>
 
-                    {/* Unread circle badge */}
-                    {!n.read && (
-                      <span className="absolute top-1/2 right-3.5 -translate-y-1/2 w-2 h-2 rounded-full bg-primary shrink-0" />
-                    )}
+                      {/* Content */}
+                      <div className="flex-1 space-y-1 pr-4">
+                        <div className="flex items-center justify-between">
+                          <p className={cn("text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight")}>
+                            {n.title}
+                          </p>
+                          <span className="text-[9px] text-muted-foreground/80 flex items-center gap-0.5 shrink-0">
+                            {formatRelativeTime(n.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                          {n.message}
+                        </p>
+                      </div>
+
+                      {/* Unread circle badge */}
+                      {!n.read && (
+                        <span className="absolute top-1/2 right-3.5 -translate-y-1/2 w-2 h-2 rounded-full bg-primary shrink-0" />
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-muted/65 flex items-center justify-center mx-auto text-muted-foreground/40">
+                      <Bell className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">All caught up!</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">No notifications for {role} at this time.</p>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-8 text-center space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted/65 flex items-center justify-center mx-auto text-muted-foreground/40">
-                    <Bell className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">All caught up!</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">No notifications for {role} at this time.</p>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* User Profile */}
+        <div className="relative flex items-center" ref={profileDropdownRef}>
+          <button
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="flex items-center gap-2 p-1 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none"
+            aria-label="User profile menu"
+          >
+            {userInfo?.avatarUrl ? (
+              <img
+                src={userInfo.avatarUrl}
+                alt={userInfo.name}
+                className="w-8 h-8 rounded-lg object-cover border border-border/60"
+              />
+            ) : (
+              <div className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
+                {userInfo?.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
+            <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform duration-200", isProfileOpen && "rotate-180")} />
+          </button>
+
+          {isProfileOpen && (
+            <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-2xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* User info details */}
+              <div className="px-3 py-2 border-b border-border/60">
+                <p className="text-xs font-bold text-foreground truncate">{userInfo?.name || 'Loading...'}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{userInfo?.email || ''}</p>
+                <div className="mt-1.5">
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider block text-center w-full",
+                    roleBadges[role] || 'bg-muted text-muted-foreground'
+                  )}>
+                    {role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions list */}
+              <div className="pt-1.5 space-y-0.5">
+                <button
+                  onClick={() => {
+                    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu lưu tạm (localStorage) để bắt đầu nhập liệu sạch từ đầu không?")) {
+                      Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('mangaflow_')) {
+                          localStorage.removeItem(key)
+                        }
+                      })
+                      window.location.reload()
+                    }
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-amber-600 hover:bg-amber-500/5 rounded-xl transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Reset App Data
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )

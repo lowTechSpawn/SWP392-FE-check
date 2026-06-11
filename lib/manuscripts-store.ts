@@ -33,102 +33,7 @@ export interface Annotation {
 const STORAGE_MANUSCRIPTS_KEY = 'mangaflow_manuscripts'
 const STORAGE_ANNOTATIONS_KEY = 'mangaflow_annotations'
 
-// Seed data matching the user's screenshots exactly
-const SEED_MANUSCRIPTS: ManuscriptItem[] = [
-  {
-    id: 'M01',
-    seriesId: 'S11',
-    seriesTitle: 'Steel Horizon',
-    chapterNumber: 15,
-    chapterTitle: 'Iron Will',
-    latestVersion: 'v1',
-    status: 'APPROVED',
-    progress: 100,
-    history: [
-      {
-        version: 'v1',
-        status: 'APPROVED',
-        submittedAt: '2026-03-25T10:00:00Z',
-        reviewedAt: '2026-03-26T14:30:00Z',
-        feedback: 'Excellent line work and pacing. Ready for publishing!'
-      }
-    ],
-    pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4']
-  },
-  {
-    id: 'M02',
-    seriesId: 'S12',
-    seriesTitle: 'Blade of Eternity',
-    chapterNumber: 22,
-    chapterTitle: 'Shadows of the Past',
-    latestVersion: 'v1',
-    status: 'APPROVED',
-    progress: 100,
-    history: [
-      {
-        version: 'v1',
-        status: 'APPROVED',
-        submittedAt: '2026-04-05T09:00:00Z',
-        reviewedAt: '2026-04-07T11:20:00Z',
-        feedback: 'Perfect shading. The story beats flow beautifully.'
-      }
-    ],
-    pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4']
-  },
-  {
-    id: 'M03',
-    seriesId: 'S16',
-    seriesTitle: 'Crimson Protocol',
-    chapterNumber: 9,
-    chapterTitle: 'Final Hack',
-    latestVersion: 'v1',
-    status: 'SUBMITTED',
-    progress: 0, // 0% triggers BR-84 warning: "Cannot approve — chapter completion is 0%, must be 100%"
-    history: [
-      {
-        version: 'v1',
-        status: 'SUBMITTED',
-        submittedAt: '2026-02-12T14:00:00Z'
-      }
-    ],
-    pages: ['Page 5', 'Page 6', 'Page 7', 'Page 8']
-  },
-  {
-    id: 'M04',
-    seriesId: 'S01',
-    seriesTitle: 'Sakura Knights',
-    chapterNumber: 3,
-    chapterTitle: 'Resonance Force',
-    latestVersion: 'v2',
-    status: 'REVISION REQUIRED',
-    progress: 80,
-    history: [
-      {
-        version: 'v2',
-        status: 'REVISION REQUIRED',
-        submittedAt: '2026-03-24T08:00:00Z',
-        reviewedAt: '2026-03-25T16:00:00Z',
-        revisionNumber: 2,
-        feedback: 'Background is better. Page 15 still needs work on the close-up panel.'
-      },
-      {
-        version: 'v1',
-        status: 'APPROVED',
-        submittedAt: '2026-03-28T10:00:00Z',
-        reviewedAt: '2026-03-30T13:40:00Z'
-      },
-      {
-        version: 'v1',
-        status: 'REVISION REQUIRED',
-        submittedAt: '2026-03-20T09:00:00Z',
-        reviewedAt: '2026-03-22T10:30:00Z',
-        revisionNumber: 1,
-        feedback: 'Please refine background grids on the dojo scene.'
-      }
-    ],
-    pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4', 'Page 5']
-  }
-]
+const SEED_MANUSCRIPTS: ManuscriptItem[] = []
 
 const SEED_ANNOTATIONS: Annotation[] = []
 
@@ -140,7 +45,9 @@ function loadManuscripts(): ManuscriptItem[] {
       localStorage.setItem(STORAGE_MANUSCRIPTS_KEY, JSON.stringify(SEED_MANUSCRIPTS))
       return SEED_MANUSCRIPTS
     }
-    return JSON.parse(raw) as ManuscriptItem[]
+    const parsed = JSON.parse(raw) as ManuscriptItem[]
+    // Filter out mock manuscripts based on seriesId length
+    return parsed.filter(m => m.seriesId.length > 3)
   } catch {
     return SEED_MANUSCRIPTS
   }
@@ -217,28 +124,27 @@ export function updateManuscriptStatus(
   // Background API calls to backend C# Web API
   if (typeof window !== 'undefined') {
     if (newStatus === 'APPROVED') {
-      // Flow: Start review -> Approve
-      fetchAPI(`/api/manuscripts/${id}/start-review`, { method: 'POST' })
-        .then(() => {
-          fetchAPI(`/api/manuscripts/${id}/approve`, { method: 'POST' })
-            .then(res => console.log("Approved manuscript on backend successfully", res))
-            .catch(err => console.warn("Failed to approve manuscript on backend:", err))
-        })
-        .catch(err => console.warn("Failed to start review on backend:", err))
+      const payload = {
+        status: 'Approved',
+        feedback: feedbackText || 'Bản vẽ đã được phê duyệt.'
+      }
+      fetchAPI(`/api/manuscripts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      })
+        .then(res => console.log("Approved manuscript on backend successfully", res))
+        .catch(err => console.warn("Failed to approve manuscript on backend:", err))
     } else if (newStatus === 'REVISION REQUIRED') {
       const payload = {
-        revisionNotes: feedbackText || 'Cần sửa đổi bản vẽ'
+        status: 'Rejected',
+        feedback: feedbackText || 'Cần sửa đổi bản vẽ.'
       }
-      fetchAPI(`/api/manuscripts/${id}/start-review`, { method: 'POST' })
-        .then(() => {
-          fetchAPI(`/api/manuscripts/${id}/request-revision`, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          })
-            .then(res => console.log("Requested manuscript revision on backend successfully", res))
-            .catch(err => console.warn("Failed to request manuscript revision on backend:", err))
-        })
-        .catch(err => console.warn("Failed to start review on backend:", err))
+      fetchAPI(`/api/manuscripts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      })
+        .then(res => console.log("Requested manuscript revision on backend successfully", res))
+        .catch(err => console.warn("Failed to request manuscript revision on backend:", err))
     }
   }
 
@@ -295,6 +201,14 @@ export function addAnnotation(manuscriptId: string, versionName: string, text: s
 
 // ---------- Async Backend Synchronizers ----------
 
+const mapBackendManuscriptStatus = (status: string): 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED' => {
+  if (!status) return 'SUBMITTED'
+  const clean = status.trim().toUpperCase()
+  if (clean === 'APPROVED') return 'APPROVED'
+  if (clean === 'REJECTED' || clean === 'REVISION REQUIRED' || clean === 'REVISIONREQUIRED') return 'REVISION REQUIRED'
+  return 'SUBMITTED'
+}
+
 export async function syncManuscriptsFromBackend(): Promise<ManuscriptItem[]> {
   try {
     const response = await fetchAPI<{ data: any[] } | any[]>('/api/manuscripts')
@@ -303,7 +217,7 @@ export async function syncManuscriptsFromBackend(): Promise<ManuscriptItem[]> {
       const backendManuscripts: ManuscriptItem[] = dataList.map(m => {
         const historyList: ManuscriptVersion[] = (m.history || []).map((h: any) => ({
           version: h.versionLabel || `v${h.versionNo}`,
-          status: h.status.toUpperCase() as any,
+          status: mapBackendManuscriptStatus(h.status),
           submittedAt: h.submittedAt || new Date().toISOString(),
           reviewedAt: h.reviewedAt || undefined,
           feedback: h.revisionNotes || h.feedback || undefined,
@@ -313,7 +227,7 @@ export async function syncManuscriptsFromBackend(): Promise<ManuscriptItem[]> {
         if (historyList.length === 0) {
           historyList.push({
             version: m.versionLabel || `v${m.versionNo || 1}`,
-            status: m.status.toUpperCase() as any,
+            status: mapBackendManuscriptStatus(m.status),
             submittedAt: m.submittedAt || new Date().toISOString(),
           })
         }
@@ -325,7 +239,7 @@ export async function syncManuscriptsFromBackend(): Promise<ManuscriptItem[]> {
           chapterNumber: m.chapterNumber || 1,
           chapterTitle: m.chapterTitle || 'Chương mới',
           latestVersion: m.versionLabel || `v${m.versionNo || 1}`,
-          status: m.status.toUpperCase() as any,
+          status: mapBackendManuscriptStatus(m.status),
           progress: m.progress || 100,
           history: historyList,
           pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4']

@@ -1,192 +1,202 @@
 /**
- * Client-side proposals store backed by localStorage.
- * Enforces BR-14 (Proposal Lifecycle), BR-19 (Single Active Proposal Limit).
+ * Backend-integrated proposals store.
+ * Calls seriesService APIs asynchronously.
  */
 
-export type ProposalStatus = 'Draft' | 'Pending Review' | 'Under Review' | 'Approved' | 'Rejected'
+import { seriesService } from "@/services/seriesService";
+
+export type ProposalStatus = 'Draft' | 'Pending Review' | 'Under Review' | 'Approved' | 'Rejected' | 'Active';
 
 export interface Proposal {
-  id: string
-  title: string
-  genre: string
-  publicationType: 'Weekly' | 'Bi-Weekly' | 'Monthly' | 'Quarterly' | 'One-Shot'
-  synopsis: string
-  samplePages: number
-  mangakaId: string
-  status: ProposalStatus
-  createdAt: string
-  submittedAt?: string
-  coverImageUrl?: string
+  id: string;
+  title: string;
+  genre: string;
+  publicationType: 'Weekly' | 'Bi-Weekly' | 'Monthly' | 'Quarterly' | 'One-Shot';
+  synopsis: string;
+  sampleFileUrl: string;
+  mangakaId: string;
+  status: ProposalStatus;
+  createdAt: string;
+  submittedAt?: string;
+  coverImageUrl?: string;
+  rawStatus?: string;
+  sourceZipFileAssetId?: string | null;
 }
 
-const STORAGE_KEY = 'mangaflow_proposals'
+const mapSeriesToProposal = (s: any): Proposal => {
+  let status: ProposalStatus = 'Draft';
+  const rawStatus = s.status || '';
 
-// Pre-seeded mock data matching PROPOSAL_DOCUMENTATION.md §7
-const SEED_PROPOSALS: Proposal[] = [
-  {
-    id: 'PR01',
-    title: 'Whispers of the Deep',
-    genre: 'Fantasy, Horror',
-    publicationType: 'Monthly',
-    synopsis:
-      'An ancient undersea civilization awakens after millennia of slumber. Haruto, a marine biologist, discovers a mysterious signal below the Mariana Trench — only to realize it is a distress call from beings that predate humanity. Together with a reluctant mermaid guide, they must navigate treacherous ocean depths, deciphering a forgotten language and bargaining with eldritch gods, all while a military faction races to weaponize the discovery.',
-    samplePages: 12,
-    mangakaId: 'U02',
-    status: 'Approved',
-    createdAt: '2026-04-01T09:00:00.000Z',
-    submittedAt: '2026-04-02T10:00:00.000Z',
-  },
-  {
-    id: 'PR02',
-    title: 'Sakura Knights',
-    genre: 'Action, Romance',
-    publicationType: 'Weekly',
-    synopsis:
-      'In feudal Japan reimagined with magitech armor, five orphaned warriors bearing enchanted cherry-blossom insignia must unite to repel a demon warlord who can only be slain once all five blades resonate in unison. The catch: two of them are in love and two more have an unresolved blood-feud. As alliances fracture and blossoms fall, they discover the armor itself is alive — and hungers for something darker than victory.',
-    samplePages: 8,
-    mangakaId: 'U01',
-    status: 'Under Review',
-    createdAt: '2026-04-15T14:00:00.000Z',
-    submittedAt: '2026-04-16T08:30:00.000Z',
-  },
-]
-
-function loadFromStorage(): Proposal[] {
-  if (typeof window === 'undefined') return SEED_PROPOSALS
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      // First visit — seed data
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_PROPOSALS))
-      return SEED_PROPOSALS
-    }
-    return JSON.parse(raw) as Proposal[]
-  } catch {
-    return SEED_PROPOSALS
+  if (rawStatus === 'Active' || rawStatus === 'Approved') {
+    status = 'Approved';
+  } else if (rawStatus === 'Cancelled' || rawStatus === 'Rejected') {
+    status = 'Rejected';
+  } else if (rawStatus === 'UnderReview' || rawStatus === 'Under Review' || rawStatus === 'PendingReview' || rawStatus === 'Proposed') {
+    status = 'Pending Review';
+  } else if (rawStatus === 'BoardVoting') {
+    status = 'Under Review';
+  } else {
+    status = 'Draft';
   }
+
+  return {
+    id: s.id,
+    title: s.title,
+    genre: s.genre ? s.genre.join(', ') : '',
+    publicationType: s.type as any,
+    synopsis: s.description || '',
+    sampleFileUrl: s.sampleFileUrl || '',
+    mangakaId: s.mangakaId || '',
+    status: status,
+    createdAt: s.createdAt || new Date().toISOString(),
+    submittedAt: s.createdAt,
+    coverImageUrl: s.coverImageUrl,
+    rawStatus: rawStatus,
+    sourceZipFileAssetId: s.sourceZipFileAssetId || null,
+  };
+};
+
+export async function getProposals(): Promise<Proposal[]> {
+  const list = await seriesService.listSeries();
+  return list.map(mapSeriesToProposal);
 }
 
-function saveToStorage(proposals: Proposal[]): void {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(proposals))
+export async function getProposalsByMangaka(mangakaId: string): Promise<Proposal[]> {
+  const list = await seriesService.listSeries();
+  const mapped = list.map(mapSeriesToProposal);
+  return mapped.filter((p) => p.mangakaId.toLowerCase() === mangakaId.toLowerCase());
 }
 
-// ---------- Public API ----------
-
-export function getProposals(): Proposal[] {
-  return loadFromStorage()
-}
-
-export function getProposalsByMangaka(mangakaId: string): Proposal[] {
-  return loadFromStorage().filter((p) => p.mangakaId === mangakaId)
-}
-
-export function getProposalById(id: string): Proposal | undefined {
-  return loadFromStorage().find((p) => p.id === id)
+export async function getProposalById(id: string): Promise<Proposal | undefined> {
+  try {
+    const s = await seriesService.getSeriesById(id);
+    return mapSeriesToProposal(s);
+  } catch {
+    return undefined;
+  }
 }
 
 /**
  * BR-19: Returns true if the mangaka already has a proposal in Pending Review or Under Review.
  */
-export function hasPendingProposal(mangakaId: string): boolean {
-  return loadFromStorage().some(
+export async function hasPendingProposal(mangakaId: string): Promise<boolean> {
+  const list = await getProposals();
+  return list.some(
     (p) =>
-      p.mangakaId === mangakaId &&
-      (p.status === 'Pending Review' || p.status === 'Under Review'),
-  )
+      p.mangakaId.toLowerCase() === mangakaId.toLowerCase() &&
+      (p.status === 'Pending Review' || p.status === 'Under Review')
+  );
 }
 
 /**
  * BR-17: Returns true if there is already an Active series with this exact title.
- * (We store active series titles separately; here we just check approved proposals.)
  */
-export function isTitleDuplicate(title: string, excludeId?: string): boolean {
-  const all = loadFromStorage()
-  return all.some(
+export async function isTitleDuplicate(title: string, excludeId?: string): Promise<boolean> {
+  const list = await getProposals();
+  return list.some(
     (p) =>
       p.title.toLowerCase() === title.toLowerCase() &&
-      p.status !== 'Rejected' &&
-      p.id !== excludeId,
-  )
+      p.status === 'Approved' &&
+      p.id !== excludeId
+  );
 }
 
 /**
- * Save a new proposal as Draft — BR-19 only blocks Submit, not Draft save.
+ * Save a new proposal as Draft.
  */
-export function saveDraft(
+export async function saveDraft(
   data: Omit<Proposal, 'id' | 'status' | 'createdAt'>,
-): Proposal {
-  const proposals = loadFromStorage()
-  const newProposal: Proposal = {
-    ...data,
-    id: `PR${String(proposals.length + 1).padStart(2, '0')}`,
-    status: 'Draft',
-    createdAt: new Date().toISOString(),
-  }
-  proposals.push(newProposal)
-  saveToStorage(proposals)
-  return newProposal
+): Promise<Proposal> {
+  const res = await seriesService.submitProposal({
+    title: data.title,
+    genre: data.genre,
+    publicationType: data.publicationType,
+    synopsis: data.synopsis,
+    sampleFileUrl: data.sampleFileUrl,
+    coverImageUrl: data.coverImageUrl,
+    mangakaId: data.mangakaId,
+    sourceZipFileAssetId: data.sourceZipFileAssetId,
+    status: 'Draft'
+  });
+  return mapSeriesToProposal(res);
 }
 
 /**
- * Submit a proposal for review — sets status to Pending Review.
- * Caller must validate BR-15, BR-17, BR-19 before calling this.
+ * Submit a proposal for review.
  */
-export function submitProposal(
+export async function submitProposal(
   data: Omit<Proposal, 'id' | 'status' | 'createdAt' | 'submittedAt'>,
-): Proposal {
-  const proposals = loadFromStorage()
-  const newProposal: Proposal = {
-    ...data,
-    id: `PR${String(proposals.length + 1).padStart(2, '0')}`,
-    status: 'Pending Review',
-    createdAt: new Date().toISOString(),
-    submittedAt: new Date().toISOString(),
-  }
-  proposals.push(newProposal)
-  saveToStorage(proposals)
-  return newProposal
+): Promise<Proposal> {
+  const res = await seriesService.submitProposal({
+    title: data.title,
+    genre: data.genre,
+    publicationType: data.publicationType,
+    synopsis: data.synopsis,
+    sampleFileUrl: data.sampleFileUrl,
+    coverImageUrl: data.coverImageUrl,
+    mangakaId: data.mangakaId,
+    sourceZipFileAssetId: data.sourceZipFileAssetId,
+    status: 'PendingReview'
+  });
+  return mapSeriesToProposal(res);
 }
 
 /**
- * Update an existing draft proposal (BR-16: only drafts can be edited).
+ * Update an existing draft proposal.
  */
-export function updateDraft(
+export async function updateDraft(
   id: string,
   updates: Partial<Omit<Proposal, 'id' | 'mangakaId' | 'createdAt'>>,
-): Proposal | null {
-  const proposals = loadFromStorage()
-  const idx = proposals.findIndex((p) => p.id === id)
-  if (idx === -1) return null
-  const existing = proposals[idx]
-  if (existing.status !== 'Draft') return null // BR-16 guard
-  const updated = { ...existing, ...updates }
-  proposals[idx] = updated
-  saveToStorage(proposals)
-  return updated
+): Promise<Proposal | null> {
+  const existing = await getProposalById(id);
+  if (!existing || existing.status !== 'Draft') return null;
+  const updatedData = { ...existing, ...updates };
+  const res = await seriesService.submitProposal({
+    title: updatedData.title,
+    genre: updatedData.genre,
+    publicationType: updatedData.publicationType,
+    synopsis: updatedData.synopsis,
+    sampleFileUrl: updatedData.sampleFileUrl,
+    coverImageUrl: updatedData.coverImageUrl,
+    mangakaId: updatedData.mangakaId,
+    sourceZipFileAssetId: updatedData.sourceZipFileAssetId,
+    status: 'Draft'
+  });
+  return mapSeriesToProposal(res);
 }
 
 /**
  * Delete a Draft proposal.
  */
-export function deleteDraft(id: string): boolean {
-  const proposals = loadFromStorage()
-  const idx = proposals.findIndex((p) => p.id === id && p.status === 'Draft')
-  if (idx === -1) return false
-  proposals.splice(idx, 1)
-  saveToStorage(proposals)
-  return true
+export async function deleteDraft(id: string): Promise<boolean> {
+  try {
+    await seriesService.updateProposalStatus(id, 'Cancelled');
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Update the status of any proposal (e.g. approve or reject by Editorial Board).
+ * Update the status of any proposal.
  */
-export function updateProposalStatus(id: string, status: ProposalStatus): boolean {
-  const proposals = loadFromStorage()
-  const idx = proposals.findIndex((p) => p.id === id)
-  if (idx === -1) return false
-  proposals[idx].status = status
-  saveToStorage(proposals)
-  return true
+export async function updateProposalStatus(
+  id: string,
+  status: ProposalStatus | 'Active',
+  rejectReason?: string
+): Promise<boolean> {
+  try {
+    // Map to backend status
+    let backendStatus = 'Draft';
+    if (status === 'Approved') backendStatus = 'Active';
+    else if (status === 'Active') backendStatus = 'Active';
+    else if (status === 'Rejected') backendStatus = 'Rejected';
+    else if (status === 'Pending Review') backendStatus = 'PendingReview';
+    else if (status === 'Under Review') backendStatus = 'UnderReview';
+    
+    await seriesService.updateProposalStatus(id, backendStatus, rejectReason);
+    return true;
+  } catch {
+    return false;
+  }
 }
-

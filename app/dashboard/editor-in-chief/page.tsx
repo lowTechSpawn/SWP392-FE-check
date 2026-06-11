@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
   ShieldAlert,
-  PenTool,
+  PencilLine,
   Clock,
   CheckCircle2,
   XCircle,
@@ -55,8 +55,9 @@ export default function EditorInChiefDashboard() {
   const [mounted, setMounted] = useState(false)
   const [warnings, setWarnings] = useState<Record<string, boolean>>({})
 
-  const loadProposals = useCallback(() => {
-    setProposals(getProposals())
+  const loadProposals = useCallback(async () => {
+    const list = await getProposals()
+    setProposals(list)
   }, [])
 
   useEffect(() => {
@@ -65,11 +66,11 @@ export default function EditorInChiefDashboard() {
   }, [loadProposals])
 
   // Chief Override function
-  const handleVetoDecision = (id: string, newStatus: 'Approved' | 'Rejected') => {
+  const handleVetoDecision = async (id: string, newStatus: 'Approved' | 'Rejected') => {
     const proposal = proposals.find(p => p.id === id)
     if (!proposal) return
 
-    const success = updateProposalStatus(id, newStatus)
+    const success = await updateProposalStatus(id, newStatus)
     if (success) {
       if (newStatus === 'Approved') {
         toast.success(`Veto Approved: "${proposal.title}" is now Active. Tantou Editor automatically assigned!`)
@@ -102,7 +103,7 @@ export default function EditorInChiefDashboard() {
           'error'
         )
       }
-      loadProposals()
+      await loadProposals()
     } else {
       toast.error('Failed to execute override decision.')
     }
@@ -122,8 +123,8 @@ export default function EditorInChiefDashboard() {
     )
   }
 
-  const handleDirectDeactivate = (id: string, title: string) => {
-    const success = updateProposalStatus(id, 'Rejected')
+  const handleDirectDeactivate = async (id: string, title: string) => {
+    const success = await updateProposalStatus(id, 'Rejected')
     if (success) {
       toast.error(`Series "${title}" has been deactivated and serialization cancelled.`)
       
@@ -141,7 +142,7 @@ export default function EditorInChiefDashboard() {
         'error'
       )
       
-      loadProposals()
+      await loadProposals()
     } else {
       toast.error('Failed to deactivate series.')
     }
@@ -223,7 +224,7 @@ export default function EditorInChiefDashboard() {
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <PenTool className="w-4 h-4" />
+          <PencilLine className="w-4 h-4" />
           Veto Override Panel ({pendingOverrideProposals.length})
         </button>
         <button

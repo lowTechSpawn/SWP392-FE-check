@@ -10,7 +10,7 @@ import {
   CheckCircle, 
   BarChart3, 
   Layers, 
-  PenTool, 
+  PencilLine, 
   ClipboardList, 
   ShieldAlert,
   ChevronRight,
@@ -169,7 +169,7 @@ export default function LandingPage() {
             {/* Feature 1 */}
             <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group">
               <div className="bg-primary/10 text-primary w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <PenTool className="w-6 h-6" />
+                <PencilLine className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold mb-2 text-foreground">Series Proposals</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">

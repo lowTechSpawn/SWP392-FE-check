@@ -258,3 +258,304 @@ Dự án này được phát triển phục vụ mục đích học tập trong 
 <p align="center">
   Made with ❤️ by <strong>Team SU26SWP04</strong> — FPT University
 </p>
+
+## Database
+
+Table "Roles" {
+  "RoleId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "RoleName" NVARCHAR(50) [not null]
+
+  Indexes {
+    RoleId [pk, name: "PK_Roles"]
+    RoleName [unique, name: "UQ_Roles_RoleName"]
+  }
+}
+
+Table "Users" {
+  "UserId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "RoleId" UNIQUEIDENTIFIER [not null]
+  "UserName" NVARCHAR(100) [not null]
+  "Email" NVARCHAR(255) [not null]
+  "PasswordHash" NVARCHAR(MAX) [not null]
+  "DisplayName" NVARCHAR(150) [not null]
+  "IsActive" BIT [not null, default: 1]
+  "DeletedAt" DATETIME2
+
+  Indexes {
+    UserId [pk, name: "PK_Users"]
+    Email [unique, name: "UQ_Users_Email"]
+  }
+}
+
+Table "Genre" {
+  "GenreId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "GenreName" NVARCHAR(100) [not null]
+
+  Indexes {
+    GenreId [pk, name: "PK_Genre"]
+    GenreName [unique, name: "UQ_Genre_GenreName"]
+  }
+}
+
+Table "FileAsset" {
+  "FileAssetId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "FileName" NVARCHAR(255) [not null]
+  "FileUrl" NVARCHAR(1000) [not null]
+  "FileType" NVARCHAR(50) [not null]
+  "UploadedByUserId" UNIQUEIDENTIFIER [not null]
+  "DeletedAt" DATETIME2
+
+  Indexes {
+    FileAssetId [pk, name: "PK_FileAsset"]
+  }
+}
+
+Table "Series" {
+  "SeriesId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "MangakaId" UNIQUEIDENTIFIER [not null]
+  "GenreId" UNIQUEIDENTIFIER [not null]
+  "Title" NVARCHAR(100) [not null]
+  "Synopsis" NVARCHAR(2000) [not null]
+  "PublicationType" NVARCHAR(50) [not null]
+  "Status" NVARCHAR(50) [not null]
+  "CoverFileAssetId" UNIQUEIDENTIFIER
+  "DeletedAt" DATETIME2
+
+  Indexes {
+    SeriesId [pk, name: "PK_Series"]
+  }
+}
+
+Table "ProposalPage" {
+  "ProposalPageId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "FileAssetId" UNIQUEIDENTIFIER [not null]
+  "PageNumber" INT [not null]
+
+  Indexes {
+    ProposalPageId [pk, name: "PK_ProposalPage"]
+  }
+}
+
+Table "UserAssignments" {
+  "UserAssignmentId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "UserId" UNIQUEIDENTIFIER [not null]
+  "RoleId" UNIQUEIDENTIFIER [not null]
+  "AssignedByUserId" UNIQUEIDENTIFIER [not null]
+  "DeletedAt" DATETIME2
+
+  Indexes {
+    UserAssignmentId [pk, name: "PK_UserAssignments"]
+  }
+}
+
+Table "BoardVotes" {
+  "BoardVoteId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "BoardMemberId" UNIQUEIDENTIFIER [not null]
+  "VoteValue" NVARCHAR(50) [not null]
+  "Comment" NVARCHAR(1000)
+
+  Indexes {
+    BoardVoteId [pk, name: "PK_BoardVotes"]
+    (SeriesId, BoardMemberId) [unique, name: "UQ_BoardVotes_Series_BoardMember"]
+  }
+}
+
+Table "BoardDecisions" {
+  "BoardDecisionId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "FinalDecision" NVARCHAR(50) [not null]
+  "Reason" NVARCHAR(1000)
+  "DecidedByUserId" UNIQUEIDENTIFIER [not null]
+
+  Indexes {
+    BoardDecisionId [pk, name: "PK_BoardDecisions"]
+  }
+}
+
+Table "Chapters" {
+  "ChapterId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "ChapterNumber" INT [not null]
+  "Title" NVARCHAR(150) [not null]
+  "Status" NVARCHAR(50) [not null]
+  "DeletedAt" DATETIME2
+
+  Indexes {
+    ChapterId [pk, name: "PK_Chapters"]
+    (SeriesId, ChapterNumber) [unique, name: "UQ_Chapters_Series_ChapterNumber"]
+  }
+}
+
+Table "Manuscripts" {
+  "ManuscriptId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "ChapterId" UNIQUEIDENTIFIER [not null]
+  "SubmittedByUserId" UNIQUEIDENTIFIER [not null]
+  "SourceFileAssetId" UNIQUEIDENTIFIER [not null]
+  "VersionNumber" INT [not null]
+  "Status" NVARCHAR(50) [not null]
+
+  Indexes {
+    ManuscriptId [pk, name: "PK_Manuscripts"]
+  }
+}
+
+Table "PageTasks" {
+  "PageTaskId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "ChapterId" UNIQUEIDENTIFIER [not null]
+  "AssignedToUserId" UNIQUEIDENTIFIER [not null]
+  "AssignedByUserId" UNIQUEIDENTIFIER [not null]
+  "PageNumber" INT [not null]
+  "Description" NVARCHAR(1000)
+  "Status" NVARCHAR(50) [not null]
+
+  Indexes {
+    PageTaskId [pk, name: "PK_PageTasks"]
+  }
+}
+
+Table "PageTaskSubmissions" {
+  "PageTaskSubmissionId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "PageTaskId" UNIQUEIDENTIFIER [not null]
+  "SubmittedByUserId" UNIQUEIDENTIFIER [not null]
+  "FileAssetId" UNIQUEIDENTIFIER [not null]
+  "Note" NVARCHAR(1000)
+  "Status" NVARCHAR(50) [not null]
+
+  Indexes {
+    PageTaskSubmissionId [pk, name: "PK_PageTaskSubmissions"]
+  }
+}
+
+Table "Annotations" {
+  "AnnotationId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "ManuscriptId" UNIQUEIDENTIFIER [not null]
+  "CreatedByUserId" UNIQUEIDENTIFIER [not null]
+  "PageNumber" INT [not null]
+  "PositionX" DECIMAL(18,4) [not null]
+  "PositionY" DECIMAL(18,4) [not null]
+  "Content" NVARCHAR(MAX) [not null]
+
+  Indexes {
+    AnnotationId [pk, name: "PK_Annotations"]
+  }
+}
+
+Table "VoteRecords" {
+  "VoteRecordId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "VoteCount" INT [not null]
+  "ReaderCount" INT [not null]
+
+  Indexes {
+    VoteRecordId [pk, name: "PK_VoteRecords"]
+  }
+}
+
+Table "RankingSnapshots" {
+  "RankingSnapshotId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "RankNumber" INT [not null]
+  "Score" DECIMAL(18,2) [not null]
+
+  Indexes {
+    RankingSnapshotId [pk, name: "PK_RankingSnapshots"]
+  }
+}
+
+Table "Escalations" {
+  "EscalationId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "SeriesId" UNIQUEIDENTIFIER [not null]
+  "PageTaskId" UNIQUEIDENTIFIER
+  "RaisedByUserId" UNIQUEIDENTIFIER [not null]
+  "AssignedToUserId" UNIQUEIDENTIFIER
+  "Reason" NVARCHAR(1000) [not null]
+  "Status" NVARCHAR(50) [not null]
+
+  Indexes {
+    EscalationId [pk, name: "PK_Escalations"]
+  }
+}
+
+Table "Notifications" {
+  "NotificationId" UNIQUEIDENTIFIER [not null, default: `NEWSEQUENTIALID()`]
+  "UserId" UNIQUEIDENTIFIER [not null]
+  "Title" NVARCHAR(150) [not null]
+  "Message" NVARCHAR(1000) [not null]
+  "IsRead" BIT [not null, default: 0]
+
+  Indexes {
+    NotificationId [pk, name: "PK_Notifications"]
+  }
+}
+
+Ref "FK_Users_Roles":"Roles"."RoleId" < "Users"."RoleId"
+
+Ref "FK_FileAsset_Users":"Users"."UserId" < "FileAsset"."UploadedByUserId"
+
+Ref "FK_Series_Mangaka":"Users"."UserId" < "Series"."MangakaId"
+
+Ref "FK_Series_Genre":"Genre"."GenreId" < "Series"."GenreId"
+
+Ref "FK_Series_CoverFileAsset":"FileAsset"."FileAssetId" < "Series"."CoverFileAssetId"
+
+Ref "FK_ProposalPage_Series":"Series"."SeriesId" < "ProposalPage"."SeriesId"
+
+Ref "FK_ProposalPage_FileAsset":"FileAsset"."FileAssetId" < "ProposalPage"."FileAssetId"
+
+Ref "FK_UserAssignments_Series":"Series"."SeriesId" < "UserAssignments"."SeriesId"
+
+Ref "FK_UserAssignments_User":"Users"."UserId" < "UserAssignments"."UserId"
+
+Ref "FK_UserAssignments_Role":"Roles"."RoleId" < "UserAssignments"."RoleId"
+
+Ref "FK_UserAssignments_AssignedBy":"Users"."UserId" < "UserAssignments"."AssignedByUserId"
+
+Ref "FK_BoardVotes_Series":"Series"."SeriesId" < "BoardVotes"."SeriesId"
+
+Ref "FK_BoardVotes_BoardMember":"Users"."UserId" < "BoardVotes"."BoardMemberId"
+
+Ref "FK_BoardDecisions_Series":"Series"."SeriesId" < "BoardDecisions"."SeriesId"
+
+Ref "FK_BoardDecisions_DecidedBy":"Users"."UserId" < "BoardDecisions"."DecidedByUserId"
+
+Ref "FK_Chapters_Series":"Series"."SeriesId" < "Chapters"."SeriesId"
+
+Ref "FK_Manuscripts_Chapters":"Chapters"."ChapterId" < "Manuscripts"."ChapterId"
+
+Ref "FK_Manuscripts_SubmittedBy":"Users"."UserId" < "Manuscripts"."SubmittedByUserId"
+
+Ref "FK_Manuscripts_SourceFile":"FileAsset"."FileAssetId" < "Manuscripts"."SourceFileAssetId"
+
+Ref "FK_PageTasks_Chapters":"Chapters"."ChapterId" < "PageTasks"."ChapterId"
+
+Ref "FK_PageTasks_AssignedTo":"Users"."UserId" < "PageTasks"."AssignedToUserId"
+
+Ref "FK_PageTasks_AssignedBy":"Users"."UserId" < "PageTasks"."AssignedByUserId"
+
+Ref "FK_PageTaskSubmissions_PageTasks":"PageTasks"."PageTaskId" < "PageTaskSubmissions"."PageTaskId"
+
+Ref "FK_PageTaskSubmissions_SubmittedBy":"Users"."UserId" < "PageTaskSubmissions"."SubmittedByUserId"
+
+Ref "FK_PageTaskSubmissions_FileAsset":"FileAsset"."FileAssetId" < "PageTaskSubmissions"."FileAssetId"
+
+Ref "FK_Annotations_Manuscripts":"Manuscripts"."ManuscriptId" < "Annotations"."ManuscriptId"
+
+Ref "FK_Annotations_CreatedBy":"Users"."UserId" < "Annotations"."CreatedByUserId"
+
+Ref "FK_VoteRecords_Series":"Series"."SeriesId" < "VoteRecords"."SeriesId"
+
+Ref "FK_RankingSnapshots_Series":"Series"."SeriesId" < "RankingSnapshots"."SeriesId"
+
+Ref "FK_Escalations_Series":"Series"."SeriesId" < "Escalations"."SeriesId"
+
+Ref "FK_Escalations_PageTasks":"PageTasks"."PageTaskId" < "Escalations"."PageTaskId"
+
+Ref "FK_Escalations_RaisedBy":"Users"."UserId" < "Escalations"."RaisedByUserId"
+
+Ref "FK_Escalations_AssignedTo":"Users"."UserId" < "Escalations"."AssignedToUserId"
+
+Ref "FK_Notifications_Users":"Users"."UserId" < "Notifications"."UserId"
+

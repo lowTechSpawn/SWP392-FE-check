@@ -28,117 +28,7 @@ export interface RankingRow {
 }
 
 const STORAGE_KEY = 'mangaflow_votes'
-
-// Seed data matching the user's design image perfectly
-const SEED_VOTES: VoteRecord[] = [
-  // 2026-Q1 Confirmed Rank list
-  {
-    id: 'V01',
-    seriesId: 'S11',
-    seriesTitle: 'Steel Horizon',
-    genre: 'Seinen',
-    chapterId: 'C101',
-    chapterTitle: 'Ch. 24: Iron Clad',
-    period: '2026-Q1',
-    readerCount: 12000,
-    voteCount: 9850,
-    score: 82.08,
-    confirmed: true,
-    createdAt: '2026-03-20T10:00:00Z',
-    confirmedAt: '2026-03-25T15:00:00Z'
-  },
-  {
-    id: 'V02',
-    seriesId: 'S12',
-    seriesTitle: 'Blade of Eternity',
-    genre: 'Shōnen',
-    chapterId: 'C102',
-    chapterTitle: 'Ch. 42: Resonating Wills',
-    period: '2026-Q1',
-    readerCount: 15000,
-    voteCount: 11800,
-    score: 78.67,
-    confirmed: true,
-    createdAt: '2026-03-20T10:05:00Z',
-    confirmedAt: '2026-03-25T15:01:00Z'
-  },
-  {
-    id: 'V03',
-    seriesId: 'S13',
-    seriesTitle: 'Moonlit Academy',
-    genre: 'Shōjo',
-    chapterId: 'C103',
-    chapterTitle: 'Ch. 12: Starlight Waltz',
-    period: '2026-Q1',
-    readerCount: 8500,
-    voteCount: 5540,
-    score: 65.18,
-    confirmed: true,
-    createdAt: '2026-03-20T10:10:00Z',
-    confirmedAt: '2026-03-25T15:02:00Z'
-  },
-  {
-    id: 'V04',
-    seriesId: 'S14',
-    seriesTitle: 'Garden of Stars',
-    genre: 'Romance',
-    chapterId: 'C104',
-    chapterTitle: 'Ch. 18: Petals of Time',
-    period: '2026-Q1',
-    readerCount: 7500,
-    voteCount: 4185,
-    score: 55.8,
-    confirmed: true,
-    createdAt: '2026-03-20T10:15:00Z',
-    confirmedAt: '2026-03-25T15:03:00Z'
-  },
-  {
-    id: 'V05',
-    seriesId: 'S15',
-    seriesTitle: 'Ramen Dynasty',
-    genre: 'Slice of Life',
-    chapterId: 'C105',
-    chapterTitle: 'Ch. 30: Secret Broth',
-    period: '2026-Q1',
-    readerCount: 6000,
-    voteCount: 2720,
-    score: 45.33,
-    confirmed: true,
-    createdAt: '2026-03-20T10:20:00Z',
-    confirmedAt: '2026-03-25T15:04:00Z'
-  },
-  {
-    id: 'V06',
-    seriesId: 'S16',
-    seriesTitle: 'Crimson Protocol',
-    genre: 'Action',
-    chapterId: 'C106',
-    chapterTitle: 'Ch. 8: Cybernetic Breach',
-    period: '2026-Q1',
-    readerCount: 9000,
-    voteCount: 1980,
-    score: 22.0,
-    confirmed: true,
-    createdAt: '2026-03-20T10:25:00Z',
-    confirmedAt: '2026-03-25T15:05:00Z'
-  },
-
-  // 2026-Q2 Pending Review data
-  {
-    id: 'V07',
-    seriesId: 'S12',
-    seriesTitle: 'Blade of Eternity',
-    genre: 'Shōnen',
-    chapterId: 'C202',
-    chapterTitle: 'Ch. 43: Unbreakable Shield',
-    period: '2026-Q2',
-    readerCount: 16000,
-    voteCount: 12500,
-    score: 78.125,
-    confirmed: false,
-    createdAt: '2026-05-28T08:00:00Z'
-  }
-]
+const SEED_VOTES: VoteRecord[] = []
 
 function loadVotes(): VoteRecord[] {
   if (typeof window === 'undefined') return SEED_VOTES
@@ -148,7 +38,9 @@ function loadVotes(): VoteRecord[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_VOTES))
       return SEED_VOTES
     }
-    return JSON.parse(raw) as VoteRecord[]
+    const parsed = JSON.parse(raw) as VoteRecord[]
+    // Filter out any mock vote records based on seriesId length
+    return parsed.filter(v => v.seriesId.length > 3)
   } catch {
     return SEED_VOTES
   }

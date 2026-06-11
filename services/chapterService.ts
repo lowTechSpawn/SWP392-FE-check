@@ -1,4 +1,4 @@
-import { fetchWithFallback } from "./api";
+import { fetchAPI } from "./api";
 
 export interface Chapter {
   id: string;
@@ -12,65 +12,65 @@ export interface Chapter {
   createdAt: string;
 }
 
-export const MOCK_CHAPTERS: Chapter[] = [
-  {
-    id: 'CH01',
-    seriesId: 'S01',
-    number: 1,
-    title: 'The Resonance of Blades',
-    status: 'Published',
-    totalPages: 19,
-    publicationDate: '2026-05-15',
-    deadline: '2026-05-01',
-    createdAt: '2026-04-20T10:00:00Z',
-  },
-  {
-    id: 'CH02',
-    seriesId: 'S01',
-    number: 2,
-    title: 'Cherry Blossom Magitech',
-    status: 'In Progress',
-    totalPages: 18,
-    publicationDate: '2026-06-15',
-    deadline: '2026-06-01',
-    createdAt: '2026-05-15T09:00:00Z',
-  },
-  {
-    id: 'CH03',
-    seriesId: 'S02',
-    number: 1,
-    title: 'The Spy\'s Family',
-    status: 'Published',
-    totalPages: 24,
-    publicationDate: '2026-05-10',
-    deadline: '2026-04-26',
-    createdAt: '2026-04-10T08:00:00Z',
-  },
-  {
-    id: 'CH04',
-    seriesId: 'S05',
-    number: 1044,
-    title: 'Warrior of Liberation',
-    status: 'Published',
-    totalPages: 17,
-    publicationDate: '2026-05-01',
-    deadline: '2026-04-17',
-    createdAt: '2026-04-01T07:00:00Z',
-  }
-];
-
 export const chapterService = {
-  listChapters: async () => {
-    return fetchWithFallback<Chapter[]>("/api/chapters", MOCK_CHAPTERS);
+  listChapters: async (): Promise<Chapter[]> => {
+    const res = await fetchAPI<{ data: any[] }>("/api/chapters");
+    const list = res.data || res || [];
+    return list.map((c: any) => ({
+      id: c.chapterId || c.id,
+      seriesId: c.seriesId,
+      number: c.chapterNo || c.number,
+      title: c.title,
+      status: c.status,
+      totalPages: c.totalPages,
+      publicationDate: c.publicationDate?.split('T')[0] || '',
+      deadline: c.submissionDeadline?.split('T')[0] || c.deadline?.split('T')[0] || '',
+      createdAt: c.createdAt || new Date().toISOString()
+    }));
   },
-  getChaptersBySeries: async (seriesId: string) => {
-    const list = MOCK_CHAPTERS.filter(c => c.seriesId === seriesId);
-    return fetchWithFallback<Chapter[]>(`/api/chapters/series/${seriesId}`, list);
+
+  getChaptersBySeries: async (seriesId: string): Promise<Chapter[]> => {
+    const res = await fetchAPI<{ data: any[] }>(`/api/series/${seriesId}/chapters`);
+    const list = res.data || res || [];
+    return list.map((c: any) => ({
+      id: c.chapterId || c.id,
+      seriesId: c.seriesId,
+      number: c.chapterNo || c.number,
+      title: c.title,
+      status: c.status,
+      totalPages: c.totalPages,
+      publicationDate: c.publicationDate?.split('T')[0] || '',
+      deadline: c.submissionDeadline?.split('T')[0] || c.deadline?.split('T')[0] || '',
+      createdAt: c.createdAt || new Date().toISOString()
+    }));
   },
+
   createChapter: async (chapterData: any) => {
-    return fetchWithFallback<any>("/api/chapters", { success: true, data: chapterData });
+    const payload = {
+      seriesId: chapterData.seriesId,
+      chapterNo: Number(chapterData.number || chapterData.chapterNo || 1),
+      title: chapterData.title,
+      totalPages: Number(chapterData.totalPages || 20),
+      publicationDate: chapterData.publicationDate ? new Date(chapterData.publicationDate).toISOString() : new Date().toISOString(),
+      submissionDeadline: chapterData.deadline ? new Date(chapterData.deadline).toISOString() : new Date().toISOString()
+    };
+    return fetchAPI<any>("/api/chapters", {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
   },
+
   updateChapter: async (id: string, chapterData: any) => {
-    return fetchWithFallback<any>(`/api/chapters/${id}`, { success: true, data: chapterData });
+    const payload = {
+      title: chapterData.title,
+      totalPages: chapterData.totalPages ? Number(chapterData.totalPages) : undefined,
+      publicationDate: chapterData.publicationDate ? new Date(chapterData.publicationDate).toISOString() : undefined,
+      submissionDeadline: chapterData.deadline ? new Date(chapterData.deadline).toISOString() : undefined,
+      status: chapterData.status
+    };
+    return fetchAPI<any>(`/api/chapters/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
   }
 };

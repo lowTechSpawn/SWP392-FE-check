@@ -5,7 +5,77 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { seriesProposalSchema, type SeriesProposalInput } from '@/lib/validation'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp, AlertCircle, BookOpen, FileText } from 'lucide-react'
+import { ChevronDown, ChevronUp, AlertCircle, BookOpen, FileText, Image as ImageIcon, Upload, X } from 'lucide-react'
+import { API_BASE_URL } from '@/lib/constants'
+
+const uploadSampleImagesToBackend = async (files: File[]): Promise<string> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+  const formData = new FormData();
+  formData.append('category', '2'); // 2 is ProposalSamplePage
+
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
+
+  const response = await fetch(`${API_BASE_URL}/api/files`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    }
+  });
+
+  if (!response.ok) {
+    let errMsg = "Tải lên các trang mẫu thất bại.";
+    try {
+      const errRes = await response.json();
+      if (errRes.message) errMsg = errRes.message;
+    } catch {}
+    throw new Error(errMsg);
+  }
+
+  const resData = await response.json();
+  const fileAssetIds: string[] = (resData?.data?.files || []).map((f: any) => f.fileAssetId).filter(Boolean);
+  
+  if (fileAssetIds.length < 5) {
+    throw new Error("Không đủ số lượng file asset ID trả về từ backend (yêu cầu tối thiểu 5 trang).");
+  }
+  
+  return fileAssetIds.join(',');
+};
+
+const uploadSourceZipToBackend = async (file: File): Promise<string> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+  const formData = new FormData();
+  formData.append('category', '1'); // 1 is ProposalSource
+  formData.append('files', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/files`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    }
+  });
+
+  if (!response.ok) {
+    let errMsg = "Tải lên tệp tin nguồn ZIP thất bại.";
+    try {
+      const errRes = await response.json();
+      if (errRes.message) errMsg = errRes.message;
+    } catch {}
+    throw new Error(errMsg);
+  }
+
+  const resData = await response.json();
+  const fileAssetIds: string[] = (resData?.data?.files || []).map((f: any) => f.fileAssetId).filter(Boolean);
+  
+  if (fileAssetIds.length === 0) {
+    throw new Error("Không tìm thấy file asset ID trả về cho tệp tin nguồn ZIP.");
+  }
+  
+  return fileAssetIds[0];
+};
 
 interface SeriesProposalFormProps {
   onSubmit: (data: SeriesProposalInput, action: 'draft' | 'submit') => Promise<void>
@@ -44,6 +114,10 @@ export function SeriesProposalForm({
   const [selectedGenres, setSelectedGenres] = useState<string[]>(
     defaultValues?.genre ? defaultValues.genre.split(', ').filter(Boolean) : []
   )
+  const [sampleImages, setSampleImages] = useState<(File | null)[]>([null, null, null, null, null])
+  const [samplePreviews, setSamplePreviews] = useState<(string | null)[]>([null, null, null, null, null])
+  const [sourceZipFile, setSourceZipFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -60,10 +134,59 @@ export function SeriesProposalForm({
       genre: defaultValues?.genre ?? '',
       publicationType: defaultValues?.publicationType ?? 'Weekly',
       synopsis: defaultValues?.synopsis ?? '',
-      samplePages: defaultValues?.samplePages ?? 5,
+      sampleFileUrl: defaultValues?.sampleFileUrl ?? '',
       coverImageUrl: defaultValues?.coverImageUrl ?? '',
+      sourceZipFileAssetId: defaultValues?.sourceZipFileAssetId ?? null,
     },
   })
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      samplePreviews.forEach((preview) => {
+        if (preview) URL.revokeObjectURL(preview)
+      })
+    }
+  }, [samplePreviews])
+
+  const handleSampleImageChange = (index: number, file: File | null) => {
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Vui lòng chỉ chọn các tệp tin hình ảnh (.jpg, .jpeg, .png, .gif, .webp).')
+        return
+      }
+      
+      const newImages = [...sampleImages]
+      newImages[index] = file
+      setSampleImages(newImages)
+
+      const newPreviews = [...samplePreviews]
+      if (newPreviews[index]) {
+        URL.revokeObjectURL(newPreviews[index]!)
+      }
+      newPreviews[index] = URL.createObjectURL(file)
+      setSamplePreviews(newPreviews)
+
+      const allFilled = newImages.every(img => img !== null)
+      if (allFilled) {
+        setValue('sampleFileUrl', 'ready', { shouldValidate: true })
+      } else {
+        setValue('sampleFileUrl', '')
+      }
+    } else {
+      const newImages = [...sampleImages]
+      newImages[index] = null
+      setSampleImages(newImages)
+
+      const newPreviews = [...samplePreviews]
+      if (newPreviews[index]) {
+        URL.revokeObjectURL(newPreviews[index]!)
+        newPreviews[index] = null
+      }
+      setSamplePreviews(newPreviews)
+      setValue('sampleFileUrl', '')
+    }
+  }
 
   const synopsisValue = watch('synopsis') ?? ''
   const titleValue = watch('title') ?? ''
@@ -93,11 +216,46 @@ export function SeriesProposalForm({
   const handleFormSubmit = async (data: SeriesProposalInput) => {
     try {
       setError(null)
-      await onSubmit(data, action)
+      const finalData = { ...data }
+
+      if (action === 'submit') {
+        const selectedCount = sampleImages.filter(Boolean).length
+        if (selectedCount < 5 && !data.sampleFileUrl) {
+          setError('Vui lòng chọn đủ 5 ảnh cho các trang truyện mẫu.')
+          return
+        }
+      }
+
+      setIsUploading(true)
+
+      try {
+        const filledImages = sampleImages.filter((img): img is File => img !== null)
+        if (filledImages.length === 5) {
+          const uploadedUrl = await uploadSampleImagesToBackend(filledImages)
+          finalData.sampleFileUrl = uploadedUrl
+          setValue('sampleFileUrl', uploadedUrl)
+        }
+
+        if (sourceZipFile) {
+          const zipAssetId = await uploadSourceZipToBackend(sourceZipFile)
+          finalData.sourceZipFileAssetId = zipAssetId
+          setValue('sourceZipFileAssetId', zipAssetId)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Tải lên tệp tin thất bại.')
+        return
+      } finally {
+        setIsUploading(false)
+      }
+
+      await onSubmit(finalData, action)
       reset()
+      setSampleImages([null, null, null, null, null])
+      setSamplePreviews([null, null, null, null, null])
+      setSourceZipFile(null)
       setSelectedGenres([])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.')
+      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra. Vui lòng thử lại.')
     }
   }
 
@@ -280,24 +438,119 @@ export function SeriesProposalForm({
         )}
       </div>
 
+      {/* 5 Sample Pages Area (Required) */}
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-foreground/80 flex items-center gap-1.5">
+          <ImageIcon className="w-4 h-4 text-primary" />
+          Manga Sample Pages (Trang mẫu) <span className="text-destructive">*</span>
+          <span className="text-[11px] text-muted-foreground font-normal ml-1">(Bắt buộc tải lên đủ 5 trang truyện định dạng ảnh: .jpg, .jpeg, .png, .gif, .webp)</span>
+        </label>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {[0, 1, 2, 3, 4].map((index) => {
+            const preview = samplePreviews[index]
+            return (
+              <div 
+                key={index} 
+                className="relative aspect-[3/4] rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-all overflow-hidden bg-muted/30 group flex flex-col items-center justify-center p-2 text-center"
+              >
+                {preview ? (
+                  <>
+                    <img src={preview} alt={`Trang ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fileInput = document.getElementById(`sample-image-input-${index}`)
+                          fileInput?.click()
+                        }}
+                        className="p-1.5 bg-white/20 hover:bg-white/40 text-white rounded-lg text-xs font-semibold backdrop-blur-sm transition-colors cursor-pointer"
+                      >
+                        Thay đổi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSampleImageChange(index, null)}
+                        className="p-1.5 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg backdrop-blur-sm transition-colors cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[9px] font-bold rounded">
+                      Trang {index + 1}
+                    </span>
+                  </>
+                ) : (
+                  <label 
+                    htmlFor={`sample-image-input-${index}`} 
+                    className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Upload className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                      Trang {index + 1}
+                    </span>
+                    <span className="text-[9px] text-muted-foreground/60">Tải ảnh lên</span>
+                  </label>
+                )}
+                <input
+                  type="file"
+                  id={`sample-image-input-${index}`}
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null
+                    handleSampleImageChange(index, file)
+                  }}
+                  className="hidden"
+                  disabled={isLoading || isUploading || hasActivePendingProposal}
+                />
+              </div>
+            )
+          })}
+        </div>
+        
+        {/* Hidden input to register sampleFileUrl validation */}
+        <input type="hidden" {...register('sampleFileUrl')} />
+        
+        {errors.sampleFileUrl && (
+          <span className="text-destructive text-xs font-semibold block">{errors.sampleFileUrl.message}</span>
+        )}
+      </div>
+
+      {/* Source ZIP File & Cover Image URL Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Sample Pages — BR-15: ≥ 5 */}
+        {/* Source ZIP File Input (Optional) */}
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-foreground/80 flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5" />
-            Sample Pages <span className="text-destructive">*</span>
-            <span className="text-[10px] text-muted-foreground font-normal ml-1">(min 5)</span>
+            Source Manuscript File (ZIP)
+            <span className="text-[10px] text-muted-foreground font-normal ml-1">(Optional)</span>
           </label>
-          <input
-            {...register('samplePages', { valueAsNumber: true })}
-            type="number"
-            min={5}
-            defaultValue={5}
-            className="w-32 px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            disabled={isLoading || hasActivePendingProposal}
-          />
-          {errors.samplePages && (
-            <span className="text-destructive text-xs font-semibold">{errors.samplePages.message}</span>
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              id="sourceZipFile"
+              accept=".zip"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null
+                setSourceZipFile(file)
+              }}
+              className="hidden"
+              disabled={isLoading || isUploading || hasActivePendingProposal}
+            />
+            <label
+              htmlFor="sourceZipFile"
+              className={`px-4 py-2.5 bg-background border border-border rounded-xl text-sm font-semibold cursor-pointer hover:bg-muted/50 transition-colors ${
+                isLoading || isUploading || hasActivePendingProposal ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              Choose ZIP File
+            </label>
+            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+              {sourceZipFile ? sourceZipFile.name : (watch('sourceZipFileAssetId') ? 'ZIP uploaded' : 'No file chosen')}
+            </span>
+          </div>
+          {errors.sourceZipFileAssetId && (
+            <span className="text-destructive text-xs font-semibold block">{errors.sourceZipFileAssetId.message}</span>
           )}
         </div>
 
@@ -312,7 +565,7 @@ export function SeriesProposalForm({
             {...register('coverImageUrl')}
             placeholder="https://example.com/cover.jpg"
             className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-            disabled={isLoading || hasActivePendingProposal}
+            disabled={isLoading || isUploading || hasActivePendingProposal}
           />
           {errors.coverImageUrl && (
             <span className="text-destructive text-xs font-semibold">{errors.coverImageUrl.message}</span>
@@ -322,25 +575,35 @@ export function SeriesProposalForm({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
-        {/* Save Draft — no validation, no BR-19 block for draft intent display */}
+        {/* Save Draft */}
         <Button
           type="submit"
           variant="outline"
-          onClick={() => setAction('draft')}
-          disabled={isLoading || hasActivePendingProposal}
+          onClick={() => {
+            setAction('draft')
+            if (!watch('sampleFileUrl') && sampleImages.filter(Boolean).length === 0) {
+              setValue('sampleFileUrl', 'draft-placeholder')
+            }
+          }}
+          disabled={isLoading || isUploading || hasActivePendingProposal}
           className="flex-1 py-2.5 font-semibold rounded-xl border-border"
         >
-          {isLoading && action === 'draft' ? 'Saving…' : 'Save as Draft'}
+          {isLoading || isUploading ? 'Processing…' : 'Save as Draft'}
         </Button>
 
         {/* Submit for Review */}
         <Button
           type="submit"
-          onClick={() => setAction('submit')}
-          disabled={isLoading || hasActivePendingProposal}
+          onClick={() => {
+            setAction('submit')
+            if (watch('sampleFileUrl') === 'draft-placeholder') {
+              setValue('sampleFileUrl', '')
+            }
+          }}
+          disabled={isLoading || isUploading || hasActivePendingProposal}
           className="flex-1 py-2.5 font-bold rounded-xl shadow-sm"
         >
-          {isLoading && action === 'submit' ? 'Submitting…' : 'Submit for Review'}
+          {isLoading || isUploading ? 'Processing…' : 'Submit for Review'}
         </Button>
       </div>
     </form>

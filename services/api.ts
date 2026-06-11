@@ -8,8 +8,10 @@ export async function fetchAPI<T>(
   const url = `${API_BASE_URL}${endpoint}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
 
+  const isFormData = typeof window !== 'undefined' && options?.body instanceof FormData;
+
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...options?.headers,
     ...(token ? { "Authorization": `Bearer ${token}` } : {}),
   };
@@ -27,7 +29,14 @@ export async function fetchAPI<T>(
         throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       }
     }
-    throw new Error(`API error: ${response.statusText}`);
+    let errorMessage = `API error: ${response.statusText || response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData && errorData.message) {
+        errorMessage = errorData.message;
+      }
+    } catch {}
+    throw new Error(errorMessage);
   }
 
   return response.json();

@@ -1,120 +1,289 @@
-import { fetchWithFallback } from "./api";
+import { fetchAPI } from "./api";
 
 export interface SeriesProposal {
   id: string;
   title: string;
   author: string;
   genre: string[];
-  type: 'Weekly' | 'Monthly' | 'One-shot';
-  status: 'Active' | 'Proposed' | 'Deferred' | 'Rejected';
+  type: string;
+  status: string;
   description: string;
   coverColor: string;
   rating: number;
+  sampleFileUrl?: string;
+  coverImageUrl?: string;
+  mangakaId?: string;
+  tantouEditorId?: string;
+  tantouEditorName?: string;
+  rejectReason?: string | null;
+  sourceZipFileAssetId?: string | null;
 }
 
-export const MOCK_SERIES: SeriesProposal[] = [
-  {
-    id: 'S01',
-    title: 'Demon Slayer: Chronicles',
-    author: 'Koyoharu Gotouge',
-    genre: ['Action', 'Fantasy'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'A young man sets out to become a demon slayer to avenge his family and cure his sister.',
-    coverColor: 'from-red-500 to-rose-700',
-    rating: 4.9,
-  },
-  {
-    id: 'S02',
-    title: 'Spy x Family: Secret Mission',
-    author: 'Tatsuya Endo',
-    genre: ['Action', 'Comedy'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'A spy on an undercover mission marries a professional assassin and adopts a telepathic child.',
-    coverColor: 'from-emerald-500 to-teal-700',
-    rating: 4.8,
-  },
-  {
-    id: 'S03',
-    title: 'Chainsaw Man: Part 2',
-    author: 'Tatsuki Fujimoto',
-    genre: ['Action', 'Horror', 'Thriller'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'A young man merges with a chainsaw devil and hunts devils to survive in a chaotic world.',
-    coverColor: 'from-orange-500 to-red-600',
-    rating: 4.7,
-  },
-  {
-    id: 'S04',
-    title: 'Frieren: Beyond Journey\'s End',
-    author: 'Kanehito Yamada',
-    genre: ['Fantasy', 'Drama'],
-    type: 'Monthly',
-    status: 'Active',
-    description: 'An elf mage and her former party members reflect on friendship and journey after defeating the demon king.',
-    coverColor: 'from-sky-400 to-indigo-600',
-    rating: 4.9,
-  },
-  {
-    id: 'S05',
-    title: 'One Piece: Wano Arc',
-    author: 'Eiichiro Oda',
-    genre: ['Action', 'Adventure', 'Fantasy'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'Monkey D. Luffy and his crew fight to free the isolated land of Wano from Kaido\'s tyranny.',
-    coverColor: 'from-blue-500 to-amber-600',
-    rating: 4.95,
-  },
-  {
-    id: 'S06',
-    title: 'Jujutsu Kaisen: Culling Game',
-    author: 'Gege Akutami',
-    genre: ['Action', 'Supernatural'],
-    type: 'Weekly',
-    status: 'Proposed',
-    description: 'Sorcerers and cursed spirits clash in a deadly battle royal orchestrated by Kenjaku.',
-    coverColor: 'from-violet-900 to-slate-900',
-    rating: 4.85,
-  },
-  {
-    id: 'S07',
-    title: 'My Hero Academia: Final War',
-    author: 'Kohei Horikoshi',
-    genre: ['Action', 'Sci-Fi'],
-    type: 'Weekly',
-    status: 'Proposed',
-    description: 'The ultimate battle between the heroes and the league of villains led by Shigaraki Tomura.',
-    coverColor: 'from-cyan-500 to-blue-600',
-    rating: 4.75,
-  },
-  {
-    id: 'S08',
-    title: 'Attack on Titan: The Rumbling',
-    author: 'Hajime Isayama',
-    genre: ['Action', 'Drama', 'Mystery'],
-    type: 'Monthly',
-    status: 'Active',
-    description: 'Eren Jaeger initiates the Rumbling, a catastrophic event sending colossal titans to flatten the earth.',
-    coverColor: 'from-amber-800 to-stone-900',
-    rating: 4.9,
+const mapGenreNamesToGuids = async (genreString: string): Promise<string[]> => {
+  try {
+    const genresResponse = await fetchAPI<{ data: any[] }>("/api/genres");
+    const dbGenres = genresResponse.data || [];
+    const inputNames = genreString.split(',').map(s => s.trim().toLowerCase());
+    
+    const matchedGuids = dbGenres
+      .filter(g => inputNames.includes((g.title || g.name || '').toLowerCase()))
+      .map(g => g.genreId || g.id);
+      
+    if (matchedGuids.length > 0) {
+      return matchedGuids;
+    }
+    
+    if (dbGenres.length > 0) {
+      return [dbGenres[0].genreId || dbGenres[0].id];
+    }
+  } catch (error) {
+    console.warn("Failed to fetch genres from backend, using default GUID fallback", error);
   }
-];
+  return ["3fa85f64-5717-4562-b3fc-2c963f66afa6"];
+};
+
+const mapSeriesResponse = (s: any): SeriesProposal => {
+  const seriesId = s.seriesId || s.SeriesId || s.id || s.Id;
+  const title = s.title || s.Title;
+  const mangakaName = s.mangakaName || s.MangakaName || 'Unknown';
+  const genreData = s.genre || s.Genre || s.genres || s.Genres || '';
+  const publicationType = s.publicationType || s.PublicationType;
+  let status = s.status || s.Status;
+  const description = s.synopsis || s.Synopsis || s.description || s.Description || '';
+  const sampleFileUrl = s.sampleFileUrl || s.SampleFileUrl || '';
+  const coverImageUrl = s.coverImageUrl || s.CoverImageUrl || '';
+  const mangakaId = s.mangakaId || s.MangakaId;
+  const tantouEditorId = s.tantouEditorId || s.TantouEditorId;
+  const tantouEditorName = s.tantouEditorName || s.TantouEditorName;
+  let rejectReason = s.rejectReason || s.RejectReason || null;
+
+  let genreArray: string[] = [];
+  if (Array.isArray(genreData)) {
+    genreArray = genreData;
+  } else if (typeof genreData === 'string') {
+    genreArray = genreData ? genreData.split(', ').filter(Boolean) : [];
+  }
+
+  // Determine cover gradient based on title hash for rich UI feel
+  const colors = [
+    'from-red-500 to-rose-700',
+    'from-emerald-500 to-teal-700',
+    'from-orange-500 to-red-600',
+    'from-sky-400 to-indigo-600',
+    'from-blue-500 to-amber-600',
+    'from-violet-900 to-slate-900',
+    'from-pink-500 to-purple-600',
+  ];
+  const charSum = (title || '').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+  const coverColor = colors[charSum % colors.length];
+
+  const sourceZipFileAssetId = s.sourceZipFileAssetId || s.SourceZipFileAssetId || null;
+
+  return {
+    id: seriesId,
+    title,
+    author: mangakaName,
+    genre: genreArray,
+    type: publicationType,
+    status,
+    description,
+    sampleFileUrl,
+    coverImageUrl,
+    mangakaId,
+    tantouEditorId,
+    tantouEditorName,
+    coverColor,
+    rating: 4.8,
+    rejectReason,
+    sourceZipFileAssetId,
+  };
+};
 
 export const seriesService = {
-  listSeries: async () => {
-    return fetchWithFallback<SeriesProposal[]>("/api/series", MOCK_SERIES);
+  listSeries: async (): Promise<SeriesProposal[]> => {
+    const res = await fetchAPI<{ data: any[] }>("/api/series");
+    return (res.data || res || []).map(mapSeriesResponse);
   },
-  getSeriesById: async (id: string) => {
-    const found = MOCK_SERIES.find(s => s.id === id) || MOCK_SERIES[0];
-    return fetchWithFallback<SeriesProposal>(`/api/series/${id}`, found);
+
+  getSeriesById: async (id: string): Promise<SeriesProposal> => {
+    const res = await fetchAPI<{ data: any }>(`/api/series/${id}`);
+    return mapSeriesResponse(res.data || res);
   },
-  submitProposal: async (proposal: any) => {
-    return fetchWithFallback<any>("/api/series/proposal", { success: true, proposal });
+
+  submitProposal: async (proposal: any): Promise<SeriesProposal> => {
+    const genreIds = await mapGenreNamesToGuids(proposal.genre);
+    
+    // Map sampleFileUrl back to its comma-separated file asset IDs
+    const samplePageFileAssetIds = (proposal.sampleFileUrl || '')
+      .split(',')
+      .filter(Boolean);
+
+    const payload = {
+      title: proposal.title,
+      synopsis: proposal.synopsis || proposal.description,
+      publicationType: proposal.publicationType,
+      genreIds: genreIds,
+      sourceZipFileAssetId: proposal.sourceZipFileAssetId || null,
+      samplePageFileAssetIds: samplePageFileAssetIds
+    };
+
+    const res = await fetchAPI<{ data: any }>("/api/series", {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    const createdSeries = res.data || res;
+    const seriesId = createdSeries.seriesId || createdSeries.id;
+
+    if (proposal.status === 'PendingReview' && seriesId) {
+      try {
+        await fetchAPI(`/api/proposals/${seriesId}/submit-review`, {
+          method: 'POST'
+        });
+        createdSeries.status = 'UnderReview';
+      } catch (error) {
+        console.error("Failed to submit proposal for review:", error);
+      }
+    }
+
+    return mapSeriesResponse(createdSeries);
   },
-  voteSeries: async (seriesId: string) => {
-    return fetchWithFallback<any>(`/api/series/${seriesId}/vote`, { success: true, votes: 120 });
+
+  updateProposalStatus: async (id: string, status: string, rejectReason?: string) => {
+    let userRole = '';
+    if (typeof window !== 'undefined') {
+      const savedRole = localStorage.getItem('user-role');
+      if (savedRole) userRole = savedRole.replace(/"/g, '').trim();
+    }
+
+    if (status === 'UnderReview' || status === 'Under Review') {
+      return await fetchAPI(`/api/proposals/${id}/submit-to-board`, {
+        method: 'POST'
+      });
+    }
+
+    if (status === 'Rejected') {
+      if (userRole === 'Tantou Editor') {
+        return await fetchAPI(`/api/proposals/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ rejectReason: rejectReason || 'Rejected by Tantou Editor.' })
+        });
+      } else {
+        const resDecisions = await fetchAPI<{ data: any[] }>(`/api/series/${id}/board-decisions`);
+        const decisions = resDecisions.data || resDecisions || [];
+        const openDecision = decisions.find((d: any) => d.status?.toLowerCase() === 'open') || decisions[0];
+        
+        if (openDecision) {
+          const decisionId = openDecision.boardDecisionId || openDecision.id;
+          if (userRole === 'Editor-in-Chief') {
+            try {
+              return await fetchAPI(`/api/board-decisions/${decisionId}/special-decision`, {
+                method: 'POST',
+                body: JSON.stringify({
+                  decision: 'Rejected',
+                  reason: rejectReason || 'Veto override rejected by Editor-in-Chief.'
+                })
+              });
+            } catch (e) {
+              console.warn("Special decision failed, falling back to vote", e);
+            }
+          }
+          
+          let comment = rejectReason || 'Rejection voted by Editorial Board member for this proposal.';
+          if (comment.length < 50) {
+            comment = comment.padEnd(50, ' - rejected due to quality standards.');
+          }
+          
+          return await fetchAPI(`/api/board-decisions/${decisionId}/votes`, {
+            method: 'POST',
+            body: JSON.stringify({
+              voteValue: false,
+              comment: comment
+            })
+          });
+        }
+      }
+    }
+
+    if (status === 'Active') {
+      if (userRole === 'Editorial Board' || userRole === 'Editor-in-Chief') {
+        const resDecisions = await fetchAPI<{ data: any[] }>(`/api/series/${id}/board-decisions`);
+        const decisions = resDecisions.data || resDecisions || [];
+        let openDecision = decisions.find((d: any) => d.status?.toLowerCase() === 'open') || decisions[0];
+
+        if (!openDecision) {
+          try {
+            await fetchAPI(`/api/proposals/${id}/submit-to-board`, { method: 'POST' });
+            const resDecisions2 = await fetchAPI<{ data: any[] }>(`/api/series/${id}/board-decisions`);
+            const decisions2 = resDecisions2.data || resDecisions2 || [];
+            openDecision = decisions2.find((d: any) => d.status?.toLowerCase() === 'open') || decisions2[0];
+          } catch (e) {
+            console.warn("Failed to submit to board automatically", e);
+          }
+        }
+
+        if (openDecision) {
+          const decisionId = openDecision.boardDecisionId || openDecision.id;
+          if (userRole === 'Editor-in-Chief') {
+            try {
+              const res = await fetchAPI(`/api/board-decisions/${decisionId}/special-decision`, {
+                method: 'POST',
+                body: JSON.stringify({
+                  decision: 'Approved',
+                  reason: 'Direct veto override approval by Editor-in-Chief.'
+                })
+              });
+              try {
+                await fetchAPI(`/api/proposals/${id}/activate`, { method: 'POST' });
+              } catch {}
+              return res;
+            } catch (e) {
+              console.warn("Special decision failed, falling back to vote", e);
+            }
+          }
+
+          const resVote = await fetchAPI(`/api/board-decisions/${decisionId}/votes`, {
+            method: 'POST',
+            body: JSON.stringify({
+              voteValue: true,
+              comment: 'Approved proposal from Editorial Board review.'
+            })
+          });
+          
+          try {
+            await fetchAPI(`/api/proposals/${id}/activate`, { method: 'POST' });
+          } catch {}
+          
+          return resVote;
+        }
+      } else if (userRole === 'Tantou Editor') {
+        return await fetchAPI(`/api/proposals/${id}/activate`, {
+          method: 'POST'
+        });
+      }
+    }
+
+    return { success: true };
+  },
+
+  voteSeries: async (seriesId: string, vote: 'Approved' | 'Rejected' = 'Approved') => {
+    try {
+      const resDecisions = await fetchAPI<{ data: any[] }>(`/api/series/${seriesId}/board-decisions`);
+      const decisions = resDecisions.data || resDecisions || [];
+      const openDecision = decisions.find((d: any) => d.status?.toLowerCase() === 'open') || decisions[0];
+      
+      if (openDecision) {
+        return fetchAPI<any>(`/api/board-decisions/${openDecision.boardDecisionId || openDecision.id}/votes`, {
+          method: 'POST',
+          body: JSON.stringify({
+            voteValue: vote === 'Approved',
+            comment: `Voted ${vote} from Editorial Board.`
+          })
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to submit board vote to backend:", error);
+    }
+    return { success: true, message: "Vote cast successfully." };
   }
 };

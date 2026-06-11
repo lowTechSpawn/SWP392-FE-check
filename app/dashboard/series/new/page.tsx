@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, CheckCircle, WifiOff } from 'lucide-react'
 import Link from 'next/link'
@@ -15,17 +15,42 @@ import {
 import { useRole } from '@/context/RoleContext'
 import { notificationStore } from '@/store/notificationStore'
 
-// Fake "current user" id — will be wired to real auth later
-const MOCK_MANGAKA_ID = 'U01'
+const DEFAULT_MANGAKA_ID = 'U01'
 
 export default function NewProposalPage() {
   const router = useRouter()
   const { role } = useRole()
   const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  
+  const [mangakaName, setMangakaName] = useState('Mangaka')
+  const [mangakaId, setMangakaId] = useState(DEFAULT_MANGAKA_ID)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('user-info')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (parsed?.name) {
+            setMangakaName(parsed.name)
+          }
+          if (parsed?.id) {
+            setMangakaId(parsed.id)
+          }
+        } catch {}
+      }
+    }
+  }, [])
+
+  const [blockedByBR19, setBlockedByBR19] = useState(false)
 
   // BR-19: check if mangaka already has an active pending proposal
-  const blockedByBR19 = hasPendingProposal(MOCK_MANGAKA_ID)
+  useEffect(() => {
+    if (mangakaId) {
+      hasPendingProposal(mangakaId).then(setBlockedByBR19)
+    }
+  }, [mangakaId])
 
   const handleSubmit = useCallback(
     async (data: SeriesProposalInput, action: 'draft' | 'submit') => {
@@ -34,13 +59,13 @@ export default function NewProposalPage() {
       try {
         if (action === 'draft') {
           // Draft: no validation, just save
-          saveDraft({
+          await saveDraft({
             title: data.title,
             genre: data.genre,
             publicationType: data.publicationType,
             synopsis: data.synopsis,
-            samplePages: data.samplePages,
-            mangakaId: MOCK_MANGAKA_ID,
+            sampleFileUrl: data.sampleFileUrl,
+            mangakaId: mangakaId,
             coverImageUrl: data.coverImageUrl,
           })
           setSuccessMessage('draft')
@@ -49,24 +74,17 @@ export default function NewProposalPage() {
         }
 
         // Submit — run BR-17 check
-        if (isTitleDuplicate(data.title)) {
+        if (await isTitleDuplicate(data.title)) {
           throw new Error(`Title "${data.title}" is already used by an existing proposal or active series`)
         }
 
-        // Simulate network (70% success, 30% error per PROPOSAL_DOCUMENTATION §5)
-        await new Promise((res) => setTimeout(res, 1000))
-        const roll = Math.random()
-        if (roll < 0.3) {
-          throw new Error('Connection error or timeout. Please try again! (simulated 30% failure)')
-        }
-
-        submitProposal({
+        await submitProposal({
           title: data.title,
           genre: data.genre,
           publicationType: data.publicationType,
           synopsis: data.synopsis,
-          samplePages: data.samplePages,
-          mangakaId: MOCK_MANGAKA_ID,
+          sampleFileUrl: data.sampleFileUrl,
+          mangakaId: mangakaId,
           coverImageUrl: data.coverImageUrl,
         })
 
@@ -79,24 +97,26 @@ export default function NewProposalPage() {
         )
         notificationStore.addNotification(
           'New Proposal Pending Review',
-          `Mangaka Tanaka Yuki has submitted a new proposal "${data.title}" for review.`,
+          `Mangaka ${mangakaName} has submitted a new proposal "${data.title}" for review.`,
           'Editorial Board',
           'info'
         )
         notificationStore.addNotification(
           'New Proposal Pending Review',
-          `Mangaka Tanaka Yuki has submitted a new proposal "${data.title}" for review.`,
+          `Mangaka ${mangakaName} has submitted a new proposal "${data.title}" for review.`,
           'Editor-in-Chief',
           'info'
         )
 
         setSuccessMessage('submitted')
         setTimeout(() => router.push('/dashboard/series'), 1800)
+      } catch (err) {
+        throw err
       } finally {
         setIsLoading(false)
       }
     },
-    [router],
+    [router, mangakaId, mangakaName],
   )
 
   // Only Mangaka can access this page
@@ -143,14 +163,14 @@ export default function NewProposalPage() {
           <div>
             {successMessage === 'submitted' ? (
               <>
-                <p className="font-bold text-emerald-600">Proposal submitted for review!</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100">Proposal submitted for review!</p>
                 <p className="text-muted-foreground text-xs mt-0.5">
                   The Editorial Board has been notified. Redirecting to My Proposals…
                 </p>
               </>
             ) : (
               <>
-                <p className="font-bold text-emerald-600">Draft saved successfully!</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100">Draft saved successfully!</p>
                 <p className="text-muted-foreground text-xs mt-0.5">Redirecting to My Proposals…</p>
               </>
             )}

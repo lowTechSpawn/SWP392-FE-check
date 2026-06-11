@@ -15,11 +15,11 @@ export const seriesProposalSchema = z.object({
     .string()
     .min(200, 'Synopsis must be ≥ 200 characters')
     .max(2000, 'Synopsis must be ≤ 2000 characters'),
-  // BR-15: At least 1 sample chapter with ≥ 5 pages
-  samplePages: z
-    .number()
-    .min(5, 'Must have ≥ 5 sample pages'),
+  sampleFileUrl: z
+    .string()
+    .min(1, 'Sample file is required'),
   coverImageUrl: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  sourceZipFileAssetId: z.string().optional().nullable(),
 })
 
 export type SeriesProposalInput = z.infer<typeof seriesProposalSchema>

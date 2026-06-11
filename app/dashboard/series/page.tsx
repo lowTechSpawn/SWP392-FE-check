@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
-  PenTool,
+  PencilLine,
   Plus,
   Clock,
   CheckCircle2,
@@ -59,6 +59,11 @@ const STATUS_CONFIG: Record<
     className: 'bg-red-500/10 text-red-600 border-red-500/20',
     icon: XCircle,
   },
+  Active: {
+    label: 'Approved & Active',
+    className: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+    icon: CheckCircle2,
+  },
 }
 
 const ALL_STATUSES: (ProposalStatus | 'All')[] = [
@@ -68,6 +73,7 @@ const ALL_STATUSES: (ProposalStatus | 'All')[] = [
   'Under Review',
   'Approved',
   'Rejected',
+  'Active',
 ]
 
 function formatDateShort(iso: string) {
@@ -93,17 +99,16 @@ function ProposalCard({
     <div className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/25 hover:shadow-md transition-all group flex flex-col">
       {/* Coloured top accent bar */}
       <div
-        className={`h-1 w-full ${
-          proposal.status === 'Approved'
-            ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
-            : proposal.status === 'Rejected'
+        className={`h-1 w-full ${proposal.status === 'Approved'
+          ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
+          : proposal.status === 'Rejected'
             ? 'bg-gradient-to-r from-red-400 to-rose-500'
             : proposal.status === 'Under Review'
-            ? 'bg-gradient-to-r from-blue-400 to-indigo-500'
-            : proposal.status === 'Pending Review'
-            ? 'bg-gradient-to-r from-amber-400 to-orange-500'
-            : 'bg-gradient-to-r from-slate-400 to-slate-500'
-        }`}
+              ? 'bg-gradient-to-r from-blue-400 to-indigo-500'
+              : proposal.status === 'Pending Review'
+                ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                : 'bg-gradient-to-r from-slate-400 to-slate-500'
+          }`}
       />
 
       <div className="p-5 flex flex-col flex-1 gap-4">
@@ -163,9 +168,20 @@ function ProposalCard({
               {proposal.publicationType}
             </span>
             <span className="text-muted-foreground/30">•</span>
-            <span className="text-[10px] text-muted-foreground font-semibold">
-              {proposal.samplePages} sample pages
-            </span>
+            {proposal.sampleFileUrl ? (
+              <a
+                href={proposal.sampleFileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-primary hover:underline font-bold"
+              >
+                Sample File
+              </a>
+            ) : (
+              <span className="text-[10px] text-muted-foreground font-semibold">
+                No File
+              </span>
+            )}
           </div>
         </div>
 
@@ -196,28 +212,43 @@ export default function MyProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'All'>('All')
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [mangakaId, setMangakaId] = useState('U01')
 
-  const reload = useCallback(() => {
-    setProposals(getProposalsByMangaka(MOCK_MANGAKA_ID))
+  const [isBlocked, setIsBlocked] = useState(false)
+
+  const reload = useCallback(async (currentId: string) => {
+    const list = await getProposalsByMangaka(currentId)
+    setProposals(list)
+    const blocked = await hasPendingProposal(currentId)
+    setIsBlocked(blocked)
   }, [])
 
   useEffect(() => {
-    reload()
+    const saved = localStorage.getItem('user-info')
+    let currentId = 'U01'
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed?.id) {
+          currentId = parsed.id
+          setMangakaId(parsed.id)
+        }
+      } catch { }
+    }
+    reload(currentId)
   }, [reload])
 
   const handleDelete = (id: string) => {
     setDeleteConfirmId(id)
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmId) {
-      deleteDraft(deleteConfirmId)
+      await deleteDraft(deleteConfirmId)
       setDeleteConfirmId(null)
-      reload()
+      await reload(mangakaId)
     }
   }
-
-  const isBlocked = hasPendingProposal(MOCK_MANGAKA_ID)
 
   const filtered =
     statusFilter === 'All' ? proposals : proposals.filter((p) => p.status === statusFilter)
@@ -238,7 +269,7 @@ export default function MyProposalsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2.5">
-            <PenTool className="w-7 h-7 text-primary" />
+            <PencilLine className="w-7 h-7 text-primary" />
             My Proposals
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -311,11 +342,10 @@ export default function MyProposalsPage() {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                statusFilter === s
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === s
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                }`}
             >
               {s} <span className="opacity-70 ml-1">({count})</span>
             </button>
@@ -332,7 +362,7 @@ export default function MyProposalsPage() {
         </div>
       ) : (
         <div className="bg-card border border-border rounded-2xl p-16 text-center space-y-4">
-          <PenTool className="w-12 h-12 text-muted-foreground/30 mx-auto" />
+          <PencilLine className="w-12 h-12 text-muted-foreground/30 mx-auto" />
           <div>
             <h3 className="font-bold text-lg text-foreground">
               {statusFilter === 'All' ? 'No proposals yet' : `No ${statusFilter} proposals`}

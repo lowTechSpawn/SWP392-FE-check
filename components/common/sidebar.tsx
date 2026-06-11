@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useRole } from '@/context/RoleContext'
 import Image from 'next/image'
 import {
   BookOpen,
-  PenTool,
+  PencilLine,
   Layers,
   ClipboardList,
   BarChart3,
@@ -22,9 +22,10 @@ import {
   Users
 } from 'lucide-react'
 
-export function Sidebar() {
+function SidebarInner() {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { role, setRole } = useRole()
   const [isOpen, setIsOpen] = useState(false)
   const [showRoleSelector, setShowRoleSelector] = useState(false)
@@ -34,7 +35,7 @@ export function Sidebar() {
   const menuItems = {
     Mangaka: [
       { label: 'Dashboard', href: '/dashboard/mangaka', icon: LayoutDashboard },
-      { label: 'My Proposals', href: '/dashboard/series', icon: PenTool },
+      { label: 'My Proposals', href: '/dashboard/series', icon: PencilLine },
       { label: 'New Proposal', href: '/dashboard/series/new', icon: UserPlus },
       { label: 'Manuscripts', href: '/dashboard/manuscripts', icon: Layers },
       { label: 'Chapter&Tasks', href: '/dashboard/chapters', icon: ClipboardList },
@@ -47,15 +48,15 @@ export function Sidebar() {
       { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     'Tantou Editor': [
-      { label: 'Dashboard', href: '/dashboard/tantou-editor', icon: LayoutDashboard },
-      { label: 'Manga List', href: '/dashboard/manga-list', icon: BookOpen },
-      { label: 'Assign Tasks', href: '/dashboard/chapters', icon: ClipboardList },
-      { label: 'Review Drafts', href: '/dashboard/manuscripts', icon: Layers },
+      { label: 'Dashboard', href: '/dashboard/tantou-editor?tab=dashboard', icon: LayoutDashboard },
+      { label: 'Series', href: '/dashboard/tantou-editor?tab=series', icon: BookOpen },
+      { label: 'Proposal Review', href: '/dashboard/tantou-editor?tab=proposals', icon: ClipboardList },
+      { label: 'Manuscripts', href: '/dashboard/tantou-editor?tab=manuscripts', icon: Layers },
       { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     'Editorial Board': [
       { label: 'Manga List', href: '/dashboard/manga-list', icon: BookOpen },
-      { label: 'Review Proposals', href: '/dashboard/reviews', icon: PenTool },
+      { label: 'Review Proposals', href: '/dashboard/reviews', icon: PencilLine },
       { label: 'Reader Analytics', href: '/dashboard/analytics', icon: BarChart3 },
       { label: 'Create Account', href: '/signup', icon: UserPlus },
       { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
@@ -63,7 +64,7 @@ export function Sidebar() {
     'Editor-in-Chief': [
       { label: 'Dashboard', href: '/dashboard/editor-in-chief', icon: LayoutDashboard },
       { label: 'Manga List', href: '/dashboard/manga-list', icon: BookOpen },
-      { label: 'Review Proposals', href: '/dashboard/reviews', icon: PenTool },
+      { label: 'Review Proposals', href: '/dashboard/reviews', icon: PencilLine },
       { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     Admin: [
@@ -133,7 +134,14 @@ export function Sidebar() {
           <nav className="space-y-1">
             {currentLinks.map((item) => {
               const Icon = item.icon
-              const isActive = pathname === item.href
+              let isActive = pathname === item.href
+
+              if (item.href.includes('?tab=')) {
+                const urlObj = new URL(item.href, 'http://localhost')
+                const tabParam = urlObj.searchParams.get('tab')
+                const activeTab = searchParams.get('tab') || 'dashboard'
+                isActive = pathname === urlObj.pathname && activeTab === tabParam
+              }
               return (
                 <Link
                   key={item.label}
@@ -150,59 +158,6 @@ export function Sidebar() {
               )
             })}
           </nav>
-        </div>
-      </div>
-
-      {/* Bottom Profile and Role Switcher */}
-      <div className="space-y-4 pt-4 border-t border-border">
-        {/* Interactive Role Switcher */}
-        <div className="relative">
-          <button
-            onClick={() => setShowRoleSelector(!showRoleSelector)}
-            className="w-full flex items-center justify-between p-2.5 bg-muted rounded-xl hover:bg-muted/80 border border-border/50 text-left text-xs transition-all focus:outline-none"
-          >
-            <div className="space-y-0.5">
-              <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">Active Role</span>
-              <p className="font-bold text-foreground leading-tight">{role}</p>
-            </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${showRoleSelector ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showRoleSelector && (
-            <div className="absolute bottom-full left-0 right-0 z-50 mb-1.5 bg-card border border-border rounded-xl shadow-xl p-1 animate-in fade-in slide-in-from-bottom-2 duration-150">
-              {roles.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => handleRoleChange(r)}
-                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-muted transition-colors ${role === r ? 'text-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-
-        {/* User Card */}
-        <div className="flex items-center justify-between p-1.5 bg-muted/40 border border-border/30 rounded-xl">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
-              U
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">Demo User</p>
-              <p className="text-[10px] text-muted-foreground truncate">demo@mangaflow.com</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg transition-colors shrink-0"
-            title="Sign Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </div>
@@ -252,5 +207,15 @@ export function Sidebar() {
         <SidebarContent />
       </aside>
     </>
+  )
+}
+
+import { Suspense } from 'react'
+
+export function Sidebar() {
+  return (
+    <Suspense fallback={<div className="w-64 bg-card border-r border-border h-screen flex flex-col p-5"><div className="animate-pulse space-y-4"><div className="h-8 bg-muted rounded w-3/4"></div><div className="h-4 bg-muted rounded w-1/2"></div></div></div>}>
+      <SidebarInner />
+    </Suspense>
   )
 }

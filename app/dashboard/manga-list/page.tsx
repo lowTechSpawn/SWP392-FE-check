@@ -1,95 +1,73 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, Filter, BookOpen, Star } from 'lucide-react'
+import { getProposals, type Proposal } from '@/lib/proposals-store'
+import { getUsers } from '@/lib/users-store'
 
 interface Manga {
   id: string
   title: string
   author: string
   genre: string[]
-  type: 'Weekly' | 'Monthly' | 'One-shot'
+  type: string
   status: 'Active' | 'Proposed' | 'Deferred' | 'Rejected'
   description: string
   coverColor: string
   rating: number
 }
 
-const MOCK_MANGA: Manga[] = [
-  {
-    id: '1',
-    title: 'Demon Slayer: Chronicles',
-    author: 'Koyoharu Gotouge',
-    genre: ['Action', 'Fantasy'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'A young man sets out to become a demon slayer to avenge his family and cure his sister.',
-    coverColor: 'from-red-500 to-rose-700',
-    rating: 4.9,
-  },
-  {
-    id: '2',
-    title: 'Spy x Family: Secret Mission',
-    author: 'Tatsuya Endo',
-    genre: ['Action', 'Comedy'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'A spy on an undercover mission marries a professional assassin and adopts a telepathic child.',
-    coverColor: 'from-emerald-500 to-teal-700',
-    rating: 4.8,
-  },
-  {
-    id: '3',
-    title: 'Chainsaw Man: Part 2',
-    author: 'Tatsuki Fujimoto',
-    genre: ['Action', 'Horror', 'Thriller'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'A young man merges with a chainsaw devil and hunts devils to survive in a chaotic world.',
-    coverColor: 'from-orange-500 to-red-600',
-    rating: 4.7,
-  },
-  {
-    id: '4',
-    title: 'Frieren: Beyond Journey\'s End',
-    author: 'Kanehito Yamada',
-    genre: ['Fantasy', 'Drama'],
-    type: 'Monthly',
-    status: 'Active',
-    description: 'An elf mage and her former party members reflect on friendship and journey after defeating the demon king.',
-    coverColor: 'from-sky-400 to-indigo-600',
-    rating: 4.9,
-  },
-  {
-    id: '5',
-    title: 'Blue Lock: Neo Striker',
-    author: 'Muneyuki Kaneshiro',
-    genre: ['Sports', 'Thriller'],
-    type: 'Weekly',
-    status: 'Active',
-    description: 'Japan initiates a radical training camp called Blue Lock to produce the world\'s greatest egoist striker.',
-    coverColor: 'from-blue-600 to-cyan-700',
-    rating: 4.8,
-  },
-  {
-    id: '6',
-    title: 'Oshi no Ko: Dark Stage',
-    author: 'Aka Akasaka',
-    genre: ['Drama', 'Mystery'],
-    type: 'Weekly',
-    status: 'Proposed',
-    description: 'A gynecologist and his deceased patient are reincarnated as the twin children of a famous Japanese pop idol.',
-    coverColor: 'from-pink-500 to-purple-600',
-    rating: 4.6,
-  }
-]
-
 export default function MangaListPage() {
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<string>('All')
+  const [mangaList, setMangaList] = useState<Manga[]>([])
+
+  useEffect(() => {
+    getProposals().then((proposals) => {
+      const users = getUsers()
+
+      const list: Manga[] = proposals.map((p) => {
+        const authorUser = users.find((u) => u.id === p.mangakaId)
+        const authorName = authorUser ? authorUser.name : 'Unknown Author'
+
+        const statusMap: Record<Proposal['status'], Manga['status']> = {
+          Approved: 'Active',
+          'Pending Review': 'Proposed',
+          'Under Review': 'Proposed',
+          Draft: 'Proposed',
+          Rejected: 'Rejected',
+          Active: 'Active',
+        }
+
+        const colors = [
+          'from-red-500 to-rose-700',
+          'from-emerald-500 to-teal-700',
+          'from-orange-500 to-red-600',
+          'from-sky-400 to-indigo-600',
+          'from-blue-600 to-cyan-700',
+          'from-pink-500 to-purple-600',
+        ]
+        const colorIdx = Math.abs(p.title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length
+        const coverColor = colors[colorIdx]
+
+        return {
+          id: p.id,
+          title: p.title,
+          author: authorName,
+          genre: p.genre ? p.genre.split(', ') : [],
+          type: p.publicationType,
+          status: statusMap[p.status] || 'Proposed',
+          description: p.synopsis,
+          coverColor,
+          rating: 4.5 + (p.title.length % 5) * 0.1,
+        }
+      })
+      setMangaList(list)
+    })
+  }, [])
 
   // Filter logic
-  const filteredManga = MOCK_MANGA.filter((manga) => {
+  const filteredManga = mangaList.filter((manga) => {
     const matchesSearch =
       manga.title.toLowerCase().includes(search.toLowerCase()) ||
       manga.author.toLowerCase().includes(search.toLowerCase())
