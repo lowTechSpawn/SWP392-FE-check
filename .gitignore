@@ -41,3 +41,12 @@ yarn-error.log*
 next-env.d.ts
 
 /MangaManagementSystem/
+
+# guides, previews, and reviews
+*guide*
+*GUIDE*
+*preview*
+*PREVIEW*
+*review*
+*REVIEW*
+*NOTION_PREP*
