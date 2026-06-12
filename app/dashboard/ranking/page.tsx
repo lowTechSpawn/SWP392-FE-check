@@ -35,16 +35,37 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 
-// Import stores and logic helpers
-import { getSeries, getChapters } from '@/lib/chapters-store'
-import {
-  getPendingVotes,
-  getRankingsForPeriod,
-  confirmVoteRecord,
-  createVoteRecord,
-  type VoteRecord,
-  type RankingRow
-} from '@/lib/ranking-store'
+// Import backend APIs and logic helpers
+import { fetchAPI } from '@/services/api'
+import { seriesService } from '@/services/seriesService'
+import { chapterService } from '@/services/chapterService'
+
+export interface VoteRecord {
+  id: string
+  seriesId: string
+  seriesTitle: string
+  genre: string
+  chapterId: string
+  chapterTitle: string
+  period: string // e.g., "2026-Q2", "2026-Q1", "2025-Q4"
+  readerCount: number
+  voteCount: number
+  score: number
+  confirmed: boolean
+  createdAt: string
+  confirmedAt?: string
+}
+
+export interface RankingRow {
+  rank: number
+  seriesId: string
+  seriesTitle: string
+  genre: string
+  voteCount: number
+  readerCount: number
+  score: number
+  status: 'TOP 3' | 'BOTTOM 20% (BR-94)' | '—'
+}
 
 export default function RankingPage() {
   const { role } = useRole()
@@ -54,6 +75,8 @@ export default function RankingPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('2026-Q1')
   const [pendingVotes, setPendingVotes] = useState<VoteRecord[]>([])
   const [rankings, setRankings] = useState<RankingRow[]>([])
+  const [allSeries, setAllSeries] = useState<any[]>([])
+  const [availableChapters, setAvailableChapters] = useState<any[]>([])
   
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -72,76 +95,115 @@ export default function RankingPage() {
     return role === 'EditorialBoard' || role === 'EditorInChief'
   }, [role])
 
+  // Fetch all active series
+  useEffect(() => {
+    seriesService.listSeries().then((list) => {
+      setAllSeries(list.map(s => ({
+        id: s.id,
+        title: s.title,
+        genre: s.genre?.join(', ') || 'Fantasy'
+      })))
+    }).catch((err) => {
+      console.warn("Failed to load active series:", err)
+      setAllSeries([])
+    })
+  }, [])
+
+  // Fetch chapters when formSeriesId changes
+  useEffect(() => {
+    if (!formSeriesId) {
+      setAvailableChapters([])
+      return
+    }
+    chapterService.getChaptersBySeries(formSeriesId).then((res) => {
+      setAvailableChapters(res.map(c => ({
+        id: c.id,
+        title: `Ch. ${c.number || (c as any).chapterNo || 1}: ${c.title}`
+      })))
+    }).catch(() => {
+      setAvailableChapters([{ id: 'C_default', title: 'Ch. 1: Storyboard Draft' }])
+    })
+  }, [formSeriesId])
+
   useEffect(() => {
     setMounted(true)
     refreshData()
-  }, [selectedPeriod, role])
+  }, [selectedPeriod, role, allSeries])
 
-  const refreshData = () => {
-    setPendingVotes(getPendingVotes())
-    setRankings(getRankingsForPeriod(selectedPeriod))
-  }
-
-  // Generate dynamic list of available series (active + seeded ones)
-  const allSeries = useMemo(() => {
-    const activeSeriesList = getSeries()
-    const seededList = [
-      { id: 'S11', title: 'Steel Horizon', genre: 'Seinen' },
-      { id: 'S12', title: 'Blade of Eternity', genre: 'Shōnen' },
-      { id: 'S13', title: 'Moonlit Academy', genre: 'Shōjo' },
-      { id: 'S14', title: 'Garden of Stars', genre: 'Romance' },
-      { id: 'S15', title: 'Ramen Dynasty', genre: 'Slice of Life' },
-      { id: 'S16', title: 'Crimson Protocol', genre: 'Action' }
-    ]
-    // Merge without duplicates
-    const combined = [...activeSeriesList]
-    seededList.forEach(s => {
-      if (!combined.some(item => item.id === s.id)) {
-        combined.push({
-          id: s.id,
-          title: s.title,
-          mangakaId: 'U_seed',
-          coverColor: 'from-blue-500 to-indigo-600',
-          status: 'Active'
+  const refreshData = async () => {
+    if (allSeries.length === 0) return
+    try {
+      const allRecordsList = await Promise.all(
+        allSeries.map(async (s) => {
+          try {
+            const res = await fetchAPI<{ data: any[] } | any[]>(`/api/series/${s.id}/vote-records`)
+            const records = (res as any).data || res
+            if (Array.isArray(records)) {
+              return records.map(r => ({
+                id: r.voteRecordId || r.id,
+                seriesId: s.id,
+                seriesTitle: s.title,
+                genre: s.genre || 'Fantasy',
+                chapterId: 'C_default',
+                chapterTitle: `Period: ${r.period}`,
+                period: r.period,
+                readerCount: r.readerCount,
+                voteCount: r.voteCount,
+                score: Math.round(((r.voteCount / (r.readerCount || 1)) * 100) * 100) / 100,
+                confirmed: r.status?.toLowerCase() === 'confirmed',
+                createdAt: r.createdAt
+              }))
+            }
+          } catch (e) {
+            console.warn(`Failed to fetch vote records for series ${s.id}:`, e)
+          }
+          return []
         })
-      }
-    })
-    return combined
-  }, [])
+      )
+      
+      const flatRecords = allRecordsList.flat()
+      setPendingVotes(flatRecords.filter(r => !r.confirmed))
+      
+      // Calculate rankings for the selected period
+      const confirmedForPeriod = flatRecords.filter(r => r.confirmed && r.period === selectedPeriod)
+      const sorted = [...confirmedForPeriod].sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return b.voteCount - a.voteCount
+      })
+      const total = sorted.length
+      const calculatedRankings = sorted.map((v, index) => {
+        const rank = index + 1
+        let status: 'TOP 3' | 'BOTTOM 20% (BR-94)' | '—' = '—'
 
-  // Generate dynamic list of chapters based on selected series
-  const availableChapters = useMemo(() => {
-    if (!formSeriesId) return []
-    const actualChapters = getChapters(formSeriesId)
-    if (actualChapters.length > 0) {
-      return actualChapters.map(c => ({
-        id: c.id,
-        title: `Ch. ${c.number}: ${c.title}`
-      }))
+        if (rank <= 3) {
+          status = 'TOP 3'
+        } else if (total >= 5) {
+          const bottomCount = Math.ceil((total * 20) / 100)
+          if (rank > total - bottomCount) {
+            status = 'BOTTOM 20% (BR-94)'
+          }
+        }
+        return {
+          rank,
+          seriesId: v.seriesId,
+          seriesTitle: v.seriesTitle,
+          genre: v.genre,
+          voteCount: v.voteCount,
+          readerCount: v.readerCount,
+          score: v.score,
+          status
+        }
+      })
+      setRankings(calculatedRankings)
+    } catch (err) {
+      console.error("Failed to refresh ranking/votes data from backend:", err)
     }
-    // Seeded series fallbacks
-    switch (formSeriesId) {
-      case 'S11': return [{ id: 'C101_new', title: 'Ch. 25: Iron Shield' }]
-      case 'S12': return [{ id: 'C102_new', title: 'Ch. 44: Rising Phoenix' }]
-      case 'S13': return [{ id: 'C103_new', title: 'Ch. 13: Moonlight Dance' }]
-      case 'S14': return [{ id: 'C104_new', title: 'Ch. 19: Midnight Rose' }]
-      case 'S15': return [{ id: 'C105_new', title: 'Ch. 31: Double Flavor' }]
-      case 'S16': return [{ id: 'C106_new', title: 'Ch. 9: Firewall' }]
-      default: return [{ id: 'C_default', title: 'Ch. 1: Storyboard Draft' }]
-    }
-  }, [formSeriesId])
+  }
 
   // Get genre of a selected series
   const getSelectedSeriesGenre = (seriesId: string): string => {
-    const seededGenres: Record<string, string> = {
-      S11: 'Seinen',
-      S12: 'Shōnen',
-      S13: 'Shōjo',
-      S14: 'Romance',
-      S15: 'Slice of Life',
-      S16: 'Action'
-    }
-    return seededGenres[seriesId] || 'Fantasy'
+    const series = allSeries.find(s => s.id === seriesId)
+    return series?.genre || 'Fantasy'
   }
 
   // Handle vote import submission (BR-89 validations)
@@ -164,21 +226,17 @@ export default function RankingPage() {
       return
     }
 
-    const selectedSeries = allSeries.find(s => s.id === formSeriesId)
-    const selectedChapter = availableChapters.find(c => c.id === formChapterId)
+    const payload = {
+      seriesId: formSeriesId,
+      period: formPeriod,
+      readerCount: formReaderCount,
+      voteCount: formVoteCount
+    }
 
-    try {
-      createVoteRecord({
-        seriesId: formSeriesId,
-        seriesTitle: selectedSeries?.title || 'Unknown Series',
-        genre: getSelectedSeriesGenre(formSeriesId),
-        chapterId: formChapterId,
-        chapterTitle: selectedChapter?.title || 'Unknown Chapter',
-        period: formPeriod,
-        readerCount: formReaderCount,
-        voteCount: formVoteCount
-      })
-
+    fetchAPI('/api/vote-records', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(() => {
       toast.success('Vote record successfully imported as Pending Confirmation!')
       setIsDialogOpen(false)
       
@@ -189,20 +247,21 @@ export default function RankingPage() {
       setFormVoteCount(0)
       
       refreshData()
-    } catch (err: any) {
+    }).catch((err: any) => {
       toast.error(err.message || 'Failed to import vote data.')
-    }
+    })
   }
 
   // Handle vote confirmation (BR-92)
   const handleConfirmVote = (id: string, title: string) => {
-    const success = confirmVoteRecord(id)
-    if (success) {
+    fetchAPI(`/api/vote-records/${id}/confirm`, {
+      method: 'PUT'
+    }).then(() => {
       toast.success(`Confirmed vote record for "${title}". Rankings recalculated!`)
       refreshData()
-    } else {
+    }).catch(() => {
       toast.error('Failed to confirm vote record.')
-    }
+    })
   }
 
   if (!mounted) return null

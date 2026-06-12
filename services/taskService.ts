@@ -1,4 +1,4 @@
-import { fetchWithFallback } from "./api";
+import { fetchAPI } from "./api";
 
 export interface TaskItem {
   id: string;
@@ -10,16 +10,14 @@ export interface TaskItem {
   status: 'Pending' | 'In-Progress' | 'Submitted' | 'Approved' | 'Rejected';
 }
 
-export const MOCK_TASKS: TaskItem[] = [
-  { id: 'T01', chapterId: 'CH02', type: 'Line Art', pages: '1-3', description: 'Sketch and ink the opening battle', assistantName: 'Sato Takashi', status: 'Approved' },
-  { id: 'T02', chapterId: 'CH02', type: 'Coloring', pages: '4-8', description: 'Apply sunset glow colors', assistantName: 'Suzuki Mei', status: 'Submitted' }
-];
-
 export const taskService = {
   listTasks: async () => {
-    return fetchWithFallback<TaskItem[]>("/api/tasks", MOCK_TASKS);
+    return fetchAPI<any>("/api/page-tasks");
   },
   assignTask: async (data: any) => {
-    return fetchWithFallback<any>("/api/tasks/assign", { success: true, data });
+    return fetchAPI<any>("/api/page-tasks", {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   }
 };

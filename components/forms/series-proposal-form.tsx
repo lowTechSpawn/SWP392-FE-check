@@ -31,17 +31,17 @@ const uploadSampleImagesToBackend = async (files: File[]): Promise<string> => {
     try {
       const errRes = await response.json();
       if (errRes.message) errMsg = errRes.message;
-    } catch {}
+    } catch { }
     throw new Error(errMsg);
   }
 
   const resData = await response.json();
   const fileAssetIds: string[] = (resData?.data?.files || []).map((f: any) => f.fileAssetId).filter(Boolean);
-  
+
   if (fileAssetIds.length < 5) {
     throw new Error("Không đủ số lượng file asset ID trả về từ backend (yêu cầu tối thiểu 5 trang).");
   }
-  
+
   return fileAssetIds.join(',');
 };
 
@@ -64,17 +64,17 @@ const uploadSourceZipToBackend = async (file: File): Promise<string> => {
     try {
       const errRes = await response.json();
       if (errRes.message) errMsg = errRes.message;
-    } catch {}
+    } catch { }
     throw new Error(errMsg);
   }
 
   const resData = await response.json();
   const fileAssetIds: string[] = (resData?.data?.files || []).map((f: any) => f.fileAssetId).filter(Boolean);
-  
+
   if (fileAssetIds.length === 0) {
     throw new Error("Không tìm thấy file asset ID trả về cho tệp tin nguồn ZIP.");
   }
-  
+
   return fileAssetIds[0];
 };
 
@@ -147,6 +147,31 @@ export function SeriesProposalForm({
     },
   })
 
+  useEffect(() => {
+    if (defaultValues) {
+      reset({
+        title: defaultValues.title ?? '',
+        genre: defaultValues.genre ?? '',
+        publicationType: defaultValues.publicationType ?? 'Weekly',
+        synopsis: defaultValues.synopsis ?? '',
+        sampleFileUrl: defaultValues.sampleFileUrl ?? '',
+        coverImageUrl: defaultValues.coverImageUrl ?? '',
+        sourceZipFileAssetId: defaultValues.sourceZipFileAssetId ?? null,
+      })
+      if (defaultValues.genre) {
+        setSelectedGenres(defaultValues.genre.split(', ').filter(Boolean))
+      }
+      if (defaultValues.sampleFileUrl) {
+        const ids = defaultValues.sampleFileUrl.split(',').filter(Boolean)
+        const newPreviews: (string | null)[] = ids.map(id => id.trim().startsWith('http') ? id.trim() : `${API_BASE_URL}/api/files/${id.trim()}`)
+        while (newPreviews.length < 5) {
+          newPreviews.push(null)
+        }
+        setSamplePreviews(newPreviews)
+      }
+    }
+  }, [defaultValues, reset])
+
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
@@ -162,7 +187,7 @@ export function SeriesProposalForm({
         setError('Vui lòng chỉ chọn các tệp tin hình ảnh (.jpg, .jpeg, .png, .gif, .webp).')
         return
       }
-      
+
       const newImages = [...sampleImages]
       newImages[index] = file
       setSampleImages(newImages)
@@ -197,6 +222,7 @@ export function SeriesProposalForm({
 
   const synopsisValue = watch('synopsis') ?? ''
   const titleValue = watch('title') ?? ''
+  const sourceZipFileAssetIdValue = watch('sourceZipFileAssetId') ?? null
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -404,9 +430,7 @@ export function SeriesProposalForm({
             disabled={isLoading || hasActivePendingProposal}
           >
             <option value="Weekly">Weekly</option>
-            <option value="Bi-Weekly">Bi-Weekly</option>
             <option value="Monthly">Monthly</option>
-            <option value="Quarterly">Quarterly</option>
             <option value="One-Shot">One-Shot</option>
           </select>
           {errors.publicationType && (
@@ -452,13 +476,13 @@ export function SeriesProposalForm({
           Manga Sample Pages (Trang mẫu) <span className="text-destructive">*</span>
           <span className="text-[11px] text-muted-foreground font-normal ml-1">(Bắt buộc tải lên đủ 5 trang truyện định dạng ảnh: .jpg, .jpeg, .png, .gif, .webp)</span>
         </label>
-        
+
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[0, 1, 2, 3, 4].map((index) => {
             const preview = samplePreviews[index]
             return (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="relative aspect-[3/4] rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-all overflow-hidden bg-muted/30 group flex flex-col items-center justify-center p-2 text-center"
               >
                 {preview ? (
@@ -488,8 +512,8 @@ export function SeriesProposalForm({
                     </span>
                   </>
                 ) : (
-                  <label 
-                    htmlFor={`sample-image-input-${index}`} 
+                  <label
+                    htmlFor={`sample-image-input-${index}`}
                     className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer"
                   >
                     <Upload className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -514,10 +538,10 @@ export function SeriesProposalForm({
             )
           })}
         </div>
-        
+
         {/* Hidden input to register sampleFileUrl validation */}
         <input type="hidden" {...register('sampleFileUrl')} />
-        
+
         {errors.sampleFileUrl && (
           <span className="text-destructive text-xs font-semibold block">{errors.sampleFileUrl.message}</span>
         )}
@@ -546,16 +570,16 @@ export function SeriesProposalForm({
             />
             <label
               htmlFor="sourceZipFile"
-              className={`px-4 py-2.5 bg-background border border-border rounded-xl text-sm font-semibold cursor-pointer hover:bg-muted/50 transition-colors ${
-                isLoading || isUploading || hasActivePendingProposal ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`px-4 py-2.5 bg-background border border-border rounded-xl text-sm font-semibold cursor-pointer hover:bg-muted/50 transition-colors ${isLoading || isUploading || hasActivePendingProposal ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
             >
               Choose ZIP File
             </label>
             <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-              {sourceZipFile ? sourceZipFile.name : (watch('sourceZipFileAssetId') ? 'ZIP uploaded' : 'No file chosen')}
+              {sourceZipFile ? sourceZipFile.name : (sourceZipFileAssetIdValue ? 'ZIP uploaded' : 'No file chosen')}
             </span>
           </div>
+          <input type="hidden" {...register('sourceZipFileAssetId')} />
           {errors.sourceZipFileAssetId && (
             <span className="text-destructive text-xs font-semibold block">{errors.sourceZipFileAssetId.message}</span>
           )}

@@ -11,6 +11,9 @@ import {
   isTitleDuplicate,
   saveDraft,
   submitProposal,
+  getProposalById,
+  updateDraft,
+  type Proposal,
 } from '@/lib/proposals-store'
 import { useRole } from '@/context/RoleContext'
 import { notificationStore } from '@/store/notificationStore'
@@ -22,6 +25,23 @@ export default function NewProposalPage() {
   const { role } = useRole()
   const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editProposal, setEditProposal] = useState<Proposal | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const edit = params.get('edit')
+      if (edit) {
+        setEditId(edit)
+        getProposalById(edit).then((p) => {
+          if (p && p.status === 'Draft') {
+            setEditProposal(p)
+          }
+        })
+      }
+    }
+  }, [])
 
   const [mangakaName, setMangakaName] = useState('Mangaka')
   const [mangakaId, setMangakaId] = useState(DEFAULT_MANGAKA_ID)
@@ -58,8 +78,51 @@ export default function NewProposalPage() {
 
       try {
         if (action === 'draft') {
-          // Draft: no validation, just save
-          await saveDraft({
+          if (editId) {
+            await updateDraft(editId, {
+              title: data.title,
+              genre: data.genre,
+              publicationType: data.publicationType,
+              synopsis: data.synopsis,
+              sampleFileUrl: data.sampleFileUrl,
+              coverImageUrl: data.coverImageUrl,
+              sourceZipFileAssetId: data.sourceZipFileAssetId,
+            }, false)
+          } else {
+            // Draft: no validation, just save
+            await saveDraft({
+              title: data.title,
+              genre: data.genre,
+              publicationType: data.publicationType,
+              synopsis: data.synopsis,
+              sampleFileUrl: data.sampleFileUrl,
+              mangakaId: mangakaId,
+              coverImageUrl: data.coverImageUrl,
+              sourceZipFileAssetId: data.sourceZipFileAssetId,
+            })
+          }
+          setSuccessMessage('draft')
+          setTimeout(() => router.push('/dashboard/series'), 1200)
+          return
+        }
+
+        // Submit — run BR-17 check
+        if (await isTitleDuplicate(data.title, editId || undefined)) {
+          throw new Error(`Title "${data.title}" is already used by an existing proposal or active series`)
+        }
+
+        if (editId) {
+          await updateDraft(editId, {
+            title: data.title,
+            genre: data.genre,
+            publicationType: data.publicationType,
+            synopsis: data.synopsis,
+            sampleFileUrl: data.sampleFileUrl,
+            coverImageUrl: data.coverImageUrl,
+            sourceZipFileAssetId: data.sourceZipFileAssetId,
+          }, true)
+        } else {
+          await submitProposal({
             title: data.title,
             genre: data.genre,
             publicationType: data.publicationType,
@@ -69,26 +132,7 @@ export default function NewProposalPage() {
             coverImageUrl: data.coverImageUrl,
             sourceZipFileAssetId: data.sourceZipFileAssetId,
           })
-          setSuccessMessage('draft')
-          setTimeout(() => router.push('/dashboard/series'), 1200)
-          return
         }
-
-        // Submit — run BR-17 check
-        if (await isTitleDuplicate(data.title)) {
-          throw new Error(`Title "${data.title}" is already used by an existing proposal or active series`)
-        }
-
-        await submitProposal({
-          title: data.title,
-          genre: data.genre,
-          publicationType: data.publicationType,
-          synopsis: data.synopsis,
-          sampleFileUrl: data.sampleFileUrl,
-          mangakaId: mangakaId,
-          coverImageUrl: data.coverImageUrl,
-          sourceZipFileAssetId: data.sourceZipFileAssetId,
-        })
 
         // Dispatch notifications to Mangaka, Editorial Board, and Editor-in-Chief
         notificationStore.addNotification(
@@ -118,7 +162,7 @@ export default function NewProposalPage() {
         setIsLoading(false)
       }
     },
-    [router, mangakaId, mangakaName],
+    [router, mangakaId, mangakaName, editId],
   )
 
   // Only Mangaka can access this page
@@ -198,6 +242,7 @@ export default function NewProposalPage() {
           onSubmit={handleSubmit}
           isLoading={isLoading}
           hasActivePendingProposal={blockedByBR19}
+          defaultValues={editProposal || undefined}
         />
       </div>
     </div>

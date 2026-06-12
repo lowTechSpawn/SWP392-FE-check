@@ -49,7 +49,7 @@ const mapSeriesToProposal = (s: any): Proposal => {
     mangakaId: s.mangakaId || '',
     status: status,
     createdAt: s.createdAt || new Date().toISOString(),
-    submittedAt: s.createdAt,
+    submittedAt: s.submittedAt || s.createdAt || new Date().toISOString(),
     coverImageUrl: s.coverImageUrl,
     rawStatus: rawStatus,
     sourceZipFileAssetId: s.sourceZipFileAssetId || null,
@@ -147,20 +147,21 @@ export async function submitProposal(
 export async function updateDraft(
   id: string,
   updates: Partial<Omit<Proposal, 'id' | 'mangakaId' | 'createdAt'>>,
+  submit: boolean = false
 ): Promise<Proposal | null> {
   const existing = await getProposalById(id);
   if (!existing || existing.status !== 'Draft') return null;
   const updatedData = { ...existing, ...updates };
-  const res = await seriesService.submitProposal({
+  const res = await seriesService.updateProposal(id, {
     title: updatedData.title,
-    genre: updatedData.genre,
+    genre: updatedData.genre ? updatedData.genre.split(', ').filter(Boolean) : [],
     publicationType: updatedData.publicationType,
     synopsis: updatedData.synopsis,
     sampleFileUrl: updatedData.sampleFileUrl,
     coverImageUrl: updatedData.coverImageUrl,
     mangakaId: updatedData.mangakaId,
     sourceZipFileAssetId: updatedData.sourceZipFileAssetId,
-    status: 'Draft'
+    status: submit ? 'PendingReview' : 'Draft'
   });
   return mapSeriesToProposal(res);
 }

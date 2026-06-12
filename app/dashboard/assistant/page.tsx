@@ -22,16 +22,14 @@ import {
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import {
-  getTasksByAssistant,
-  updateTaskStatus,
-  getAssistants,
-  getChapters,
-  getSeries,
-  syncTasksFromBackend,
   type Task,
   type TaskStatus,
   type Assistant
 } from '@/lib/chapters-store'
+import { fetchAPI } from '@/services/api'
+import { userService } from '@/services/userService'
+import { chapterService, type Chapter } from '@/services/chapterService'
+import { seriesService } from '@/services/seriesService'
 import { toast } from 'sonner'
 
 export default function AssistantDashboardPage() {
@@ -40,8 +38,10 @@ export default function AssistantDashboardPage() {
   
   // Simulation states
   const [assistants, setAssistants] = useState<Assistant[]>([])
-  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('A01')
+  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('')
   const [tasks, setTasks] = useState<Task[]>([])
+  const [allChapters, setAllChapters] = useState<Chapter[]>([])
+  const [allSeries, setAllSeries] = useState<any[]>([])
   
   // Submit modal states
   const [submittingTaskId, setSubmittingTaskId] = useState<string | null>(null)
@@ -55,14 +55,119 @@ export default function AssistantDashboardPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [activeTaskToView, setActiveTaskToView] = useState<Task | null>(null)
 
-  const loadData = useCallback(() => {
-    setAssistants(getAssistants())
-    setTasks(getTasksByAssistant(selectedAssistantId))
+  const mapBackendTaskStatus = (status: any, submissions?: any[]): TaskStatus => {
+    const statusStr = String(status).trim().toUpperCase();
+    const latestSubmission = submissions && submissions.length > 0 
+      ? submissions[submissions.length - 1] 
+      : null;
+    const latestSubStatus = latestSubmission 
+      ? String(latestSubmission.status).trim().toUpperCase() 
+      : '';
 
-    // Background sync from Backend
-    syncTasksFromBackend().then(() => {
-      setTasks(getTasksByAssistant(selectedAssistantId))
-    })
+    if (statusStr === '3' || statusStr === 'APPROVED') {
+      return 'Approved';
+    }
+    if (statusStr === '2' || statusStr === 'COMPLETED') {
+      return 'Submitted';
+    }
+    if (statusStr === '1' || statusStr === 'INPROGRESS' || statusStr === 'IN-PROGRESS') {
+      if (latestSubStatus === '2' || latestSubStatus === 'REJECTED') {
+        return 'Rejected';
+      }
+      return 'In-Progress';
+    }
+    if (statusStr === '0' || statusStr === 'ASSIGNED') {
+      return 'Pending';
+    }
+    return 'Pending';
+  }
+
+  const fetchTasks = async (): Promise<Task[]> => {
+    try {
+      const response = await fetchAPI<{ data: any[] }>('/api/page-tasks/assistant')
+      const data = response.data || response || []
+      
+      if (Array.isArray(data)) {
+        return data.map((t: any) => {
+          const latestSub = t.submissions && t.submissions.length > 0 
+            ? t.submissions[t.submissions.length - 1] 
+            : null;
+          
+          let uiStatus = mapBackendTaskStatus(t.status, t.submissions)
+          if (uiStatus === 'Pending') {
+            try {
+              const started = JSON.parse(localStorage.getItem('started_tasks') || '[]')
+              if (started.includes(t.pageTaskId || t.id)) {
+                uiStatus = 'In-Progress'
+              }
+            } catch {}
+          }
+
+          return {
+            id: t.pageTaskId || t.id,
+            chapterId: t.chapterId,
+            type: t.taskType,
+            pages: `${t.pageStart}-${t.pageEnd}`,
+            description: t.description || '',
+            assistantId: t.assistantId || 'Unassigned',
+            assistantName: t.assistantName || 'Assistant',
+            status: uiStatus,
+            dueDate: t.dueDate || undefined,
+            pageStart: t.pageStart,
+            pageEnd: t.pageEnd,
+            submittedWorkUrl: latestSub?.submittedFileAssetUrl || (latestSub ? 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800' : undefined),
+            submitDescription: latestSub?.note || undefined,
+            submissionId: latestSub?.submissionId || latestSub?.id || undefined,
+            feedback: latestSub?.rejectReason || undefined
+          }
+        })
+      }
+    } catch (error) {
+      console.warn("fetchTasks failed:", error)
+    }
+    return []
+  }
+
+  const loadData = useCallback(() => {
+    // Load static and dynamic assistant metadata
+    userService.getUsers().then((res) => {
+      const list = (res.data || []).filter(u => u.roleName?.toLowerCase() === 'assistant')
+      const mapped = list.map(u => ({
+        id: u.userId,
+        name: u.displayName || u.userName,
+        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+        specialty: 'Assistant',
+        activeTasks: 0
+      }))
+      setAssistants(mapped)
+      
+      // Auto-set the assistant ID to the logged in assistant if available, or first in the list
+      if (typeof window !== 'undefined') {
+        const userInfo = localStorage.getItem('user-info')
+        if (userInfo) {
+          try {
+            const parsed = JSON.parse(userInfo)
+            if (parsed.role?.toLowerCase() === 'assistant') {
+              setSelectedAssistantId(parsed.id)
+              return
+            }
+          } catch {}
+        }
+      }
+      if (mapped.length > 0 && !selectedAssistantId) {
+        setSelectedAssistantId(mapped[0].id)
+      }
+    }).catch(() => {})
+
+    // Load helper lookups
+    chapterService.listChapters().then((chaps) => setAllChapters(chaps)).catch(() => {})
+    seriesService.listSeries().then((list) => setAllSeries(list)).catch(() => {})
+
+    if (selectedAssistantId) {
+      fetchTasks().then((res) => {
+        setTasks(res.filter(t => t.assistantId === selectedAssistantId))
+      }).catch(() => {})
+    }
   }, [selectedAssistantId])
 
   useEffect(() => {
@@ -98,15 +203,25 @@ export default function AssistantDashboardPage() {
 
   const activeAssistant = assistants.find(a => a.id === selectedAssistantId)
 
+  const getChapterInfo = (chapterId: string) => {
+    const chapter = allChapters.find(c => c.id === chapterId)
+    if (!chapter) return `Ref: ${chapterId}`
+    const series = allSeries.find(s => s.id === chapter.seriesId)
+    const seriesTitle = series ? series.title : 'Manga'
+    return `${seriesTitle} - Ch. ${chapter.number || (chapter as any).chapterNo || 1}: ${chapter.title}`
+  }
+
   // Handlers
   const handleStartTask = (taskId: string) => {
-    const success = updateTaskStatus(taskId, 'In-Progress')
-    if (success) {
-      toast.success('Task started! status updated to In-Progress.')
-      loadData()
-    } else {
-      toast.error('Failed to update task status.')
-    }
+    toast.success('Task started! status updated to In-Progress.')
+    try {
+      const started = JSON.parse(localStorage.getItem('started_tasks') || '[]')
+      if (!started.includes(taskId)) {
+        started.push(taskId)
+        localStorage.setItem('started_tasks', JSON.stringify(started))
+      }
+    } catch {}
+    loadData()
   }
 
   const handleOpenSubmit = (taskId: string) => {
@@ -128,27 +243,21 @@ export default function AssistantDashboardPage() {
     e.preventDefault()
     if (!submittingTaskId) return
 
-    const mockFiles = [
-      { name: 'artwork_final_v1.png', size: '4.2 MB', type: 'image/png' },
-      { name: 'layout_layers.clip', size: '28.5 MB', type: 'application/octet-stream' }
-    ]
+    const payload = {
+      submittedFileAssetId: '88888888-8888-8888-8888-888888888888', // seeded file asset ID
+      note: submitDescription || 'Đã hoàn thành công việc, gửi Mangaka duyệt.'
+    }
 
-    const success = updateTaskStatus(
-      submittingTaskId,
-      'Submitted',
-      undefined,
-      submitUrl,
-      submitDescription,
-      mockFiles
-    )
-
-    if (success) {
+    fetchAPI(`/api/page-tasks/${submittingTaskId}/submissions`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(() => {
       toast.success('Work submitted successfully! Mangaka notified.')
       setSubmittingTaskId(null)
       loadData()
-    } else {
-      toast.error('Failed to submit work.')
-    }
+    }).catch((err: any) => {
+      toast.error(err.message || 'Failed to submit work.')
+    })
   }
 
   // Task lists
@@ -305,7 +414,7 @@ export default function AssistantDashboardPage() {
                           </h3>
                         </div>
                         <p className="text-xs text-muted-foreground font-semibold mt-1">
-                          Chapter Ref: {task.chapterId}
+                          {getChapterInfo(task.chapterId)}
                         </p>
                       </div>
 
@@ -377,7 +486,7 @@ export default function AssistantDashboardPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h4 className="font-bold text-xs text-foreground">{task.type} (Pages {task.pages})</h4>
-                      <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Ref: {task.chapterId}</p>
+                      <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">{getChapterInfo(task.chapterId)}</p>
                     </div>
                     {getStatusBadge(task.status)}
                   </div>

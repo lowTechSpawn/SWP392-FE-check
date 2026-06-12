@@ -35,26 +35,10 @@ export async function fetchAPI<T>(
       if (errorData && errorData.message) {
         errorMessage = errorData.message;
       }
-    } catch {}
+    } catch { }
     throw new Error(errorMessage);
   }
 
   return response.json();
 }
 
-export async function fetchWithFallback<T>(
-  endpoint: string,
-  mockData: T,
-  options?: RequestInit
-): Promise<T> {
-  try {
-    const data = await fetchAPI<T>(endpoint, options);
-    return data;
-  } catch (error) {
-    console.warn(
-      `[API Fallback Warning] Gọi API tới "${endpoint}" thất bại. Sử dụng Mock Data thay thế.`,
-      error
-    );
-    return mockData;
-  }
-}

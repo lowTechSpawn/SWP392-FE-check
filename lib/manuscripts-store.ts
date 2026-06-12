@@ -30,173 +30,79 @@ export interface Annotation {
   createdAt: string
 }
 
-const STORAGE_MANUSCRIPTS_KEY = 'mangaflow_manuscripts'
-const STORAGE_ANNOTATIONS_KEY = 'mangaflow_annotations'
+let memoryManuscripts: ManuscriptItem[] = []
+let memoryAnnotations: Annotation[] = []
 
-const SEED_MANUSCRIPTS: ManuscriptItem[] = []
-
-const SEED_ANNOTATIONS: Annotation[] = []
-
-function loadManuscripts(): ManuscriptItem[] {
-  if (typeof window === 'undefined') return SEED_MANUSCRIPTS
-  try {
-    const raw = localStorage.getItem(STORAGE_MANUSCRIPTS_KEY)
-    if (!raw) {
-      localStorage.setItem(STORAGE_MANUSCRIPTS_KEY, JSON.stringify(SEED_MANUSCRIPTS))
-      return SEED_MANUSCRIPTS
-    }
-    const parsed = JSON.parse(raw) as ManuscriptItem[]
-    // Filter out mock manuscripts based on seriesId length
-    return parsed.filter(m => m.seriesId.length > 3)
-  } catch {
-    return SEED_MANUSCRIPTS
-  }
-}
-
-function saveManuscripts(items: ManuscriptItem[]): void {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_MANUSCRIPTS_KEY, JSON.stringify(items))
-}
-
-function loadAnnotations(): Annotation[] {
-  if (typeof window === 'undefined') return SEED_ANNOTATIONS
-  try {
-    const raw = localStorage.getItem(STORAGE_ANNOTATIONS_KEY)
-    if (!raw) {
-      localStorage.setItem(STORAGE_ANNOTATIONS_KEY, JSON.stringify(SEED_ANNOTATIONS))
-      return SEED_ANNOTATIONS
-    }
-    return JSON.parse(raw) as Annotation[]
-  } catch {
-    return SEED_ANNOTATIONS
-  }
-}
-
-function saveAnnotations(anns: Annotation[]): void {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_ANNOTATIONS_KEY, JSON.stringify(anns))
-}
 export function getManuscripts(): ManuscriptItem[] {
-  return loadManuscripts()
+  return memoryManuscripts
 }
 
 export function getManuscriptById(id: string): ManuscriptItem | undefined {
-  return loadManuscripts().find(m => m.id === id)
-}
-
-export function updateManuscriptStatus(
-  id: string,
-  newStatus: 'APPROVED' | 'REVISION REQUIRED',
-  feedbackText: string
-): boolean {
-  const items = loadManuscripts()
-  const idx = items.findIndex(m => m.id === id)
-  if (idx === -1) return false
-
-  const item = items[idx]
-  item.status = newStatus
-
-  // Update latest version details in history
-  const activeVerIdx = item.history.findIndex(h => h.version === item.latestVersion && h.status === 'SUBMITTED')
-  if (activeVerIdx !== -1) {
-    item.history[activeVerIdx].status = newStatus
-    item.history[activeVerIdx].reviewedAt = new Date().toISOString()
-    item.history[activeVerIdx].feedback = feedbackText
-    if (newStatus === 'REVISION REQUIRED') {
-      // Calculate revision cycle (max 3 rounds in BR-83)
-      const prevRevsCount = item.history.filter(h => h.status === 'REVISION REQUIRED').length
-      item.history[activeVerIdx].revisionNumber = prevRevsCount + 1
-    }
-  } else {
-    // Append to history if not existing
-    item.history.unshift({
-      version: item.latestVersion,
-      status: newStatus,
-      submittedAt: new Date().toISOString(),
-      reviewedAt: new Date().toISOString(),
-      feedback: feedbackText,
-      revisionNumber: newStatus === 'REVISION REQUIRED' ? 1 : undefined
-    })
-  }
-
-  saveManuscripts(items)
-
-  // Background API calls to backend C# Web API
-  if (typeof window !== 'undefined') {
-    if (newStatus === 'APPROVED') {
-      const payload = {
-        status: 'Approved',
-        feedback: feedbackText || 'Bản vẽ đã được phê duyệt.'
-      }
-      fetchAPI(`/api/manuscripts/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload)
-      })
-        .then(res => console.log("Approved manuscript on backend successfully", res))
-        .catch(err => console.warn("Failed to approve manuscript on backend:", err))
-    } else if (newStatus === 'REVISION REQUIRED') {
-      const payload = {
-        status: 'Rejected',
-        feedback: feedbackText || 'Cần sửa đổi bản vẽ.'
-      }
-      fetchAPI(`/api/manuscripts/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload)
-      })
-        .then(res => console.log("Requested manuscript revision on backend successfully", res))
-        .catch(err => console.warn("Failed to request manuscript revision on backend:", err))
-    }
-  }
-
-  return true
+  return memoryManuscripts.find(m => m.id === id)
 }
 
 export function getAnnotations(manuscriptId: string, versionName: string): Annotation[] {
-  return loadAnnotations().filter(a => a.manuscriptId === manuscriptId && a.versionName === versionName)
+  return memoryAnnotations.filter(a => a.manuscriptId === manuscriptId && a.versionName === versionName)
 }
 
-export function addAnnotation(manuscriptId: string, versionName: string, text: string): Annotation {
-  const anns = loadAnnotations()
-  const newAnn: Annotation = {
-    id: `A${String(anns.length + 1).padStart(2, '0')}`,
-    manuscriptId,
-    versionName,
-    text,
-    createdAt: new Date().toISOString()
+export async function updateManuscriptStatus(
+  id: string,
+  newStatus: 'APPROVED' | 'REVISION REQUIRED',
+  feedbackText: string
+): Promise<boolean> {
+  const idx = memoryManuscripts.findIndex(m => m.id === id)
+  if (idx !== -1) {
+    memoryManuscripts[idx].status = newStatus
   }
-  anns.push(newAnn)
-  saveAnnotations(anns)
 
-  // Background API call to backend
-  if (typeof window !== 'undefined') {
-    const versionNoStr = versionName.replace('v', '')
-    const versionNo = parseInt(versionNoStr) || 1
+  const payload = {
+    status: newStatus === 'APPROVED' ? 'Approved' : 'Rejected',
+    feedback: feedbackText || (newStatus === 'APPROVED' ? 'Bản vẽ đã được phê duyệt.' : 'Cần sửa đổi bản vẽ.')
+  }
 
-    const payload = {
-      pageNo: 1, // Default page coordinate fallback
-      positionX: 50.00,
-      positionY: 50.00,
-      content: text
-    }
+  try {
+    await fetchAPI(`/api/manuscripts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    })
+    return true
+  } catch (error) {
+    console.error("Failed to update manuscript status on backend:", error)
+    throw error
+  }
+}
 
-    fetchAPI<{ id: string; annotationId: string }>(`/api/manuscripts/${manuscriptId}/annotations`, {
+export async function addAnnotation(manuscriptId: string, versionName: string, text: string): Promise<Annotation> {
+  const versionNoStr = versionName.replace('v', '')
+  const versionNo = parseInt(versionNoStr) || 1
+
+  const payload = {
+    pageNo: 1, // Default page coordinate fallback
+    positionX: 50.00,
+    positionY: 50.00,
+    content: text
+  }
+
+  try {
+    const res = await fetchAPI<{ id: string; annotationId: string }>(`/api/manuscripts/${manuscriptId}/annotations`, {
       method: 'POST',
       body: JSON.stringify(payload)
-    }).then((res: any) => {
-      if (res && (res.id || res.annotationId)) {
-        const currentAnns = loadAnnotations()
-        const foundIdx = currentAnns.findIndex(a => a.id === newAnn.id)
-        if (foundIdx !== -1) {
-          currentAnns[foundIdx].id = res.id || res.annotationId
-          saveAnnotations(currentAnns)
-        }
-      }
-    }).catch(err => {
-      console.warn("Failed to create annotation on backend:", err)
     })
+    
+    const newAnn: Annotation = {
+      id: res.id || res.annotationId || `A${Date.now()}`,
+      manuscriptId,
+      versionName,
+      text,
+      createdAt: new Date().toISOString()
+    }
+    
+    memoryAnnotations.push(newAnn)
+    return newAnn
+  } catch (error) {
+    console.error("Failed to create annotation on backend:", error)
+    throw error
   }
-
-  return newAnn
 }
 
 // ---------- Async Backend Synchronizers ----------
@@ -246,23 +152,13 @@ export async function syncManuscriptsFromBackend(): Promise<ManuscriptItem[]> {
         }
       })
 
-      const localItems = loadManuscripts()
-      const merged = [...localItems]
-      backendManuscripts.forEach(bm => {
-        const idx = merged.findIndex(lm => lm.id === bm.id)
-        if (idx !== -1) {
-          merged[idx] = { ...merged[idx], ...bm }
-        } else {
-          merged.push(bm)
-        }
-      })
-      saveManuscripts(merged)
-      return merged
+      memoryManuscripts = backendManuscripts
+      return backendManuscripts
     }
   } catch (error) {
-    console.warn("syncManuscriptsFromBackend failed, using offline data:", error)
+    console.error("syncManuscriptsFromBackend failed:", error)
   }
-  return getManuscripts()
+  return memoryManuscripts
 }
 
 export async function syncAnnotationsFromBackend(manuscriptId: string): Promise<Annotation[]> {
@@ -278,14 +174,15 @@ export async function syncAnnotationsFromBackend(manuscriptId: string): Promise<
         createdAt: a.createdAt || new Date().toISOString()
       }))
 
-      const localAnns = loadAnnotations()
-      const filtered = localAnns.filter(la => la.manuscriptId !== manuscriptId)
-      const merged = [...filtered, ...backendAnns]
-      saveAnnotations(merged)
+      // Merge into memoryAnnotations
+      memoryAnnotations = [
+        ...memoryAnnotations.filter(la => la.manuscriptId !== manuscriptId),
+        ...backendAnns
+      ]
       return backendAnns
     }
   } catch (error) {
-    console.warn("syncAnnotationsFromBackend failed, using offline data:", error)
+    console.error("syncAnnotationsFromBackend failed:", error)
   }
-  return loadAnnotations().filter(a => a.manuscriptId === manuscriptId)
+  return memoryAnnotations.filter(a => a.manuscriptId === manuscriptId)
 }

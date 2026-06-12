@@ -32,21 +32,6 @@ import {
   Layers
 } from 'lucide-react'
 import {
-  getSeries,
-  getChapters,
-  getChapterById,
-  createChapter,
-  updateChapterStatus,
-  getTasks,
-  getTaskById,
-  getTasksByAssistant,
-  createTask,
-  updateTaskStatus,
-  assignTask,
-  getAssistants,
-  getSeriesByMangaka,
-  SEED_ASSISTANTS,
-  syncTasksFromBackend,
   TASK_TYPE_SUGGESTIONS,
   type Chapter,
   type Task,
@@ -55,6 +40,10 @@ import {
   type ChapterStatus,
   type TaskStatus
 } from '@/lib/chapters-store'
+import { fetchAPI } from '@/services/api'
+import { seriesService } from '@/services/seriesService'
+import { chapterService } from '@/services/chapterService'
+import { userService } from '@/services/userService'
 import { calculateChapterDeadline, calculateChapterProgress } from '@/lib/business-logic'
 
 export default function ChaptersPage() {
@@ -77,12 +66,15 @@ export default function ChaptersPage() {
 
   // --- State for Mangaka Role ---
   const [mangakaSeries, setMangakaSeries] = useState<Series[]>([])
+  const [allChapters, setAllChapters] = useState<Chapter[]>([])
+  const [allSeries, setAllSeries] = useState<Series[]>([])
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>('')
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [selectedChapterId, setSelectedChapterId] = useState<string>('')
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null)
   const [chapterTasks, setChapterTasks] = useState<Task[]>([])
   const [assistants, setAssistants] = useState<Assistant[]>([])
+  const [allTasks, setAllTasks] = useState<Task[]>([])
 
   // Modal control states
   const [isChapterModalOpen, setIsChapterModalOpen] = useState(false)
@@ -137,54 +129,167 @@ export default function ChaptersPage() {
     refreshData()
   }, [role, selectedSeriesId, selectedChapterId, selectedAssistantId, mangakaId])
 
-  const refreshData = () => {
-    // 1. Load active series and select default
-    const seriesList = getSeriesByMangaka(mangakaId)
-    setMangakaSeries(seriesList)
+  const mapBackendTaskStatus = (status: any, submissions?: any[]): TaskStatus => {
+    const statusStr = String(status).trim().toUpperCase();
+    const latestSubmission = submissions && submissions.length > 0 
+      ? submissions[submissions.length - 1] 
+      : null;
+    const latestSubStatus = latestSubmission 
+      ? String(latestSubmission.status).trim().toUpperCase() 
+      : '';
 
-    let currentSeriesId = selectedSeriesId
-    if (!currentSeriesId && seriesList.length > 0) {
-      currentSeriesId = seriesList[0].id
-      setSelectedSeriesId(currentSeriesId)
+    if (statusStr === '3' || statusStr === 'APPROVED') {
+      return 'Approved';
     }
+    if (statusStr === '2' || statusStr === 'COMPLETED') {
+      return 'Submitted';
+    }
+    if (statusStr === '1' || statusStr === 'INPROGRESS' || statusStr === 'IN-PROGRESS') {
+      if (latestSubStatus === '2' || latestSubStatus === 'REJECTED') {
+        return 'Rejected';
+      }
+      return 'In-Progress';
+    }
+    if (statusStr === '0' || statusStr === 'ASSIGNED') {
+      return 'Pending';
+    }
+    return 'Pending';
+  }
 
-    // 2. Load chapters for series
-    if (currentSeriesId) {
-      const chapterList = getChapters(currentSeriesId)
-      setChapters(chapterList)
+  const fetchTasks = async (chapterId?: string): Promise<Task[]> => {
+    try {
+      const activeRole = localStorage.getItem('user-role') || role
+      let endpoint = '/api/page-tasks/mangaka'
+      if (activeRole === 'Assistant') {
+        endpoint = '/api/page-tasks/assistant'
+      }
+      const response = await fetchAPI<{ data: any[] }>(endpoint)
+      const data = response.data || response || []
+      
+      if (Array.isArray(data)) {
+        const mapped = data.map((t: any) => {
+          const latestSub = t.submissions && t.submissions.length > 0 
+            ? t.submissions[t.submissions.length - 1] 
+            : null;
+          
+          let uiStatus = mapBackendTaskStatus(t.status, t.submissions)
+          if (uiStatus === 'Pending') {
+            try {
+              const started = JSON.parse(localStorage.getItem('started_tasks') || '[]')
+              if (started.includes(t.pageTaskId || t.id)) {
+                uiStatus = 'In-Progress'
+              }
+            } catch {}
+          }
 
-      let currentChapterId = selectedChapterId
-      if (!currentChapterId && chapterList.length > 0) {
-        currentChapterId = chapterList[0].id
-        setSelectedChapterId(currentChapterId)
+          return {
+            id: t.pageTaskId || t.id,
+            chapterId: t.chapterId,
+            type: t.taskType,
+            pages: `${t.pageStart}-${t.pageEnd}`,
+            description: t.description || '',
+            assistantId: t.assistantId || 'Unassigned',
+            assistantName: t.assistantName || 'Assistant',
+            status: uiStatus,
+            dueDate: t.dueDate || undefined,
+            pageStart: t.pageStart,
+            pageEnd: t.pageEnd,
+            submittedWorkUrl: latestSub?.submittedFileAssetUrl || (latestSub ? 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800' : undefined),
+            submitDescription: latestSub?.note || undefined,
+            submissionId: latestSub?.submissionId || latestSub?.id || undefined,
+            feedback: latestSub?.rejectReason || undefined
+          }
+        })
+        return chapterId ? mapped.filter(t => t.chapterId === chapterId) : mapped
+      }
+    } catch (error) {
+      console.warn("fetchTasks failed:", error)
+    }
+    return []
+  }
+
+  const refreshData = async () => {
+    try {
+      // 1. Fetch series and filter by active and mangaka ownership
+      const allProposals = await seriesService.listSeries()
+      const mappedProposals: Series[] = allProposals.map(p => ({
+        id: p.id,
+        title: p.title,
+        mangakaId: p.mangakaId || '',
+        coverColor: p.coverColor || 'from-emerald-400 to-teal-500',
+        status: p.status
+      }))
+      setAllSeries(mappedProposals)
+
+      const allChaps = await chapterService.listChapters()
+      setAllChapters(allChaps)
+
+      const activeSeries = mappedProposals.filter(p => p.status === 'Active' && p.mangakaId === mangakaId)
+      setMangakaSeries(activeSeries)
+
+      let currentSeriesId = selectedSeriesId
+      if (!currentSeriesId && activeSeries.length > 0) {
+        currentSeriesId = activeSeries[0].id
+        setSelectedSeriesId(currentSeriesId)
       }
 
-      if (currentChapterId) {
-        const chap = getChapterById(currentChapterId)
-        setSelectedChapter(chap || null)
-        setChapterTasks(getTasks(currentChapterId))
+      // 2. Load Chapters for series
+      if (currentSeriesId) {
+        const chapterList = await chapterService.getChaptersBySeries(currentSeriesId)
+        setChapters(chapterList)
 
-        // Background sync tasks from Backend
-        syncTasksFromBackend(currentChapterId).then((synced) => {
-          setChapterTasks(synced)
-        })
+        let currentChapterId = selectedChapterId
+        if (!currentChapterId && chapterList.length > 0) {
+          currentChapterId = chapterList[0].id
+          setSelectedChapterId(currentChapterId)
+        }
+
+        if (currentChapterId) {
+          const chap = chapterList.find(c => c.id === currentChapterId)
+          setSelectedChapter(chap || null)
+
+          // Load tasks from backend
+          const backendTasks = await fetchTasks(currentChapterId)
+          setChapterTasks(backendTasks)
+        } else {
+          setSelectedChapter(null)
+          setChapterTasks([])
+        }
       } else {
+        setChapters([])
         setSelectedChapter(null)
         setChapterTasks([])
       }
-    }
 
-    // 3. Load assistant dropdown / info
-    setAssistants(getAssistants())
-
-    // 4. Load tasks for selected assistant
-    if (selectedAssistantId) {
-      setAssistantTasks(getTasksByAssistant(selectedAssistantId))
-
-      // Background sync tasks for assistant
-      syncTasksFromBackend().then(() => {
-        setAssistantTasks(getTasksByAssistant(selectedAssistantId))
+      // 3. Load Assistant list from backend
+      const usersRes = await userService.getUsers()
+      const assistantsList = (usersRes.data || []).filter(u => u.roleName?.toLowerCase() === 'assistant')
+      
+      // Load all tasks to calculate active tasks per assistant
+      const allTasksList = await fetchTasks()
+      setAllTasks(allTasksList)
+      const mappedAssistants = assistantsList.map(u => {
+        const activeTasks = allTasksList.filter(
+          t => t.assistantId === u.userId && 
+          (t.status === 'Pending' || t.status === 'In-Progress' || t.status === 'Submitted' || t.status === 'Rejected')
+        ).length
+        return {
+          id: u.userId,
+          name: u.displayName || u.userName,
+          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+          specialty: 'Assistant',
+          activeTasks
+        }
       })
+      setAssistants(mappedAssistants)
+
+      // 4. Load tasks for assistant role
+      if (role === 'Assistant' && selectedAssistantId) {
+        const assTasks = allTasksList.filter(t => t.assistantId === selectedAssistantId)
+        setAssistantTasks(assTasks)
+      }
+    } catch (error) {
+      console.error("refreshData failed:", error)
     }
   }
 
@@ -275,16 +380,15 @@ export default function ChaptersPage() {
 
   // Tra cứu Tên Manga (Series Title) dựa vào task.chapterId và series.id
   const getMangaTitleForTask = (task: Task) => {
-    const chapter = getChapterById(task.chapterId)
+    const chapter = allChapters.find(c => c.id === task.chapterId)
     if (!chapter) return 'Unknown Manga'
-    const seriesList = getSeries()
-    const series = seriesList.find(s => s.id === chapter.seriesId)
+    const series = allSeries.find(s => s.id === chapter.seriesId)
     return series ? series.title : 'Unknown Manga'
   }
 
   // Lấy thông tin số chương và tiêu đề chương tương ứng với task.chapterId
   const getChapterInfoForTask = (task: Task) => {
-    const chapter = getChapterById(task.chapterId)
+    const chapter = allChapters.find(c => c.id === task.chapterId)
     if (!chapter) return ''
     return `Ch. ${chapter.number}: ${chapter.title}`
   }
@@ -383,37 +487,35 @@ export default function ChaptersPage() {
     pubDateObj.setDate(pubDateObj.getDate() - 14)
     const deadlineString = pubDateObj.toISOString().split('T')[0]
 
-    const newChap = createChapter({
+    chapterService.createChapter({
       seriesId: newChapterSeriesId,
       number: parseInt(newChapterNo) || 0,
       title: newChapterTitle,
-      status: 'Draft',
       totalPages: newChapterPages,
       publicationDate: newChapterPubDate,
-      deadline: deadlineString,
-      synopsis: newChapterSynopsis,
-      notes: newChapterNotes,
-      storyboardFiles: newChapterStoryboardFiles,
-      manuscriptFiles: newChapterManuscriptFiles
+      deadline: deadlineString
+    }).then((res: any) => {
+      const created = res.data || res
+      showToast(`Đã tạo thành công Chapter ${created.chapterNo || created.number || newChapterNo}: ${created.title || newChapterTitle}!`)
+      setIsChapterModalOpen(false)
+      
+      // Reset form states
+      setNewChapterSeriesId(selectedSeriesId)
+      setNewChapterNo('')
+      setNewChapterTitle('')
+      setNewChapterPages(24)
+      setNewChapterPubDate('')
+      setNewChapterSynopsis('')
+      setNewChapterNotes('')
+      setNewChapterStoryboardFiles([])
+      setNewChapterManuscriptFiles([])
+      setErrors({})
+
+      setSelectedChapterId(created.chapterId || created.id)
+      refreshData()
+    }).catch((err: any) => {
+      showToast(err.message || 'Failed to create chapter.', 'error')
     })
-
-    showToast(`Đã tạo thành công Chapter ${newChap.number}: ${newChap.title}!`)
-    setIsChapterModalOpen(false)
-    
-    // Reset form states
-    setNewChapterSeriesId(selectedSeriesId)
-    setNewChapterNo('')
-    setNewChapterTitle('')
-    setNewChapterPages(24)
-    setNewChapterPubDate('')
-    setNewChapterSynopsis('')
-    setNewChapterNotes('')
-    setNewChapterStoryboardFiles([])
-    setNewChapterManuscriptFiles([])
-    setErrors({})
-
-    setSelectedChapterId(newChap.id) // Automatically select the created chapter
-    refreshData()
   }
 
   // 2. Tạo Task & Giao việc cho Assistant
@@ -432,65 +534,105 @@ export default function ChaptersPage() {
       return
     }
 
-    createTask({
-      chapterId: selectedChapterId,
-      type: newTaskType.trim(),
-      pages: `${newTaskPageStart}-${newTaskPageEnd}`,
-      pageStart: newTaskPageStart,
-      pageEnd: newTaskPageEnd,
-      description: newTaskDesc,
-      assistantId: newTaskAssistantId,
-      dueDate: newTaskDueDate || undefined,
-      attachments: newTaskAttachments.length > 0 ? newTaskAttachments : undefined
+    // Fetch latest manuscript for chapter
+    fetchAPI<{ data: any[] } | any[]>(`/api/chapters/${selectedChapterId}/manuscripts`).then((res) => {
+      const list = (res as any).data || res
+      const latestManuscript = Array.isArray(list) && list.length > 0 ? list[0] : null
+      const manuscriptId = latestManuscript?.manuscriptId || latestManuscript?.id || '77777777-7777-7777-7777-777777777777'
+
+      const payload = {
+        chapterId: selectedChapterId,
+        manuscriptId: manuscriptId,
+        assistantId: newTaskAssistantId,
+        pageStart: newTaskPageStart,
+        pageEnd: newTaskPageEnd,
+        taskType: newTaskType.trim(),
+        description: newTaskDesc,
+        dueDate: newTaskDueDate ? new Date(newTaskDueDate).toISOString() : null
+      }
+
+      return fetchAPI('/api/page-tasks', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+    }).then(() => {
+      showToast(`Đã tạo task và giao việc thành công!`)
+      setIsTaskModalOpen(false)
+      setNewTaskDesc('')
+      setNewTaskType('Line Art')
+      setNewTaskPageStart(1)
+      setNewTaskPageEnd(3)
+      setNewTaskDueDate('')
+      setNewTaskAttachments([])
+      
+      // Update chapter status to 'In Progress' if it is 'Draft'
+      if (selectedChapter && selectedChapter.status === 'Draft') {
+        chapterService.updateChapter(selectedChapterId, { status: 'In Progress' }).finally(() => {
+          refreshData()
+        })
+      } else {
+        refreshData()
+      }
+    }).catch((err: any) => {
+      showToast(err.message || 'Failed to assign page task.', 'error')
     })
-
-    showToast(`Đã tạo task và giao việc thành công!`)
-    setIsTaskModalOpen(false)
-    setNewTaskDesc('')
-    setNewTaskType('Line Art')
-    setNewTaskPageStart(1)
-    setNewTaskPageEnd(3)
-    setNewTaskDueDate('')
-    setNewTaskAttachments([])
-    refreshData()
-
-    // Cập nhật trạng thái chapter sang "In Progress" nếu đang là "Draft"
-    if (selectedChapter && selectedChapter.status === 'Draft') {
-      updateChapterStatus(selectedChapterId, 'In Progress')
-      refreshData()
-    }
   }
 
   // 3. Duyệt Task của Assistant (Approve)
   const handleApproveTask = (task: Task) => {
-    updateTaskStatus(task.id, 'Approved', reviewFeedback || 'Đồng ý duyệt, bài làm rất tốt!')
-    showToast(`Đã phê duyệt công việc của ${task.assistantName}!`)
-    setIsReviewModalOpen(false)
-    setActiveTaskToReview(null)
-    setReviewFeedback('')
-    refreshData()
+    if (!task.submissionId) {
+      showToast('Không tìm thấy bản nộp để phê duyệt.', 'error')
+      return
+    }
+    fetchAPI(`/api/page-tasks/submissions/${task.submissionId}/approve`, {
+      method: 'POST'
+    }).then(() => {
+      showToast(`Đã phê duyệt công việc của ${task.assistantName}!`)
+      setIsReviewModalOpen(false)
+      setActiveTaskToReview(null)
+      setReviewFeedback('')
+      refreshData()
+    }).catch((err: any) => {
+      showToast(err.message || 'Failed to approve submission.', 'error')
+    })
   }
 
   // 4. Từ chối Task của Assistant (Reject)
   const handleRejectTask = (task: Task) => {
+    if (!task.submissionId) {
+      showToast('Không tìm thấy bản nộp để từ chối.', 'error')
+      return
+    }
     if (!reviewFeedback.trim()) {
       showToast('Vui lòng điền phản hồi (lý do từ chối)!', 'error')
       return
     }
-    updateTaskStatus(task.id, 'Rejected', reviewFeedback)
-    showToast(`Đã từ chối và gửi phản hồi yêu cầu sửa đổi!`, 'error')
-    setIsReviewModalOpen(false)
-    setActiveTaskToReview(null)
-    setReviewFeedback('')
-    refreshData()
+    fetchAPI(`/api/page-tasks/submissions/${task.submissionId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ rejectReason: reviewFeedback })
+    }).then(() => {
+      showToast(`Đã từ chối và gửi phản hồi yêu cầu sửa đổi!`, 'error')
+      setIsReviewModalOpen(false)
+      setActiveTaskToReview(null)
+      setReviewFeedback('')
+      refreshData()
+    }).catch((err: any) => {
+      showToast(err.message || 'Failed to reject submission.', 'error')
+    })
   }
 
   // --- Action Handlers for Assistant ---
 
   // 1. Nhận việc / Bắt đầu làm (In-Progress)
   const handleStartTask = (taskId: string) => {
-    updateTaskStatus(taskId, 'In-Progress')
     showToast('Đã chuyển trạng thái sang Đang làm việc (In-Progress)!')
+    try {
+      const started = JSON.parse(localStorage.getItem('started_tasks') || '[]')
+      if (!started.includes(taskId)) {
+        started.push(taskId)
+        localStorage.setItem('started_tasks', JSON.stringify(started))
+      }
+    } catch {}
     refreshData()
   }
 
@@ -499,25 +641,25 @@ export default function ChaptersPage() {
     e.preventDefault()
     if (!activeTaskToSubmit) return
 
-    // Sử dụng URL mặc định nếu để trống
-    const workUrl = submitWorkUrl.trim() || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800'
+    const payload = {
+      submittedFileAssetId: '88888888-8888-8888-8888-888888888888', // seeded file asset ID
+      note: submitComment || 'Đã hoàn thành công việc, gửi Mangaka duyệt.'
+    }
 
-    updateTaskStatus(
-      activeTaskToSubmit.id,
-      'Submitted',
-      undefined,
-      workUrl,
-      submitComment || 'Đã hoàn thành công việc, gửi Mangaka duyệt.',
-      submittedFiles
-    )
-
-    showToast('Đã nộp kết quả công việc thành công! Chờ Mangaka phê duyệt.')
-    setIsSubmitWorkModalOpen(false)
-    setActiveTaskToSubmit(null)
-    setSubmitWorkUrl('')
-    setSubmitComment('')
-    setSubmittedFiles([])
-    refreshData()
+    fetchAPI(`/api/page-tasks/${activeTaskToSubmit.id}/submissions`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(() => {
+      showToast('Đã nộp kết quả công việc thành công! Chờ Mangaka phê duyệt.')
+      setIsSubmitWorkModalOpen(false)
+      setActiveTaskToSubmit(null)
+      setSubmitWorkUrl('')
+      setSubmitComment('')
+      setSubmittedFiles([])
+      refreshData()
+    }).catch((err: any) => {
+      showToast(err.message || 'Failed to submit work.', 'error')
+    })
   }
 
   // Helper styles for badges
@@ -764,9 +906,10 @@ export default function ChaptersPage() {
                         {selectedChapter.status === 'Draft' && (
                           <button
                             onClick={() => {
-                              updateChapterStatus(selectedChapterId, 'In Progress')
-                              refreshData()
-                              showToast('Chapter status updated to In Progress')
+                              chapterService.updateChapter(selectedChapterId, { status: 'In Progress' }).then(() => {
+                                refreshData()
+                                showToast('Chapter status updated to In Progress')
+                              })
                             }}
                             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
                           >
@@ -776,9 +919,10 @@ export default function ChaptersPage() {
                         {selectedChapter.status === 'In Progress' && progressPercent >= 100 && (
                           <button
                             onClick={() => {
-                              updateChapterStatus(selectedChapterId, 'Ready for Editor')
-                              refreshData()
-                              showToast('Chapter marked Ready for Editor review!')
+                              chapterService.updateChapter(selectedChapterId, { status: 'Ready for Editor' }).then(() => {
+                                refreshData()
+                                showToast('Chapter marked Ready for Editor review!')
+                              })
                             }}
                             className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
                           >
@@ -788,9 +932,10 @@ export default function ChaptersPage() {
                         {selectedChapter.status === 'Ready for Editor' && (
                           <button
                             onClick={() => {
-                              updateChapterStatus(selectedChapterId, 'Published')
-                              refreshData()
-                              showToast('Chapter successfully Published!')
+                              chapterService.updateChapter(selectedChapterId, { status: 'Published' }).then(() => {
+                                refreshData()
+                                showToast('Chapter successfully Published!')
+                              })
                             }}
                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
                           >
@@ -924,7 +1069,7 @@ export default function ChaptersPage() {
                   onChange={(e) => setSelectedAssistantId(e.target.value)}
                   className="bg-transparent text-foreground font-bold text-base pr-6 cursor-pointer focus:outline-none mt-0.5"
                 >
-                  {SEED_ASSISTANTS.map((a) => (
+                  {assistants.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({a.specialty})
                     </option>
@@ -1054,8 +1199,8 @@ export default function ChaptersPage() {
               You are logged in as {role}. Here is the current progress of active serializations and their chapter timelines.
             </p>
             <div className="border border-border rounded-xl divide-y divide-border overflow-hidden">
-              {getChapters().map(c => {
-                const tasksList = getTasks(c.id)
+              {allChapters.map(c => {
+                const tasksList = allTasks.filter(t => t.chapterId === c.id)
                 const appPages = tasksList.filter(t => t.status === 'Approved').length
                 const totPages = c.totalPages
                 const progress = Math.round((appPages / (tasksList.length || 1)) * 100)

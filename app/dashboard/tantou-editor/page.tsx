@@ -41,9 +41,6 @@ import {
 } from 'lucide-react'
 import { useRole } from '@/context/RoleContext'
 import {
-  getChapters,
-  getTasks,
-  updateChapterStatus,
   type Chapter,
   type Task,
   type ChapterStatus,
@@ -61,6 +58,7 @@ import {
 import { toast } from 'sonner'
 import { seriesService, type SeriesProposal } from '@/services/seriesService'
 import { userService } from '@/services/userService'
+import { chapterService } from '@/services/chapterService'
 import { API_BASE_URL } from '@/lib/constants'
 
 interface FileItem {
@@ -392,9 +390,14 @@ function TantouEditorWorkspace() {
       }
     }
 
-    setChapters(getChapters())
-    setTasks(getTasks())
     setManuscripts(getManuscripts())
+
+    try {
+      const allChaps = await chapterService.listChapters()
+      setChapters(allChaps)
+    } catch (e) {
+      console.warn('Failed to load chapters from backend:', e)
+    }
 
     // Background sync manuscripts
     try {
@@ -513,14 +516,17 @@ function TantouEditorWorkspace() {
     e.preventDefault()
     if (!activeManuscript || !newAnnotationText.trim()) return
 
-    const ann = addAnnotation(
+    addAnnotation(
       activeManuscript.id,
       activeManuscript.latestVersion,
       newAnnotationText.trim()
-    )
-    setAnnotations((prev) => [...prev, ann])
-    setNewAnnotationText('')
-    toast.success('Annotation added to this version draft!')
+    ).then((ann) => {
+      setAnnotations((prev) => [...prev, ann])
+      setNewAnnotationText('')
+      toast.success('Annotation added to this version draft!')
+    }).catch((err) => {
+      toast.error(err.message || 'Failed to add annotation')
+    })
   }
 
   const handleDecision = async (status: 'APPROVED' | 'REVISION REQUIRED') => {
@@ -534,22 +540,26 @@ function TantouEditorWorkspace() {
       return
     }
 
-    const success = updateManuscriptStatus(
-      activeManuscript.id,
-      status,
-      feedbackText.trim()
-    )
-    if (success) {
-      if (status === 'APPROVED') {
-        toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)
+    try {
+      const success = await updateManuscriptStatus(
+        activeManuscript.id,
+        status,
+        feedbackText.trim()
+      )
+      if (success) {
+        if (status === 'APPROVED') {
+          toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)
+        } else {
+          toast.warning(
+            `Revision requested for "${activeManuscript.seriesTitle}". Status updated.`
+          )
+        }
+        handleBackToManuscripts()
       } else {
-        toast.warning(
-          `Revision requested for "${activeManuscript.seriesTitle}". Status updated.`
-        )
+        toast.error('Failed to update manuscript review status.')
       }
-      handleBackToManuscripts()
-    } else {
-      toast.error('Failed to update manuscript review status.')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update manuscript review status.')
     }
   }
 
@@ -652,7 +662,7 @@ function TantouEditorWorkspace() {
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="text-[10px] text-muted-foreground">
-                              {proposal.submittedAt ? new Date(proposal.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft'}
+                              {proposal.submittedAt ? new Date(proposal.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : (proposal.status === 'Draft' ? 'Draft' : 'N/A')}
                             </span>
                             <span
                               className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase ${proposal.status === 'Approved' || proposal.status === 'Active'
@@ -1023,7 +1033,8 @@ function TantouEditorWorkspace() {
                 const handleUpdateStatus = async (status: string, rejectReason?: string) => {
                   try {
                     await seriesService.updateProposalStatus(proposal.id, status, rejectReason)
-                    toast.success(`Proposal status successfully updated to "${status}"!`)
+                    const displayStatus = (status === 'Under Review' || status === 'UnderReview') ? 'Board Voting' : status;
+                    toast.success(`Proposal status successfully updated to "${displayStatus}"!`)
                     setShowRejectInput(false)
                     setRejectReasonText('')
                     // Refresh data
@@ -1133,7 +1144,7 @@ function TantouEditorWorkspace() {
                             <div className="flex justify-between py-1.5">
                               <span className="text-muted-foreground font-semibold">Date Submitted</span>
                               <span className="font-bold text-foreground">
-                                {proposal.submittedAt ? new Date(proposal.submittedAt).toLocaleDateString('en-US', { dateStyle: 'medium' }) : 'Draft'}
+                                {proposal.submittedAt ? new Date(proposal.submittedAt).toLocaleDateString('en-US', { dateStyle: 'medium' }) : (proposal.status === 'Draft' ? 'Draft' : 'N/A')}
                               </span>
                             </div>
                             <div className="flex justify-between py-1.5">
@@ -1343,7 +1354,7 @@ function TantouEditorWorkspace() {
                                 </h4>
                                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                                   As the assigned Tantou Editor, you are responsible for the first line of evaluation.
-                                  If you approve this proposal, its status will become <strong>Under Review</strong> and it will be sent to the Editorial Board for voting. If you reject it, it will be marked as <strong>Rejected</strong>.
+                                  If you approve this proposal, its status will become <strong>Board Voting</strong> and it will be sent to the Editorial Board for voting. If you reject it, it will be marked as <strong>Rejected</strong>.
                                 </p>
                               </div>
 
@@ -1573,7 +1584,7 @@ function TantouEditorWorkspace() {
                                 <span className="flex items-center gap-1.5">
                                   <Calendar className="w-3.5 h-3.5 text-muted-foreground" /> Submitted:{' '}
                                   <strong className="text-foreground">
-                                    {proposal.submittedAt ? new Date(proposal.submittedAt).toLocaleDateString('en-US', { dateStyle: 'medium' }) : 'Draft'}
+                                    {proposal.submittedAt ? new Date(proposal.submittedAt).toLocaleDateString('en-US', { dateStyle: 'medium' }) : (proposal.status === 'Draft' ? 'Draft' : 'N/A')}
                                   </strong>
                                 </span>
                                 <span className="flex items-center gap-1.5">

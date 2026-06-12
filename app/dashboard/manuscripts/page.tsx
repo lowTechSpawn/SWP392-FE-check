@@ -99,10 +99,13 @@ export default function ManuscriptsPage() {
     e.preventDefault()
     if (!activeManuscript || !newAnnotationText.trim()) return
 
-    const ann = addAnnotation(activeManuscript.id, activeManuscript.latestVersion, newAnnotationText.trim())
-    setAnnotations(prev => [...prev, ann])
-    setNewAnnotationText('')
-    toast.success('Annotation added to this version draft!')
+    addAnnotation(activeManuscript.id, activeManuscript.latestVersion, newAnnotationText.trim()).then((ann) => {
+      setAnnotations(prev => [...prev, ann])
+      setNewAnnotationText('')
+      toast.success('Annotation added to this version draft!')
+    }).catch((err) => {
+      toast.error(err.message || 'Failed to add annotation')
+    })
   }
 
   // Handle decision outcomes (BR-80, BR-84)
@@ -115,17 +118,20 @@ export default function ManuscriptsPage() {
       return
     }
 
-    const success = updateManuscriptStatus(activeManuscript.id, status, feedbackText.trim())
-    if (success) {
-      if (status === 'APPROVED') {
-        toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)
+    updateManuscriptStatus(activeManuscript.id, status, feedbackText.trim()).then((success) => {
+      if (success) {
+        if (status === 'APPROVED') {
+          toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)
+        } else {
+          toast.warning(`Revision requested for "${activeManuscript.seriesTitle}". Draft status updated to Revision Required.`)
+        }
+        handleBackToList()
       } else {
-        toast.warning(`Revision requested for "${activeManuscript.seriesTitle}". Draft status updated to Revision Required.`)
+        toast.error('Failed to update manuscript review status.')
       }
-      handleBackToList()
-    } else {
-      toast.error('Failed to update manuscript review status.')
-    }
+    }).catch((err) => {
+      toast.error(err.message || 'Failed to update manuscript review status.')
+    })
   }
 
   const formatDateShort = (isoString: string) => {

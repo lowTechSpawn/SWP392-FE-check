@@ -36,6 +36,8 @@ export interface SeriesProposal {
   sourceZipPublicUrl?: string | null;
   rawStatus?: string;
   proposalPages?: ProposalPageResponse[];
+  createdAt?: string;
+  submittedAt?: string;
 }
 
 const mapGenreNamesToGuids = async (genreString: string): Promise<string[]> => {
@@ -129,6 +131,8 @@ const mapSeriesResponse = (s: any): SeriesProposal => {
       createdAt: p.createdAt || p.CreatedAt,
       url: p.url || p.Url || undefined,
     })),
+    createdAt: s.createdAt || s.CreatedAt || '',
+    submittedAt: s.submittedAt || s.SubmittedAt || s.createdAt || s.CreatedAt || '',
   };
 };
 
@@ -185,6 +189,13 @@ export const seriesService = {
         console.error(`Failed to fetch source ZIP URL for ${proposal.sourceZipFileAssetId}:`, err);
       }
     }
+    // Set sampleFileUrl from proposalPages if empty
+    if (!proposal.sampleFileUrl && proposal.proposalPages && proposal.proposalPages.length > 0) {
+      proposal.sampleFileUrl = proposal.proposalPages
+        .map((p) => p.previewFileAssetId)
+        .filter(Boolean)
+        .join(',');
+    }
 
     return proposal;
   },
@@ -226,6 +237,44 @@ export const seriesService = {
     }
 
     return mapSeriesResponse(createdSeries);
+  },
+
+  updateProposal: async (id: string, proposal: any): Promise<SeriesProposal> => {
+    const genreIds = await mapGenreNamesToGuids(proposal.genre);
+    
+    // Map sampleFileUrl back to its comma-separated file asset IDs
+    const samplePageFileAssetIds = (proposal.sampleFileUrl || '')
+      .split(',')
+      .filter(Boolean);
+
+    const payload = {
+      title: proposal.title,
+      synopsis: proposal.synopsis || proposal.description,
+      publicationType: proposal.publicationType,
+      genreIds: genreIds,
+      sourceZipFileAssetId: proposal.sourceZipFileAssetId || null,
+      samplePageFileAssetIds: samplePageFileAssetIds
+    };
+
+    const res = await fetchAPI<{ data: any }>(`/api/series/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+
+    const updatedSeries = res.data || res;
+
+    if (proposal.status === 'PendingReview' && id) {
+      try {
+        await fetchAPI(`/api/proposals/${id}/submit-review`, {
+          method: 'POST'
+        });
+        updatedSeries.status = 'UnderReview';
+      } catch (error) {
+        console.error("Failed to submit proposal for review:", error);
+      }
+    }
+
+    return mapSeriesResponse(updatedSeries);
   },
 
   updateProposalStatus: async (id: string, status: string, rejectReason?: string) => {

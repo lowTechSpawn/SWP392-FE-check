@@ -487,7 +487,7 @@ export default function ReviewProposalsPage() {
                   <div className="flex justify-between py-1.5">
                     <span className="text-muted-foreground font-semibold">Date Submitted</span>
                     <span className="font-bold text-foreground">
-                      {proposal.submittedAt ? formatDateShort(proposal.submittedAt) : 'Draft'}
+                      {proposal.submittedAt ? formatDateShort(proposal.submittedAt) : (proposal.status === 'Draft' ? 'Draft' : 'N/A')}
                     </span>
                   </div>
                   <div className="flex justify-between py-1.5">
