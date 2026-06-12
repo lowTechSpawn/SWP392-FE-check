@@ -335,6 +335,19 @@ export default function ChaptersPage() {
     setNewTaskAttachments(prev => [...prev, newFile])
   }
 
+  // Upload thực tế cho Task
+  const handleTaskRealUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    const fileList = Array.from(e.target.files)
+    const newFiles = fileList.map(f => ({
+      name: f.name,
+      size: `${(f.size / (1024 * 1024)).toFixed(2)} MB`,
+      type: f.name.split('.').pop() || '',
+      fileObject: f
+    }))
+    setNewTaskAttachments(prev => [...prev, ...newFiles])
+  }
+
   const removeTaskAttachment = (index: number) => {
     setNewTaskAttachments(prev => prev.filter((_, i) => i !== index))
   }
@@ -1659,12 +1672,20 @@ export default function ChaptersPage() {
                 </label>
                 <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
                   <p className="text-xs text-muted-foreground">Đính kèm các file tài liệu hướng dẫn vẽ</p>
+                  <input
+                    type="file"
+                    id="task-reference-file-input"
+                    className="hidden"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.zip,.psd,.clip"
+                    onChange={handleTaskRealUpload}
+                  />
                   <button
                     type="button"
-                    onClick={handleTaskMockUpload}
+                    onClick={() => document.getElementById('task-reference-file-input')?.click()}
                     className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5" /> Attach Mock File
+                    <Upload className="w-3.5 h-3.5" /> Attach Real File
                   </button>
                 </div>
                 {newTaskAttachments.length > 0 && (
