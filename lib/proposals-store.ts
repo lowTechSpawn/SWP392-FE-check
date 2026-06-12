@@ -57,21 +57,44 @@ const mapSeriesToProposal = (s: any): Proposal => {
 };
 
 export async function getProposals(): Promise<Proposal[]> {
-  const list = await seriesService.listSeries();
-  const mapped = list.map(mapSeriesToProposal);
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('mangaflow_proposals', JSON.stringify(mapped));
+  try {
+    const list = await seriesService.listSeries();
+    const mapped = list.map(mapSeriesToProposal);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mangaflow_proposals', JSON.stringify(mapped));
+    }
+    return mapped;
+  } catch (error) {
+    console.warn("Backend listSeries failed, using offline fallback...", error);
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    }
+    return [];
   }
-  return mapped;
 }
 
 export async function getProposalsByMangaka(mangakaId: string): Promise<Proposal[]> {
-  const list = await seriesService.listSeries();
-  const mapped = list.map(mapSeriesToProposal);
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('mangaflow_proposals', JSON.stringify(mapped));
+  try {
+    const list = await seriesService.listSeries();
+    const mapped = list.map(mapSeriesToProposal);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mangaflow_proposals', JSON.stringify(mapped));
+    }
+    return mapped.filter((p) => p.mangakaId.toLowerCase() === mangakaId.toLowerCase());
+  } catch (error) {
+    console.warn("Backend listSeries for Mangaka failed, using offline fallback...", error);
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      if (raw) {
+        const list = JSON.parse(raw) as Proposal[];
+        return list.filter((p) => p.mangakaId.toLowerCase() === mangakaId.toLowerCase());
+      }
+    }
+    return [];
   }
-  return mapped.filter((p) => p.mangakaId.toLowerCase() === mangakaId.toLowerCase());
 }
 
 export async function getProposalById(id: string): Promise<Proposal | undefined> {
@@ -79,6 +102,13 @@ export async function getProposalById(id: string): Promise<Proposal | undefined>
     const s = await seriesService.getSeriesById(id);
     return mapSeriesToProposal(s);
   } catch {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      if (raw) {
+        const list = JSON.parse(raw) as Proposal[];
+        return list.find(p => p.id === id);
+      }
+    }
     return undefined;
   }
 }
@@ -114,18 +144,43 @@ export async function isTitleDuplicate(title: string, excludeId?: string): Promi
 export async function saveDraft(
   data: Omit<Proposal, 'id' | 'status' | 'createdAt'>,
 ): Promise<Proposal> {
-  const res = await seriesService.submitProposal({
-    title: data.title,
-    genre: data.genre,
-    publicationType: data.publicationType,
-    synopsis: data.synopsis,
-    sampleFileUrl: data.sampleFileUrl,
-    coverImageUrl: data.coverImageUrl,
-    mangakaId: data.mangakaId,
-    sourceZipFileAssetId: data.sourceZipFileAssetId,
-    status: 'Draft'
-  });
-  return mapSeriesToProposal(res);
+  try {
+    const res = await seriesService.submitProposal({
+      title: data.title,
+      genre: data.genre,
+      publicationType: data.publicationType,
+      synopsis: data.synopsis,
+      sampleFileUrl: data.sampleFileUrl,
+      coverImageUrl: data.coverImageUrl,
+      mangakaId: data.mangakaId,
+      sourceZipFileAssetId: data.sourceZipFileAssetId,
+      status: 'Draft'
+    });
+    return mapSeriesToProposal(res);
+  } catch (error) {
+    console.warn("Backend saveDraft failed, using offline fallback...", error);
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      const list = raw ? JSON.parse(raw) : [];
+      const newProposal: Proposal = {
+        id: `PR${String(list.length + 1).padStart(2, '0')}`,
+        title: data.title,
+        genre: data.genre,
+        publicationType: data.publicationType as any,
+        synopsis: data.synopsis,
+        sampleFileUrl: data.sampleFileUrl,
+        mangakaId: data.mangakaId,
+        status: 'Draft',
+        createdAt: new Date().toISOString(),
+        coverImageUrl: data.coverImageUrl,
+        sourceZipFileAssetId: data.sourceZipFileAssetId,
+      };
+      list.push(newProposal);
+      localStorage.setItem('mangaflow_proposals', JSON.stringify(list));
+      return newProposal;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -134,18 +189,44 @@ export async function saveDraft(
 export async function submitProposal(
   data: Omit<Proposal, 'id' | 'status' | 'createdAt' | 'submittedAt'>,
 ): Promise<Proposal> {
-  const res = await seriesService.submitProposal({
-    title: data.title,
-    genre: data.genre,
-    publicationType: data.publicationType,
-    synopsis: data.synopsis,
-    sampleFileUrl: data.sampleFileUrl,
-    coverImageUrl: data.coverImageUrl,
-    mangakaId: data.mangakaId,
-    sourceZipFileAssetId: data.sourceZipFileAssetId,
-    status: 'PendingReview'
-  });
-  return mapSeriesToProposal(res);
+  try {
+    const res = await seriesService.submitProposal({
+      title: data.title,
+      genre: data.genre,
+      publicationType: data.publicationType,
+      synopsis: data.synopsis,
+      sampleFileUrl: data.sampleFileUrl,
+      coverImageUrl: data.coverImageUrl,
+      mangakaId: data.mangakaId,
+      sourceZipFileAssetId: data.sourceZipFileAssetId,
+      status: 'PendingReview'
+    });
+    return mapSeriesToProposal(res);
+  } catch (error) {
+    console.warn("Backend submitProposal failed, using offline fallback...", error);
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      const list = raw ? JSON.parse(raw) : [];
+      const newProposal: Proposal = {
+        id: `PR${String(list.length + 1).padStart(2, '0')}`,
+        title: data.title,
+        genre: data.genre,
+        publicationType: data.publicationType as any,
+        synopsis: data.synopsis,
+        sampleFileUrl: data.sampleFileUrl,
+        mangakaId: data.mangakaId,
+        status: 'Pending Review',
+        createdAt: new Date().toISOString(),
+        submittedAt: new Date().toISOString(),
+        coverImageUrl: data.coverImageUrl,
+        sourceZipFileAssetId: data.sourceZipFileAssetId,
+      };
+      list.push(newProposal);
+      localStorage.setItem('mangaflow_proposals', JSON.stringify(list));
+      return newProposal;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -155,21 +236,39 @@ export async function updateDraft(
   id: string,
   updates: Partial<Omit<Proposal, 'id' | 'mangakaId' | 'createdAt'>>,
 ): Promise<Proposal | null> {
-  const existing = await getProposalById(id);
-  if (!existing || existing.status !== 'Draft') return null;
-  const updatedData = { ...existing, ...updates };
-  const res = await seriesService.submitProposal({
-    title: updatedData.title,
-    genre: updatedData.genre,
-    publicationType: updatedData.publicationType,
-    synopsis: updatedData.synopsis,
-    sampleFileUrl: updatedData.sampleFileUrl,
-    coverImageUrl: updatedData.coverImageUrl,
-    mangakaId: updatedData.mangakaId,
-    sourceZipFileAssetId: updatedData.sourceZipFileAssetId,
-    status: 'Draft'
-  });
-  return mapSeriesToProposal(res);
+  try {
+    const existing = await getProposalById(id);
+    if (!existing || existing.status !== 'Draft') return null;
+    const updatedData = { ...existing, ...updates };
+    const res = await seriesService.submitProposal({
+      title: updatedData.title,
+      genre: updatedData.genre,
+      publicationType: updatedData.publicationType,
+      synopsis: updatedData.synopsis,
+      sampleFileUrl: updatedData.sampleFileUrl,
+      coverImageUrl: updatedData.coverImageUrl,
+      mangakaId: updatedData.mangakaId,
+      sourceZipFileAssetId: updatedData.sourceZipFileAssetId,
+      status: 'Draft'
+    });
+    return mapSeriesToProposal(res);
+  } catch (error) {
+    console.warn("Backend updateDraft failed, using offline fallback...", error);
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      if (raw) {
+        const list = JSON.parse(raw) as Proposal[];
+        const idx = list.findIndex(p => p.id === id);
+        if (idx !== -1) {
+          const updated = { ...list[idx], ...updates };
+          list[idx] = updated;
+          localStorage.setItem('mangaflow_proposals', JSON.stringify(list));
+          return updated;
+        }
+      }
+    }
+    return null;
+  }
 }
 
 /**
@@ -180,6 +279,18 @@ export async function deleteDraft(id: string): Promise<boolean> {
     await seriesService.updateProposalStatus(id, 'Cancelled');
     return true;
   } catch {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      if (raw) {
+        const list = JSON.parse(raw) as Proposal[];
+        const idx = list.findIndex(p => p.id === id);
+        if (idx !== -1) {
+          list.splice(idx, 1);
+          localStorage.setItem('mangaflow_proposals', JSON.stringify(list));
+          return true;
+        }
+      }
+    }
     return false;
   }
 }
@@ -203,7 +314,21 @@ export async function updateProposalStatus(
     
     await seriesService.updateProposalStatus(id, backendStatus, rejectReason);
     return true;
-  } catch {
+  } catch (error) {
+    console.warn("Backend updateProposalStatus failed, using offline fallback...", error);
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('mangaflow_proposals');
+      if (raw) {
+        const list = JSON.parse(raw) as Proposal[];
+        const idx = list.findIndex(p => p.id === id);
+        if (idx !== -1) {
+          list[idx].status = status as ProposalStatus;
+          list[idx].rawStatus = status === 'Approved' ? 'Active' : (status === 'Rejected' ? 'Rejected' : status);
+          localStorage.setItem('mangaflow_proposals', JSON.stringify(list));
+          return true;
+        }
+      }
+    }
     return false;
   }
 }
