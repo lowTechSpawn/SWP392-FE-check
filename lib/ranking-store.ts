@@ -40,7 +40,7 @@ function loadVotes(): VoteRecord[] {
     }
     const parsed = JSON.parse(raw) as VoteRecord[]
     // Filter out any mock vote records based on seriesId length
-    return parsed.filter(v => v.seriesId.length > 3)
+    return parsed.filter(v => v.seriesId.length >= 3)
   } catch {
     return SEED_VOTES
   }

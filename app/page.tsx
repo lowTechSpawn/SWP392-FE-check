@@ -167,7 +167,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Feature 1 */}
-            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group">
+            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group" suppressHydrationWarning>
               <div className="bg-primary/10 text-primary w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <PencilLine className="w-6 h-6" />
               </div>
@@ -178,7 +178,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group">
+            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group" suppressHydrationWarning>
               <div className="bg-primary/10 text-primary w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <ClipboardList className="w-6 h-6" />
               </div>
@@ -189,7 +189,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group">
+            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group" suppressHydrationWarning>
               <div className="bg-primary/10 text-primary w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Layers className="w-6 h-6" />
               </div>
@@ -200,7 +200,7 @@ export default function LandingPage() {
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group">
+            <div className="bg-card p-6 rounded-2xl border border-border hover:border-primary/30 hover:bg-accent/10 transition-all group" suppressHydrationWarning>
               <div className="bg-primary/10 text-primary w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <BarChart3 className="w-6 h-6" />
               </div>

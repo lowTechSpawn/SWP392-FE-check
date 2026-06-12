@@ -45,8 +45,8 @@ import {
   assignTask,
   getAssistants,
   getSeriesByMangaka,
-  SEED_ASSISTANTS,
   syncTasksFromBackend,
+  syncSeriesFromBackend,
   TASK_TYPE_SUGGESTIONS,
   type Chapter,
   type Task,
@@ -73,6 +73,22 @@ export default function ChaptersPage() {
       } catch {}
     }
   }, [])
+
+  // Sync series from backend on mount or when mangakaId/role changes
+  useEffect(() => {
+    if (role === 'Mangaka' && mangakaId) {
+      syncSeriesFromBackend(mangakaId).then((seriesList) => {
+        setMangakaSeries(seriesList)
+        setSelectedSeriesId(prev => {
+          if (!prev && seriesList.length > 0) {
+            return seriesList[0].id
+          }
+          return prev
+        })
+      })
+    }
+  }, [role, mangakaId])
+
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   // --- State for Mangaka Role ---
@@ -117,13 +133,25 @@ export default function ChaptersPage() {
   const [reviewFeedback, setReviewFeedback] = useState('')
 
   // --- State for Assistant Role ---
-  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('A01') // Sato Takashi by default
+  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('U05') // Sato Takashi by default
   const [assistantTasks, setAssistantTasks] = useState<Task[]>([])
   const [isSubmitWorkModalOpen, setIsSubmitWorkModalOpen] = useState(false)
   const [activeTaskToSubmit, setActiveTaskToSubmit] = useState<Task | null>(null)
   const [submitWorkUrl, setSubmitWorkUrl] = useState('')
   const [submitComment, setSubmitComment] = useState('')
   const [submittedFiles, setSubmittedFiles] = useState<{ name: string; size: string; type: string }[]>([])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user-info')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed?.id && parsed?.role === 'Assistant') {
+          setSelectedAssistantId(parsed.id)
+        }
+      } catch {}
+    }
+  }, [])
 
   // Trigger Toast Notification helper
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -613,7 +641,7 @@ export default function ChaptersPage() {
                 >
                   {mangakaSeries.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.title} ({s.id})
+                      {s.title}
                     </option>
                   ))}
                 </select>
@@ -924,7 +952,7 @@ export default function ChaptersPage() {
                   onChange={(e) => setSelectedAssistantId(e.target.value)}
                   className="bg-transparent text-foreground font-bold text-base pr-6 cursor-pointer focus:outline-none mt-0.5"
                 >
-                  {SEED_ASSISTANTS.map((a) => (
+                  {assistants.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({a.specialty})
                     </option>

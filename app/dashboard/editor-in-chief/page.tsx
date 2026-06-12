@@ -278,9 +278,6 @@ export default function EditorInChiefDashboard() {
                               <h3 className="font-extrabold text-lg text-foreground tracking-tight">
                                 {proposal.title}
                               </h3>
-                              <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-muted-foreground border">
-                                {proposal.id}
-                              </span>
                             </div>
                             <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-semibold">
                               <span className="text-primary">{proposal.genre}</span>

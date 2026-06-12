@@ -250,7 +250,7 @@ export default function RankingPage() {
                   >
                     <option value="">-- Choose a Series --</option>
                     {allSeries.map(s => (
-                      <option key={s.id} value={s.id}>{s.title} ({s.id})</option>
+                      <option key={s.id} value={s.id}>{s.title}</option>
                     ))}
                   </select>
                 </div>

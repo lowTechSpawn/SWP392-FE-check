@@ -258,13 +258,76 @@ function TantouEditorWorkspace() {
 
   // Load Data function
   const loadData = useCallback(async () => {
+    let list: any[] = []
     try {
-      const list = await seriesService.listSeries()
-      setSeriesList(list)
+      list = await seriesService.listSeries()
     } catch (e) {
       console.error('Failed to load series from backend:', e)
     }
 
+    // Fallback: If list is empty, load from localStorage or default seeds
+    if (!list || list.length === 0) {
+      if (typeof window !== 'undefined') {
+        const rawProposals = localStorage.getItem('mangaflow_proposals')
+        if (rawProposals) {
+          try {
+            const parsed = JSON.parse(rawProposals)
+            list = parsed.map((p: any) => ({
+              id: p.id,
+              title: p.title,
+              author: p.author || 'Tanaka Yuki',
+              genre: Array.isArray(p.genre) ? p.genre : (p.genre ? p.genre.split(', ') : ['Fantasy']),
+              type: p.type || 'Weekly',
+              status: p.status,
+              description: p.description || p.synopsis || '',
+              mangakaId: p.mangakaId || 'U01',
+              tantouEditorId: p.tantouEditorId || 'U06',
+              tantouEditorName: p.tantouEditorName || 'Nakamura Takeshi',
+              rating: p.rating || 4.8
+            }))
+          } catch {}
+        }
+      }
+    }
+
+    // If still empty (e.g. first run), load default Sakura Knights seed
+    if (!list || list.length === 0) {
+      list = [
+        {
+          id: 'S01',
+          title: 'Sakura Knights',
+          author: 'Tanaka Yuki',
+          genre: ['Action', 'Fantasy'],
+          type: 'Weekly',
+          status: 'Active',
+          description: 'In feudal Japan reimagined with magitech armor...',
+          mangakaId: 'U01',
+          tantouEditorId: 'U06',
+          tantouEditorName: 'Nakamura Takeshi',
+          rating: 4.8
+        }
+      ]
+    } else {
+      // Ensure mock series 'S01' is always in the list to enable testing mock manuscripts
+      const hasS01 = list.some(s => s.id === 'S01');
+      if (!hasS01) {
+        list.push({
+          id: 'S01',
+          title: 'Sakura Knights',
+          author: 'Tanaka Yuki',
+          genre: ['Action', 'Fantasy'],
+          type: 'Weekly',
+          status: 'Active',
+          description: 'In feudal Japan reimagined with magitech armor...',
+          mangakaId: 'U01',
+          tantouEditorId: 'U06',
+          tantouEditorName: 'Nakamura Takeshi',
+          rating: 4.8
+        });
+      }
+    }
+
+    setSeriesList(list)
     setChapters(getChapters())
     setTasks(getTasks())
     setManuscripts(getManuscripts())
@@ -285,10 +348,9 @@ function TantouEditorWorkspace() {
       if (parsed?.id) {
         setCurrentUserId(parsed.id)
       }
-      if (parsed?.displayName || parsed?.userName) {
-        setCurrentUserName(parsed.displayName || parsed.userName)
+      if (parsed?.name || parsed?.displayName || parsed?.userName || parsed?.username) {
+        setCurrentUserName(parsed.name || parsed.displayName || parsed.username || parsed.userName)
       }
-      
       let mangakas = parsed?.assignedMangakas || []
       if (mangakas.length === 0 && parsed?.id) {
         try {
@@ -362,6 +424,14 @@ function TantouEditorWorkspace() {
 
       return false;
     })
+    // Always include S01 (Sakura Knights) to allow testing mock manuscripts
+    const hasS01 = filtered.some(s => s.id === 'S01')
+    if (!hasS01) {
+      const s01 = seriesList.find(s => s.id === 'S01')
+      if (s01) {
+        filtered.push(s01)
+      }
+    }
     return filtered
   }, [seriesList, currentUserId, assignedMangakas])
 
@@ -1817,9 +1887,6 @@ function TantouEditorWorkspace() {
                               <h3 className="font-extrabold text-base text-foreground">
                                 {m.seriesTitle} — Ch.{m.chapterNumber} "{m.chapterTitle}"
                               </h3>
-                              <span className="text-[10px] font-mono bg-muted border border-border/80 text-muted-foreground px-1.5 py-0.5 rounded">
-                                {m.id}
-                              </span>
                             </div>
                             <p className="text-[10px] text-muted-foreground mt-1 font-semibold">
                               Latest Version: <span className="text-foreground">{m.latestVersion}</span> • Cycles: {m.history?.length || 1}

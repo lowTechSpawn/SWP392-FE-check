@@ -48,14 +48,14 @@ const mapSeriesResponse = (s: any): SeriesProposal => {
   const mangakaName = s.mangakaName || s.MangakaName || 'Unknown';
   const genreData = s.genre || s.Genre || s.genres || s.Genres || '';
   const publicationType = s.publicationType || s.PublicationType;
-  let status = s.status || s.Status;
+  const status = s.status || s.Status;
   const description = s.synopsis || s.Synopsis || s.description || s.Description || '';
   const sampleFileUrl = s.sampleFileUrl || s.SampleFileUrl || '';
   const coverImageUrl = s.coverImageUrl || s.CoverImageUrl || '';
   const mangakaId = s.mangakaId || s.MangakaId;
   const tantouEditorId = s.tantouEditorId || s.TantouEditorId;
   const tantouEditorName = s.tantouEditorName || s.TantouEditorName;
-  let rejectReason = s.rejectReason || s.RejectReason || null;
+  const rejectReason = s.rejectReason || s.RejectReason || null;
 
   let genreArray: string[] = [];
   if (Array.isArray(genreData)) {

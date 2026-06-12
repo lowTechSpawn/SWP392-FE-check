@@ -368,9 +368,6 @@ export default function ManuscriptsPage() {
                           <h3 className="font-extrabold text-base text-foreground">
                             {m.seriesTitle} — Ch. {m.chapterNumber} "{m.chapterTitle}"
                           </h3>
-                          <span className="text-[10px] font-mono bg-muted border text-muted-foreground px-1.5 py-0.5 rounded">
-                            {m.id}
-                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           Latest Version: <span className="font-semibold text-foreground">{m.latestVersion}</span> • Total versions: {m.history.length}

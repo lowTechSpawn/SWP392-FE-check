@@ -33,7 +33,75 @@ export interface Annotation {
 const STORAGE_MANUSCRIPTS_KEY = 'mangaflow_manuscripts'
 const STORAGE_ANNOTATIONS_KEY = 'mangaflow_annotations'
 
-const SEED_MANUSCRIPTS: ManuscriptItem[] = []
+const SEED_MANUSCRIPTS: ManuscriptItem[] = [
+  {
+    id: 'M01',
+    seriesId: 'S01',
+    seriesTitle: 'Sakura Knights',
+    chapterNumber: 1,
+    chapterTitle: 'Khởi Đầu Của Kiếm Sĩ',
+    latestVersion: 'v1',
+    status: 'APPROVED',
+    progress: 100,
+    history: [
+      {
+        version: 'v1',
+        status: 'APPROVED',
+        submittedAt: '2026-06-01T08:00:00Z',
+        reviewedAt: '2026-06-03T10:00:00Z',
+        feedback: 'Bản vẽ sạch đẹp, nét vẽ có hồn và bối cảnh được thực hiện rất tỉ mỉ.'
+      }
+    ],
+    pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4']
+  },
+  {
+    id: 'M02',
+    seriesId: 'S01',
+    seriesTitle: 'Sakura Knights',
+    chapterNumber: 2,
+    chapterTitle: 'Bí Ẩn Mật Cảnh',
+    latestVersion: 'v1',
+    status: 'SUBMITTED',
+    progress: 100,
+    history: [
+      {
+        version: 'v1',
+        status: 'SUBMITTED',
+        submittedAt: '2026-06-10T09:00:00Z'
+      }
+    ],
+    pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4']
+  },
+  {
+    id: 'M04',
+    seriesId: 'S01',
+    seriesTitle: 'Sakura Knights',
+    chapterNumber: 3,
+    chapterTitle: 'Trận Chiến Quyết Định',
+    latestVersion: 'v2',
+    status: 'REVISION REQUIRED',
+    progress: 80,
+    history: [
+      {
+        version: 'v2',
+        status: 'REVISION REQUIRED',
+        submittedAt: '2026-06-11T12:00:00Z',
+        reviewedAt: '2026-06-12T02:00:00Z',
+        revisionNumber: 2,
+        feedback: 'Nét vẽ nhân vật ở trang 2 và 3 vẫn hơi cứng. Cần tập trung tả thực nét mặt lúc chiến đấu.'
+      },
+      {
+        version: 'v1',
+        status: 'REVISION REQUIRED',
+        submittedAt: '2026-06-08T10:00:00Z',
+        reviewedAt: '2026-06-09T14:00:00Z',
+        revisionNumber: 1,
+        feedback: 'Bố cục khung cảnh trang 1 và 4 quá rối, cần bố trí lại góc nhìn rộng hơn.'
+      }
+    ],
+    pages: ['Page 1', 'Page 2', 'Page 3', 'Page 4']
+  }
+]
 
 const SEED_ANNOTATIONS: Annotation[] = []
 
@@ -46,8 +114,20 @@ function loadManuscripts(): ManuscriptItem[] {
       return SEED_MANUSCRIPTS
     }
     const parsed = JSON.parse(raw) as ManuscriptItem[]
+    // Dynamically merge missing SEED_MANUSCRIPTS into parsed
+    let hasChanges = false
+    SEED_MANUSCRIPTS.forEach(sm => {
+      const exists = parsed.some(m => m.id === sm.id)
+      if (!exists) {
+        parsed.push(sm)
+        hasChanges = true
+      }
+    })
+    if (hasChanges) {
+      localStorage.setItem(STORAGE_MANUSCRIPTS_KEY, JSON.stringify(parsed))
+    }
     // Filter out mock manuscripts based on seriesId length
-    return parsed.filter(m => m.seriesId.length > 3)
+    return parsed.filter(m => m.seriesId.length >= 3)
   } catch {
     return SEED_MANUSCRIPTS
   }

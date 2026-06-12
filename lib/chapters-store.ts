@@ -112,7 +112,7 @@ function loadChapters(): Chapter[] {
     }
     const parsed = JSON.parse(raw) as Chapter[]
     // Filter out mock chapters based on seriesId length
-    return parsed.filter(c => c.seriesId.length > 3)
+    return parsed.filter(c => c.seriesId.length >= 3)
   } catch {
     return SEED_CHAPTERS
   }
@@ -133,7 +133,7 @@ function loadTasks(): Task[] {
     }
     const parsed = JSON.parse(raw) as Task[]
     // Filter out mock tasks based on assistantId length or assignment state
-    return parsed.filter(t => t.assistantId.length > 3 || t.assistantId === 'Unassigned')
+    return parsed.filter(t => t.assistantId.length >= 3 || t.assistantId === 'Unassigned')
   } catch {
     return SEED_TASKS
   }
@@ -524,3 +524,34 @@ export async function syncTasksFromBackend(chapterId?: string): Promise<Task[]> 
   }
   return getTasks(chapterId)
 }
+
+export async function syncSeriesFromBackend(mangakaId: string): Promise<Series[]> {
+  try {
+    const response = await fetchAPI<{ data: any[] } | any[]>('/api/series')
+    const dataList = (response as any).data || response
+    if (Array.isArray(dataList)) {
+      const proposals = dataList.map((s: any) => {
+        const title = s.title || s.Title || ''
+        const mId = s.mangakaId || s.MangakaId || ''
+        const status = s.status || s.Status || ''
+        
+        let mappedStatus = 'Draft'
+        if (status === 'Active' || status === 'Approved') {
+          mappedStatus = 'Approved'
+        }
+        
+        return {
+          id: s.seriesId || s.id,
+          title: title,
+          mangakaId: mId,
+          status: mappedStatus
+        }
+      })
+      localStorage.setItem('mangaflow_proposals', JSON.stringify(proposals))
+    }
+  } catch (error) {
+    console.warn("syncSeriesFromBackend failed, using offline data:", error)
+  }
+  return getSeriesByMangaka(mangakaId)
+}
+

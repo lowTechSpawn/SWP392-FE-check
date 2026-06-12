@@ -18,7 +18,109 @@ export interface User {
 
 const STORAGE_USERS_KEY = 'mangaflow_users'
 
-export const SEED_USERS: User[] = []
+export const SEED_USERS: User[] = [
+  {
+    id: 'U01',
+    username: 'tanaka_mangaka',
+    name: 'Tanaka Yuki',
+    email: 'tanaka@mangaflow.com',
+    role: 'Mangaka',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/1.jpg',
+    editorId: 'U06'
+  },
+  {
+    id: 'U02',
+    username: 'oda_mangaka',
+    name: 'Oda Kenji',
+    email: 'oda@mangaflow.com',
+    role: 'Mangaka',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/2.jpg',
+    editorId: 'U07'
+  },
+  {
+    id: 'U03',
+    username: 'suzuki_assistant',
+    name: 'Suzuki Mei',
+    email: 'suzuki@mangaflow.com',
+    role: 'Assistant',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/female/3.jpg'
+  },
+  {
+    id: 'U04',
+    username: 'yamada_assistant',
+    name: 'Yamada Riku',
+    email: 'yamada@mangaflow.com',
+    role: 'Assistant',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/4.jpg'
+  },
+  {
+    id: 'U05',
+    username: 'sato_assistant',
+    name: 'Sato Takashi',
+    email: 'sato@mangaflow.com',
+    role: 'Assistant',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/5.jpg'
+  },
+  {
+    id: 'U06',
+    username: 'nakamura_editor',
+    name: 'Nakamura Takeshi',
+    email: 'nakamura@mangaflow.com',
+    role: 'TantouEditor',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/6.jpg'
+  },
+  {
+    id: 'U07',
+    username: 'watanabe_editor',
+    name: 'Watanabe Aoi',
+    email: 'watanabe@mangaflow.com',
+    role: 'TantouEditor',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/female/7.jpg'
+  },
+  {
+    id: 'U08',
+    username: 'takahashi_board',
+    name: 'Takahashi Ken',
+    email: 'takahashi@mangaflow.com',
+    role: 'EditorialBoard',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/8.jpg'
+  },
+  {
+    id: 'U09',
+    username: 'matsumoto_board',
+    name: 'Matsumoto Ren',
+    email: 'matsumoto@mangaflow.com',
+    role: 'EditorialBoard',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/9.jpg'
+  },
+  {
+    id: 'U10',
+    username: 'admin_system',
+    name: 'System Admin',
+    email: 'admin@mangaflow.com',
+    role: 'Admin',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/10.jpg'
+  },
+  {
+    id: 'U11',
+    username: 'temp_admin',
+    name: 'Temporary Admin',
+    email: 'tempadmin@gmail.com',
+    role: 'Admin',
+    status: 'Active',
+    avatarUrl: 'https://xsgames.co/randomusers/assets/avatars/male/11.jpg'
+  }
+]
 
 export function loadUsers(): User[] {
   if (typeof window === 'undefined') return SEED_USERS
@@ -28,7 +130,24 @@ export function loadUsers(): User[] {
       localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(SEED_USERS))
       return SEED_USERS
     }
-    return JSON.parse(raw) as User[]
+    const parsed = JSON.parse(raw) as User[]
+    if (parsed.length === 0 && SEED_USERS.length > 0) {
+      localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(SEED_USERS))
+      return SEED_USERS
+    }
+    // Dynamically merge missing SEED_USERS into parsed
+    let hasChanges = false
+    SEED_USERS.forEach(su => {
+      const exists = parsed.some(u => u.email.toLowerCase() === su.email.toLowerCase() || u.id === su.id)
+      if (!exists) {
+        parsed.push(su)
+        hasChanges = true
+      }
+    })
+    if (hasChanges) {
+      localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(parsed))
+    }
+    return parsed
   } catch {
     return SEED_USERS
   }

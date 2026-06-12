@@ -40,8 +40,20 @@ export default function AssistantDashboardPage() {
   
   // Simulation states
   const [assistants, setAssistants] = useState<Assistant[]>([])
-  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('A01')
+  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('U05')
   const [tasks, setTasks] = useState<Task[]>([])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user-info')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed?.id && parsed?.role === 'Assistant') {
+          setSelectedAssistantId(parsed.id)
+        }
+      } catch {}
+    }
+  }, [])
   
   // Submit modal states
   const [submittingTaskId, setSubmittingTaskId] = useState<string | null>(null)
@@ -212,7 +224,7 @@ export default function AssistantDashboardPage() {
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                 >
-                  {ast.name.split(' ')[0]} ({ast.id})
+                  {ast.name.split(' ')[0]}
                 </button>
               ))}
             </div>
@@ -297,9 +309,6 @@ export default function AssistantDashboardPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-                            {task.id}
-                          </span>
                           <h3 className="font-bold text-sm text-foreground">
                             {task.type} (Pages {task.pages})
                           </h3>
@@ -413,7 +422,6 @@ export default function AssistantDashboardPage() {
                   )}
 
                   <div className="flex items-center justify-between text-[9px] text-muted-foreground font-semibold pt-1">
-                    <span>Task ID: {task.id}</span>
                     <span>Updated: {task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : 'N/A'}</span>
                   </div>
                 </div>

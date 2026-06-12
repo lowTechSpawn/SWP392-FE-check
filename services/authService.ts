@@ -1,4 +1,5 @@
 import { fetchAPI } from "./api";
+import { loadUsers, createUser } from "@/lib/users-store";
 
 export interface User {
   id: string;
@@ -14,32 +15,66 @@ export interface User {
 
 export const authService = {
   login: async (credentials?: any) => {
-    const response = await fetchAPI<{ data: { token: string; refreshToken: string; user: User }; message: string }>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-    if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      if (response.data.refreshToken) {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+    try {
+      const response = await fetchAPI<{ data: { token: string; refreshToken: string; user: User }; message: string }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
+        // Fallback avatarUrl if not provided by BE
+        if (response.data.user && !response.data.user.avatarUrl) {
+          const id = response.data.user.id || "default";
+          const code = id.charCodeAt(id.length - 1) || 0;
+          response.data.user.avatarUrl = `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`;
+        }
+        localStorage.setItem('user-role', response.data.user.role);
+        localStorage.setItem('user-info', JSON.stringify(response.data.user));
       }
-      // Fallback avatarUrl if not provided by BE
-      if (response.data.user && !response.data.user.avatarUrl) {
-        const id = response.data.user.id || "default";
-        const code = id.charCodeAt(id.length - 1) || 0;
-        response.data.user.avatarUrl = `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`;
+      return response;
+    } catch (error) {
+      console.warn("Backend login failed, attempting offline fallback...", error);
+      // Offline fallback: check local storage users
+      if (typeof window !== 'undefined') {
+        const localUsers = loadUsers();
+        const user = localUsers.find(u => u.email.toLowerCase() === credentials?.email?.toLowerCase());
+        if (user) {
+          localStorage.setItem('token', 'offline_mock_token');
+          localStorage.setItem('user-role', user.role);
+          localStorage.setItem('user-info', JSON.stringify(user));
+          return { data: { token: 'offline_mock_token', user }, message: "Logged in offline successfully" };
+        }
       }
-      localStorage.setItem('user-role', response.data.user.role);
-      localStorage.setItem('user-info', JSON.stringify(response.data.user));
+      throw error;
     }
-    return response;
   },
 
   register: async (userData: any) => {
-    return fetchAPI<any>('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
+    try {
+      return await fetchAPI<any>('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+    } catch (error) {
+      console.warn("Backend register failed, attempting offline fallback...", error);
+      if (typeof window !== 'undefined') {
+        try {
+          const newUser = createUser({
+            username: userData.username || userData.email.split('@')[0],
+            name: userData.name,
+            email: userData.email,
+            role: userData.role
+          });
+          return { data: newUser, message: "Registered offline successfully" };
+        } catch (err: any) {
+          throw new Error(err.message || "Failed to register offline");
+        }
+      }
+      throw error;
+    }
   },
 
   logout: async () => {

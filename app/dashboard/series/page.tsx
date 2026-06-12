@@ -118,7 +118,6 @@ function ProposalCard({
             <h3 className="font-bold text-base text-foreground truncate group-hover:text-primary transition-colors">
               {proposal.title}
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5 font-mono">{proposal.id}</p>
           </div>
 
           {/* Status badge */}

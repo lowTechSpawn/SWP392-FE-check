@@ -197,7 +197,7 @@ export default function AdminPage() {
     } catch (err) {
       console.warn("Failed to fetch users from backend", err)
     }
-    setUsersList(getUsers().filter(u => u.id.length > 3))
+    setUsersList(getUsers().filter(u => u.id.length >= 3))
   }
 
   const handleOpenAssignTaskModal = (assistantUser: User) => {
@@ -662,7 +662,6 @@ export default function AdminPage() {
                           <TableCell className="font-bold text-foreground py-2.5">
                             <div className="flex flex-col">
                               <span>{user.name}</span>
-                              <span className="text-[10px] text-muted-foreground font-mono">{user.id}</span>
                             </div>
                           </TableCell>
 

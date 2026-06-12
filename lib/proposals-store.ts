@@ -58,12 +58,19 @@ const mapSeriesToProposal = (s: any): Proposal => {
 
 export async function getProposals(): Promise<Proposal[]> {
   const list = await seriesService.listSeries();
-  return list.map(mapSeriesToProposal);
+  const mapped = list.map(mapSeriesToProposal);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('mangaflow_proposals', JSON.stringify(mapped));
+  }
+  return mapped;
 }
 
 export async function getProposalsByMangaka(mangakaId: string): Promise<Proposal[]> {
   const list = await seriesService.listSeries();
   const mapped = list.map(mapSeriesToProposal);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('mangaflow_proposals', JSON.stringify(mapped));
+  }
   return mapped.filter((p) => p.mangakaId.toLowerCase() === mangakaId.toLowerCase());
 }
 
