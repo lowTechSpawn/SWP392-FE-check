@@ -1,0 +1,90 @@
+diff --git a/MangaManagementSystem.Business/DTOs/Responses/Users/UserAssignmentResponse.cs b/MangaManagementSystem.Business/DTOs/Responses/Users/UserAssignmentResponse.cs
+index f127dab..bc1b15e 100644
+--- a/MangaManagementSystem.Business/DTOs/Responses/Users/UserAssignmentResponse.cs
++++ b/MangaManagementSystem.Business/DTOs/Responses/Users/UserAssignmentResponse.cs
+@@ -7,6 +7,7 @@ namespace MangaManagementSystem.Business.DTOs.Responses.Users
+         public string FromUserName { get; set; } = null!;
+         public Guid ToUserId { get; set; }
+         public string ToUserName { get; set; } = null!;
++        public string ToUserEmail { get; set; } = null!;
+         public DateTime AssignedAt { get; set; }
+         public DateTime? UnassignedAt { get; set; }
+     }
+diff --git a/MangaManagementSystem.Business/Services/Implements/Users/UserAssignmentService.cs b/MangaManagementSystem.Business/Services/Implements/Users/UserAssignmentService.cs
+index e47ae3d..dd4a491 100644
+--- a/MangaManagementSystem.Business/Services/Implements/Users/UserAssignmentService.cs
++++ b/MangaManagementSystem.Business/Services/Implements/Users/UserAssignmentService.cs
+@@ -60,6 +60,7 @@ namespace MangaManagementSystem.Business.Services.Implements.Users
+         {
+             AssignmentId = a.AssignmentId, FromUserId = a.FromUserId, FromUserName = a.FromUser?.DisplayName ?? "",
+             ToUserId = a.ToUserId, ToUserName = a.ToUser?.DisplayName ?? "",
++            ToUserEmail = a.ToUser?.Email ?? "",
+             AssignedAt = a.AssignedAt, UnassignedAt = a.UnassignedAt
+         };
+     }
+diff --git a/MangaManagementSystem.WebApi/Controllers/FileController.cs b/MangaManagementSystem.WebApi/Controllers/FileController.cs
+index 0953f2d..5e4a55e 100644
+--- a/MangaManagementSystem.WebApi/Controllers/FileController.cs
++++ b/MangaManagementSystem.WebApi/Controllers/FileController.cs
+@@ -1,8 +1,12 @@
+ using MangaManagementSystem.Business.DTOs.Requests.Files;
+ using MangaManagementSystem.Business.Services.Interfaces.Files;
++using MangaManagementSystem.DataAccess.Entities.Models;
++using MangaManagementSystem.DataAccess.Repositories.Interfaces;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
+ using Swashbuckle.AspNetCore.Annotations;
++using System.IO;
+ using WarehouseService.Application.DTOs;
+ 
+ namespace MangaManagementSystem.API.Controllers
+@@ -14,10 +18,18 @@ namespace MangaManagementSystem.API.Controllers
+     public class FileController : ControllerBase
+     {
+         private readonly IFileUploadService _fileUploadService;
++        private readonly IRepository<FileAsset> _fileAssetRepository;
++        private readonly string _rootPath;
+ 
+-        public FileController(IFileUploadService fileUploadService)
++        public FileController(
++            IFileUploadService fileUploadService,
++            IRepository<FileAsset> fileAssetRepository,
++            IConfiguration configuration)
+         {
+             _fileUploadService = fileUploadService;
++            _fileAssetRepository = fileAssetRepository;
++            _rootPath = configuration["FileStorage:RootPath"]
++                ?? Path.Combine(Path.GetTempPath(), "MangaManagementSystem", "uploads");
+         }
+ 
+         [HttpPost]
+@@ -45,5 +57,28 @@ namespace MangaManagementSystem.API.Controllers
+             var result = await _fileUploadService.UploadAsync(request, cancellationToken);
+             return Ok(new BaseResponse { Data = result, Message = "Files uploaded." });
+         }
++
++        [HttpGet("{id:guid}")]
++        [AllowAnonymous]
++        [SwaggerOperation(Summary = "Retrieve/download a file asset by ID")]
++        public async Task<IActionResult> GetFile(Guid id)
++        {
++            var asset = await _fileAssetRepository.GetAll()
++                .FirstOrDefaultAsync(x => x.FileAssetId == id && x.DeletedAt == null);
++
++            if (asset == null)
++            {
++                return NotFound(new BaseResponse { Message = "File not found." });
++            }
++
++            var fullPath = Path.Combine(_rootPath, asset.ObjectPath.Replace('/', Path.DirectorySeparatorChar));
++            if (!System.IO.File.Exists(fullPath))
++            {
++                return NotFound(new BaseResponse { Message = "Physical file not found on storage." });
++            }
++
++            var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
++            return File(stream, asset.MimeType, asset.OriginalFileName);
++        }
+     }
+ }

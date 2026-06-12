@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Sparkles,
   ChevronRight,
+  ChevronLeft,
   TrendingUp,
   FileCheck,
   ClipboardList,
@@ -58,7 +59,9 @@ import {
   type Annotation,
 } from '@/lib/manuscripts-store'
 import { toast } from 'sonner'
-import { seriesService } from '@/services/seriesService'
+import { seriesService, type SeriesProposal } from '@/services/seriesService'
+import { userService } from '@/services/userService'
+import { API_BASE_URL } from '@/lib/constants'
 
 interface FileItem {
   name: string
@@ -71,40 +74,57 @@ interface FileItem {
   pageNo?: number
 }
 
-const getProposalFileTree = (title: string, numPages: number, description: string): FileItem[] => {
-  const pagesList: FileItem[] = Array.from({ length: numPages }).map((_, idx) => {
-    const pageNum = idx + 1
-    return {
-      name: `page_${pageNum.toString().padStart(2, '0')}.png`,
-      path: `root/drafts/page_${pageNum.toString().padStart(2, '0')}.png`,
-      type: 'file',
-      size: `${(1.5 + idx * 0.1).toFixed(1)} MB`,
-      previewType: 'image',
-      pageNo: pageNum,
-    }
-  })
+const getProposalFileTree = (proposal: SeriesProposal | null): FileItem[] => {
+  if (!proposal) return []
+
+  const title = proposal.title
+  const description = proposal.description
+
+  const pagesList: FileItem[] = (proposal.proposalPages && proposal.proposalPages.length > 0)
+    ? proposal.proposalPages.map((p) => {
+        return {
+          name: `page_${p.pageNo.toString().padStart(2, '0')}.png`,
+          path: `root/drafts/page_${p.pageNo.toString().padStart(2, '0')}.png`,
+          type: 'file' as const,
+          size: 'Image Page',
+          previewType: 'image' as const,
+          pageNo: p.pageNo,
+          content: `${API_BASE_URL}/api/files/${p.previewFileAssetId}`,
+        }
+      })
+    : Array.from({ length: 5 }).map((_, idx) => {
+        const pageNum = idx + 1
+        return {
+          name: `page_${pageNum.toString().padStart(2, '0')}.png`,
+          path: `root/drafts/page_${pageNum.toString().padStart(2, '0')}.png`,
+          type: 'file' as const,
+          size: `${(1.5 + idx * 0.1).toFixed(1)} MB`,
+          previewType: 'image' as const,
+          pageNo: pageNum,
+        }
+      })
 
   return [
     {
       name: 'storyboards',
       path: 'root/storyboards',
-      type: 'folder',
+      type: 'folder' as const,
       size: '',
       children: [
         {
           name: 'storyboard_ch1_draft.pdf',
           path: 'root/storyboards/storyboard_ch1_draft.pdf',
-          type: 'file',
+          type: 'file' as const,
           size: '5.8 MB',
-          previewType: 'pdf',
+          previewType: 'pdf' as const,
           pageNo: 1,
         },
         {
           name: 'storyboard_ch2_draft.pdf',
           path: 'root/storyboards/storyboard_ch2_draft.pdf',
-          type: 'file',
+          type: 'file' as const,
           size: '4.2 MB',
-          previewType: 'pdf',
+          previewType: 'pdf' as const,
           pageNo: 2,
         },
       ],
@@ -112,24 +132,24 @@ const getProposalFileTree = (title: string, numPages: number, description: strin
     {
       name: 'final_manuscript_drafts',
       path: 'root/drafts',
-      type: 'folder',
+      type: 'folder' as const,
       size: '',
       children: pagesList,
     },
     {
       name: 'character_concepts.pdf',
       path: 'root/character_concepts.pdf',
-      type: 'file',
+      type: 'file' as const,
       size: '2.4 MB',
-      previewType: 'pdf',
+      previewType: 'pdf' as const,
       pageNo: 3,
     },
     {
       name: 'world_setting_outline.txt',
       path: 'root/world_setting_outline.txt',
-      type: 'file',
+      type: 'file' as const,
       size: '12 KB',
-      previewType: 'text',
+      previewType: 'text' as const,
       content: `WORLD SETTING OUTLINE:\n\nSeries Title: ${title}\n\nKey Concepts:\n1. Main Theme & Tone\n   - A unique exploration of characters in a fantasy/slice-of-life setting.\n   - Visual pacing focuses heavily on emotional close-ups and landscape panels.\n\n2. Magic/Power System\n   - Standardized arcane rules, visual signatures for active spells.\n   - Elf magic: ancient patterns, slow but high output.\n   - Human magic: highly efficient, militaristic.\n\n3. Story Arc Structure\n   - Chapter 1: Introduction of main quest and companion relationships.\n   - Chapter 2: Journey across border mountains; encountering ancient spirits.\n\n4. Synopsis Outline:\n   ${description || 'No detailed synopsis outlines available.'}`,
     },
   ]
@@ -255,13 +275,121 @@ function TantouEditorWorkspace() {
     setExplorerPdfPage(1)
   }, [selectedProposalId])
 
+  const [detailedProposal, setDetailedProposal] = useState<SeriesProposal | null>(null)
+  const [detailedProposalLoading, setDetailedProposalLoading] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxActiveIndex, setLightboxActiveIndex] = useState(0)
+
+  useEffect(() => {
+    if (!selectedProposalId) {
+      setDetailedProposal(null)
+      return
+    }
+    let active = true
+    const fetchDetail = async () => {
+      setDetailedProposalLoading(true)
+      try {
+        const detail = await seriesService.getSeriesById(selectedProposalId)
+        if (active) {
+          setDetailedProposal(detail)
+        }
+      } catch (err) {
+        console.error('Failed to fetch detailed proposal:', err)
+      } finally {
+        if (active) setDetailedProposalLoading(false)
+      }
+    }
+    fetchDetail()
+    return () => {
+      active = false
+    }
+  }, [selectedProposalId])
+
+  // Keyboard event listener for Lightbox navigation
+  useEffect(() => {
+    if (!lightboxOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setLightboxOpen(false)
+      } else if (e.key === 'ArrowLeft') {
+        setLightboxActiveIndex((prev) => {
+          const previewPages = detailedProposal?.proposalPages && detailedProposal.proposalPages.length > 0
+            ? detailedProposal.proposalPages
+            : (detailedProposal?.sampleFileUrl || '').split(',').filter(Boolean);
+          if (previewPages.length === 0) return prev;
+          return prev > 0 ? prev - 1 : previewPages.length - 1;
+        });
+      } else if (e.key === 'ArrowRight') {
+        setLightboxActiveIndex((prev) => {
+          const previewPages = detailedProposal?.proposalPages && detailedProposal.proposalPages.length > 0
+            ? detailedProposal.proposalPages
+            : (detailedProposal?.sampleFileUrl || '').split(',').filter(Boolean);
+          if (previewPages.length === 0) return prev;
+          return prev < previewPages.length - 1 ? prev + 1 : 0;
+        });
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [lightboxOpen, detailedProposal])
+
   // Load Data function
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (editorId?: string) => {
+    const targetEditorId = editorId || currentUserId
+    let list: any[] = []
+
     try {
-      const list = await seriesService.listSeries()
+      list = await seriesService.listSeries()
       setSeriesList(list)
     } catch (e) {
       console.error('Failed to load series from backend:', e)
+    }
+
+    if (targetEditorId) {
+      try {
+        let assigned: { id: string; name: string; email: string }[] = []
+        try {
+          const res = await userService.getMyMangakas()
+          if (res && res.data) {
+            assigned = res.data.map(u => ({
+              id: u.userId,
+              name: u.displayName || u.userName,
+              email: u.email
+            }))
+          }
+        } catch (e) {
+          console.warn('Failed to load assigned mangakas from backend:', e)
+        }
+
+        // Merge local storage overrides if any
+        if (typeof window !== 'undefined') {
+          try {
+            const overrides = JSON.parse(localStorage.getItem('editor_assignments_override') || '{}')
+            for (const [mangakaId, editorId] of Object.entries(overrides)) {
+              if (typeof editorId === 'string' && editorId.toLowerCase() === targetEditorId.toLowerCase()) {
+                const alreadyAdded = assigned.some(m => m.id.toLowerCase() === mangakaId.toLowerCase())
+                if (!alreadyAdded) {
+                  const seriesObj = list.find(s => s.mangakaId?.toLowerCase() === mangakaId.toLowerCase())
+                  const name = seriesObj ? seriesObj.author : 'Assigned Mangaka'
+                  assigned.push({
+                    id: mangakaId,
+                    name: name,
+                    email: `${name.toLowerCase().replace(/\s+/g, '')}@example.com`
+                  })
+                }
+              }
+            }
+          } catch {}
+        }
+
+        setAssignedMangakas(assigned)
+      } catch (e) {
+        console.error('Failed to process assigned mangakas:', e)
+      }
     }
 
     setChapters(getChapters())
@@ -275,13 +403,15 @@ function TantouEditorWorkspace() {
     } catch (e) {
       console.warn('Failed to sync manuscripts from backend:', e)
     }
-  }, [])
+  }, [currentUserId])
 
   useEffect(() => {
+    let editorId = currentUserId
     const saved = localStorage.getItem('user-info')
     if (saved) {
       const parsed = JSON.parse(saved)
       if (parsed?.id) {
+        editorId = parsed.id
         setCurrentUserId(parsed.id)
       }
       if (parsed?.displayName || parsed?.userName) {
@@ -291,8 +421,10 @@ function TantouEditorWorkspace() {
         setAssignedMangakas(parsed.assignedMangakas)
       }
     }
-    loadData()
-  }, [loadData])
+    if (editorId) {
+      loadData(editorId)
+    }
+  }, [loadData, currentUserId])
 
   // Sync annotations when active manuscript changes in review mode
   const activeManuscript = useMemo(() => {
@@ -312,10 +444,11 @@ function TantouEditorWorkspace() {
 
   // Filtered Supervised Series list for this editor
   const supervisedSeries = useMemo(() => {
+    const assignedIds = new Set(assignedMangakas.map(m => m.id.toLowerCase()))
     return seriesList.filter(
-      (s) => s.tantouEditorId?.toLowerCase() === currentUserId?.toLowerCase()
+      (s) => s.mangakaId && assignedIds.has(s.mangakaId.toLowerCase())
     )
-  }, [seriesList, currentUserId])
+  }, [seriesList, assignedMangakas])
 
   // Stats Counters
   const pendingReviewsCount = useMemo(() => {
@@ -872,8 +1005,12 @@ function TantouEditorWorkspace() {
             {selectedProposalId ? (
               /* Detailed Proposal Review View */
               (() => {
-                const proposal = seriesList.find((s) => s.id === selectedProposalId)
-                if (!proposal) return <p className="text-sm text-muted-foreground">Proposal not found.</p>
+                const baseProposal = seriesList.find((s) => s.id === selectedProposalId)
+                if (!baseProposal) return <p className="text-sm text-muted-foreground">Proposal not found.</p>
+
+                const proposal: any = detailedProposal && detailedProposal.id === selectedProposalId
+                  ? detailedProposal
+                  : baseProposal
 
                 const samplePages = proposal.samplePages || ((proposal.title.length % 5) + 6);
                 const deadlineDate = proposal.submittedAt ? new Date(proposal.submittedAt) : new Date(proposal.createdAt || Date.now());
@@ -1005,17 +1142,30 @@ function TantouEditorWorkspace() {
                                 {deadlineStr}
                               </span>
                             </div>
-                            {proposal.sampleFileUrl && (
+                            {proposal.sourceZipFileAssetId ? (
                               <div className="py-2.5">
                                 <a
-                                  href={proposal.sampleFileUrl}
+                                  href={`${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all border border-primary/20"
                                 >
-                                  <FileText className="w-4 h-4" /> Download Sample File (.zip)
+                                  <FileArchive className="w-4 h-4" /> Download Source ZIP (.zip)
                                 </a>
                               </div>
+                            ) : (
+                              proposal.sampleFileUrl && (
+                                <div className="py-2.5">
+                                  <a
+                                    href={proposal.sampleFileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all border border-primary/20"
+                                  >
+                                    <FileText className="w-4 h-4" /> Download Sample File (.zip)
+                                  </a>
+                                </div>
+                              )
                             )}
                           </div>
                         </div>
@@ -1033,244 +1183,147 @@ function TantouEditorWorkspace() {
                           </p>
                         </div>
 
-                        {/* Sample Pages Preview - Replaced with Interactive Folder Explorer */}
-                        {(() => {
-                          const fileTree = getProposalFileTree(proposal.title, samplePages, proposal.description);
-                          const selectedFile = findFileByPath(fileTree, selectedFilePath);
+                        {/* ZIP File Attachment Panel */}
+                        {proposal.sourceZipPublicUrl || proposal.sourceZipFile || proposal.sourceZipFileAssetId || proposal.sampleFileUrl ? (
+                          (() => {
+                            const zipDownloadUrl = proposal.sourceZipPublicUrl
+                              || proposal.sourceZipFile?.url
+                              || (proposal.sourceZipFileAssetId
+                                    ? `${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`
+                                    : proposal.sampleFileUrl?.startsWith('http')
+                                      ? proposal.sampleFileUrl
+                                      : proposal.sampleFileUrl
+                                        ? `${API_BASE_URL}/api/files/${proposal.sampleFileUrl}`
+                                        : '');
 
-                          const renderTree = (items: FileItem[], depth = 0): React.ReactNode => {
-                            return items.map((item) => {
-                              const isFolder = item.type === 'folder';
-                              const isExpanded = expandedFolders[item.path];
-                              const isSelected = selectedFilePath === item.path;
+                            const zipFileName = proposal.sourceZipFile?.fileName
+                              || (proposal.sourceZipFileAssetId || proposal.sourceZipPublicUrl
+                                    ? `source_manuscript_${proposal.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.zip`
+                                    : `sample_pages_${proposal.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.zip`);
 
-                              const toggleFolder = () => {
-                                setExpandedFolders((prev) => ({
-                                  ...prev,
-                                  [item.path]: !prev[item.path],
-                                }));
-                              };
+                            const isLegacy = !proposal.sourceZipPublicUrl && !proposal.sourceZipFile && !proposal.sourceZipFileAssetId && !!proposal.sampleFileUrl;
 
-                              const handleItemClick = () => {
-                                if (isFolder) {
-                                  toggleFolder();
-                                } else {
-                                  setSelectedFilePath(item.path);
-                                  if (item.previewType === 'pdf') {
-                                    setExplorerPdfPage(1);
-                                  }
-                                }
-                              };
-
-                              return (
-                                <div key={item.path} className="select-none">
-                                  <div
-                                    onClick={handleItemClick}
-                                    style={{ paddingLeft: `${depth * 12 + 8}px` }}
-                                    className={`flex items-center justify-between py-1.5 px-2.5 rounded-xl cursor-pointer transition-all duration-200 group text-xs font-semibold ${isSelected
-                                      ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
-                                      : 'hover:bg-muted text-foreground/80 hover:text-foreground border border-transparent'
-                                      }`}
-                                  >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      {isFolder ? (
-                                        <span className="text-muted-foreground/60 group-hover:text-primary transition-colors">
-                                          {isExpanded ? (
-                                            <ChevronDown className="w-3.5 h-3.5" />
-                                          ) : (
-                                            <ChevronRight className="w-3.5 h-3.5" />
-                                          )}
-                                        </span>
-                                      ) : (
-                                        <span className="w-3.5" />
-                                      )}
-
-                                      <span>
-                                        {isFolder ? (
-                                          isExpanded ? (
-                                            <FolderOpen className="w-4 h-4 text-primary fill-primary/10" />
-                                          ) : (
-                                            <Folder className="w-4 h-4 text-primary fill-primary/10" />
-                                          )
-                                        ) : item.previewType === 'image' ? (
-                                          <FileImage className="w-4 h-4 text-sky-500 fill-sky-500/5" />
-                                        ) : item.previewType === 'pdf' ? (
-                                          <BookOpen className="w-4 h-4 text-rose-500 fill-rose-500/5" />
-                                        ) : (
-                                          <FileText className="w-4 h-4 text-slate-500 fill-slate-500/5" />
-                                        )}
-                                      </span>
-
-                                      <span className="truncate">{item.name}</span>
-                                    </div>
-
-                                    {!isFolder && item.size && (
-                                      <span className="text-[10px] text-muted-foreground bg-muted group-hover:bg-background px-1.5 py-0.5 rounded font-mono transition-colors">
-                                        {item.size}
-                                      </span>
-                                    )}
+                            return (
+                              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-6 space-y-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isLegacy ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
+                                    {isLegacy ? <FileText className="w-6 h-6" /> : <FileArchive className="w-6 h-6" />}
                                   </div>
-
-                                  {isFolder && isExpanded && item.children && (
-                                    <div className="mt-0.5">
-                                      {renderTree(item.children, depth + 1)}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            });
-                          };
-
-                          return (
-                            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col h-[520px]">
-                              {/* Explorer Header */}
-                              <div className="bg-muted/20 border-b border-border px-5 py-3.5 flex items-center justify-between flex-shrink-0">
-                                <div className="flex items-center gap-2">
-                                  <FileArchive className="w-4.5 h-4.5 text-primary" />
                                   <div>
-                                    <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
-                                      Proposal Files Explorer
+                                    <h3 className="text-sm font-bold text-foreground">
+                                      {isLegacy ? 'Attached Sample Images Package' : 'Attached ZIP Manuscript Package'}
                                     </h3>
-                                    <p className="text-[10px] text-muted-foreground">
-                                      Interactive review of zip package documents
+                                    <p className="text-xs text-muted-foreground">
+                                      {isLegacy ? 'Legacy comma-separated image file sequence' : 'Original source files uploaded by the Mangaka'}
                                     </p>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-lg border border-primary/20">
-                                  ZIP SOURCE
+
+                                <div className="p-4 bg-muted/30 border border-border/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold text-foreground truncate">
+                                      {zipFileName}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                      URL: {zipDownloadUrl}
+                                    </p>
+                                  </div>
+                                  <a
+                                    href={zipDownloadUrl}
+                                    download={zipFileName}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-extrabold rounded-xl transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
+                                  >
+                                    <Download className="w-4 h-4" /> Download ZIP
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3 shadow-sm min-h-[160px]">
+                            <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground/40">
+                              <FileArchive className="w-6 h-6" />
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-bold text-foreground">No ZIP Package Uploaded</h4>
+                              <p className="text-[10px] text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
+                                This proposal does not have any attached ZIP packages or sample files from the creator.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mandatory Manuscript Preview (5 Pages) */}
+                        {(() => {
+                          const previewPages = proposal.proposalPages && proposal.proposalPages.length > 0
+                            ? proposal.proposalPages
+                            : (proposal.sampleFileUrl || '')
+                                .split(',')
+                                .filter(Boolean)
+                                .map((id: string, idx: number) => ({
+                                  pageNo: idx + 1,
+                                  previewFileAssetId: id.trim(),
+                                  url: undefined as string | undefined,
+                                }));
+
+                          if (previewPages.length === 0) return null;
+
+                          return (
+                            <div className="bg-card border border-border p-6 rounded-2xl space-y-4 shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
+                                    Mandatory Manuscript Preview (5 Pages)
+                                  </h3>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    Required sample pages submitted by the Mangaka for review
+                                  </p>
+                                </div>
+                                <span className="text-[10px] font-extrabold px-2 py-0.5 bg-primary/10 text-primary rounded-lg border border-primary/20">
+                                  {previewPages.length} PAGES
                                 </span>
                               </div>
 
-                              {/* Explorer Grid */}
-                              <div className="flex-1 grid grid-cols-1 md:grid-cols-5 overflow-hidden">
-                                {/* Left Tree Pane (2/5 cols) */}
-                                <div className="md:col-span-2 border-r border-border overflow-y-auto p-3 bg-muted/5 space-y-1">
-                                  <div className="flex items-center gap-1.5 py-1 px-2 text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                                    <FolderOpen className="w-3.5 h-3.5 text-muted-foreground/60" />
-                                    <span>root_archive.zip</span>
-                                  </div>
-                                  <div className="space-y-0.5">
-                                    {renderTree(fileTree)}
-                                  </div>
-                                </div>
-
-                                {/* Right Preview Pane (3/5 cols) */}
-                                <div className="md:col-span-3 overflow-hidden flex flex-col bg-card">
-                                  {selectedFile ? (
-                                    <div className="flex-1 flex flex-col h-full overflow-hidden">
-                                      {/* Preview Toolbar */}
-                                      <div className="bg-muted/10 border-b border-border px-4 py-2.5 flex items-center justify-between flex-shrink-0">
-                                        <div className="min-w-0 pr-2">
-                                          <h4 className="text-xs font-bold text-foreground truncate">
-                                            {selectedFile.name}
-                                          </h4>
-                                          <p className="text-[9px] text-muted-foreground font-mono truncate">
-                                            {selectedFile.path}
-                                          </p>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                                          {selectedFile.previewType === 'image' && (
-                                            <div className="flex items-center border border-border rounded-lg overflow-hidden bg-background">
-                                              <button
-                                                onClick={() => setExplorerZoom((prev) => Math.max(50, prev - 25))}
-                                                className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground text-[10px] font-bold border-r border-border"
-                                                title="Zoom Out"
-                                              >
-                                                <ZoomOut className="w-3.5 h-3.5" />
-                                              </button>
-                                              <span className="px-2 text-[10px] font-mono text-muted-foreground font-bold">
-                                                {explorerZoom}%
-                                              </span>
-                                              <button
-                                                onClick={() => setExplorerZoom((prev) => Math.min(150, prev + 25))}
-                                                className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground text-[10px] font-bold"
-                                                title="Zoom In"
-                                              >
-                                                <ZoomIn className="w-3.5 h-3.5" />
-                                              </button>
-                                            </div>
-                                          )}
-                                          <a
-                                            href={proposal.sampleFileUrl || '#'}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="p-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-[10px] font-bold transition-all border border-primary/20 flex items-center gap-1"
-                                            title="Download original document"
-                                          >
-                                            <Download className="w-3 h-3" />
-                                            <span>Get File</span>
-                                          </a>
+                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                {previewPages.map((page: any, idx: number) => {
+                                  const imgUrl = page.url 
+                                    || (page.previewFileAssetId?.startsWith('http')
+                                          ? page.previewFileAssetId
+                                          : `${API_BASE_URL}/api/files/${page.previewFileAssetId}`);
+                                  return (
+                                    <div
+                                      key={page.proposalPageId || idx}
+                                      onClick={() => {
+                                        setLightboxActiveIndex(idx);
+                                        setLightboxOpen(true);
+                                      }}
+                                      className="group relative cursor-pointer aspect-[3/4] bg-muted border border-border hover:border-primary/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={imgUrl}
+                                        alt={`Page ${page.pageNo || idx + 1}`}
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        onError={(e) => {
+                                          (e.target as HTMLElement).style.display = 'none';
+                                        }}
+                                      />
+                                      {/* Hover Overlay */}
+                                      <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                                        <div className="bg-background/90 backdrop-blur-sm p-1.5 rounded-lg shadow-sm text-primary text-[10px] font-bold flex items-center gap-1">
+                                          <ZoomIn className="w-3.5 h-3.5" /> Inspect
                                         </div>
                                       </div>
-
-                                      {/* Preview Content Area */}
-                                      <div className="flex-1 overflow-auto p-4 flex items-start justify-center bg-muted/5">
-                                        {selectedFile.previewType === 'image' && (
-                                          <div
-                                            style={{ transform: `scale(${explorerZoom / 100})`, transformOrigin: 'top center' }}
-                                            className="transition-transform duration-200"
-                                          >
-                                            <MangaPageMockup pageNo={selectedFile.pageNo || 1} />
-                                          </div>
-                                        )}
-
-                                        {selectedFile.previewType === 'pdf' && (
-                                          <div className="w-full flex flex-col items-center gap-3">
-                                            <div className="flex items-center justify-between w-full max-w-[320px] bg-background border border-border rounded-xl px-2.5 py-1 shadow-sm text-xs">
-                                              <button
-                                                disabled={explorerPdfPage <= 1}
-                                                onClick={() => setExplorerPdfPage((p) => p - 1)}
-                                                className="px-2 py-0.5 bg-muted hover:bg-muted/80 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed text-[10px]"
-                                              >
-                                                Prev
-                                              </button>
-                                              <span className="font-bold text-muted-foreground font-mono text-[10px]">
-                                                Page {explorerPdfPage} of 8
-                                              </span>
-                                              <button
-                                                disabled={explorerPdfPage >= 8}
-                                                onClick={() => setExplorerPdfPage((p) => p + 1)}
-                                                className="px-2 py-0.5 bg-muted hover:bg-muted/80 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed text-[10px]"
-                                              >
-                                                Next
-                                              </button>
-                                            </div>
-                                            <PdfPageMockup filename={selectedFile.name} page={explorerPdfPage} />
-                                          </div>
-                                        )}
-
-                                        {selectedFile.previewType === 'text' && (
-                                          <div className="w-full h-full max-w-2xl bg-slate-900 border border-slate-800 text-slate-300 font-mono text-[10px] p-4 rounded-xl overflow-auto leading-relaxed shadow-lg relative group">
-                                            <pre className="whitespace-pre-wrap select-text">{selectedFile.content}</pre>
-                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                              <button
-                                                onClick={() => {
-                                                  navigator.clipboard.writeText(selectedFile.content || '');
-                                                  toast.success('Outline copied to clipboard!');
-                                                }}
-                                                className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[9px] rounded font-bold border border-slate-700"
-                                              >
-                                                Copy
-                                              </button>
-                                            </div>
-                                          </div>
-                                        )}
+                                      
+                                      {/* Page Number Label */}
+                                      <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md">
+                                        Page {page.pageNo || idx + 1}
                                       </div>
                                     </div>
-                                  ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                                      <div className="w-12 h-12 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary/40">
-                                        <Folder className="w-6 h-6" />
-                                      </div>
-                                      <div className="space-y-1">
-                                        <h4 className="text-xs font-bold text-foreground">No File Selected</h4>
-                                        <p className="text-[10px] text-muted-foreground max-w-[200px] mx-auto leading-relaxed">
-                                          Expand folders on the left and select any file to inspect drawings, scripts, or storyboards.
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
@@ -1282,7 +1335,7 @@ function TantouEditorWorkspace() {
                             Direct Editor Evaluation
                           </h3>
 
-                          {proposal.status === 'Proposed' || proposal.status === 'PendingReview' || proposal.status === 'Pending Review' ? (
+                          {['Proposed', 'PendingReview', 'Pending Review', 'UnderReview', 'Under Review', 'Draft'].includes(proposal.status) ? (
                             <div className="space-y-4">
                               <div className="p-4 bg-muted/30 border border-border/80 rounded-xl space-y-2">
                                 <h4 className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
@@ -1344,7 +1397,7 @@ function TantouEditorWorkspace() {
                           ) : (
                             <div className="space-y-4">
                               <div className="p-5 bg-muted/40 border border-border rounded-xl flex items-center gap-3">
-                                {proposal.status === 'Under Review' || proposal.status === 'UnderReview' ? (
+                                {proposal.status === 'Board Voting' || proposal.status === 'BoardVoting' ? (
                                   <>
                                     <Clock className="w-8 h-8 text-amber-500 shrink-0" />
                                     <div className="space-y-0.5">
@@ -1857,6 +1910,122 @@ function TantouEditorWorkspace() {
             </div>
           )}
         </div>
+      )}
+      {/* Lightbox Modal */}
+      {lightboxOpen && detailedProposal && (
+        (() => {
+          const previewPages = detailedProposal.proposalPages && detailedProposal.proposalPages.length > 0
+            ? detailedProposal.proposalPages
+            : (detailedProposal.sampleFileUrl || '')
+                .split(',')
+                .filter(Boolean)
+                .map((id: string, idx: number) => ({
+                  pageNo: idx + 1,
+                  previewFileAssetId: id.trim(),
+                  url: undefined as string | undefined,
+                }));
+
+          const activePage = previewPages[lightboxActiveIndex];
+          if (!activePage) return null;
+
+          const imgUrl = activePage.url 
+            || (activePage.previewFileAssetId?.startsWith('http')
+                  ? activePage.previewFileAssetId
+                  : `${API_BASE_URL}/api/files/${activePage.previewFileAssetId}`);
+
+          const handlePrev = (e?: React.MouseEvent) => {
+            e?.stopPropagation();
+            setLightboxActiveIndex((prev) => (prev > 0 ? prev - 1 : previewPages.length - 1));
+          };
+
+          const handleNext = (e?: React.MouseEvent) => {
+            e?.stopPropagation();
+            setLightboxActiveIndex((prev) => (prev < previewPages.length - 1 ? prev + 1 : 0));
+          };
+
+          return (
+            <div
+              className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 animate-in fade-in duration-200"
+              onClick={() => setLightboxOpen(false)}
+            >
+              {/* Header bar */}
+              <div className="w-full max-w-5xl flex items-center justify-between py-2 text-white/90 z-10">
+                <div>
+                  <h4 className="text-xs font-bold font-mono tracking-wider text-primary">
+                    MANUSCRIPT PREVIEW
+                  </h4>
+                  <p className="text-[10px] text-white/50">
+                    Page {lightboxActiveIndex + 1} of {previewPages.length}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setLightboxOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-full text-white/80 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Main Content Area */}
+              <div className="flex-1 w-full max-w-5xl flex items-center justify-between gap-4 z-10">
+                {/* Prev Button */}
+                <button
+                  onClick={handlePrev}
+                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-2xl transition-all border border-white/10 cursor-pointer hidden md:flex"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                {/* Image Wrapper */}
+                <div
+                  className="flex-1 max-h-[80vh] flex items-center justify-center p-2 relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imgUrl}
+                    alt={`Page ${lightboxActiveIndex + 1}`}
+                    className="max-w-full max-h-[75vh] object-contain rounded-xl border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
+                  />
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={handleNext}
+                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-2xl transition-all border border-white/10 cursor-pointer hidden md:flex"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Footer Control Info & Mobile Navigation */}
+              <div className="w-full max-w-5xl flex flex-col items-center gap-3 z-10 text-white/60 text-[10px] pb-4">
+                <div className="flex items-center gap-4 md:hidden">
+                  <button
+                    onClick={handlePrev}
+                    className="py-1.5 px-3 bg-white/15 active:bg-white/20 rounded-lg text-white font-bold"
+                  >
+                    Prev
+                  </button>
+                  <span className="font-bold">
+                    {lightboxActiveIndex + 1} / {previewPages.length}
+                  </span>
+                  <button
+                    onClick={handleNext}
+                    className="py-1.5 px-3 bg-white/15 active:bg-white/20 rounded-lg text-white font-bold"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden md:block text-[10px] font-medium tracking-wide">
+                  Use <kbd className="px-1.5 py-0.5 bg-white/15 rounded text-[8px] font-mono">←</kbd> and{" "}
+                  <kbd className="px-1.5 py-0.5 bg-white/15 rounded text-[8px] font-mono">→</kbd> keys to navigate,{" "}
+                  <kbd className="px-1.5 py-0.5 bg-white/15 rounded text-[8px] font-mono">ESC</kbd> to close.
+                </div>
+              </div>
+            </div>
+          );
+        })()
       )}
     </div>
   )

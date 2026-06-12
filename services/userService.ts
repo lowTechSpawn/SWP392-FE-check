@@ -71,4 +71,29 @@ export const userService = {
     }
     return { message: "Assignment updated successfully." };
   },
+
+  getMyMangakas: async () => {
+    // Call the existing backend UserAssignments to-me endpoint
+    const res = await fetchAPI<{ data: any[]; message: string }>("/api/user-assignments/to-me");
+    
+    // Map UserAssignmentResponse structure to UserProfileResponse structure
+    const mappedData = (res.data || []).map(item => ({
+      userId: item.toUserId,
+      userName: item.toUserName,
+      displayName: item.toUserName,
+      email: item.toUserEmail || "",
+      roleName: 'Mangaka',
+      isActive: true,
+      createdAt: item.assignedAt,
+      lastLoginAt: null,
+      deletedAt: null,
+      assignedEditorId: item.fromUserId,
+      assignedEditorName: item.fromUserName
+    }));
+
+    return {
+      data: mappedData,
+      message: res.message
+    };
+  },
 };

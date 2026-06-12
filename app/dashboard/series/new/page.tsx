@@ -22,7 +22,7 @@ export default function NewProposalPage() {
   const { role } = useRole()
   const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  
+
   const [mangakaName, setMangakaName] = useState('Mangaka')
   const [mangakaId, setMangakaId] = useState(DEFAULT_MANGAKA_ID)
 
@@ -38,7 +38,7 @@ export default function NewProposalPage() {
           if (parsed?.id) {
             setMangakaId(parsed.id)
           }
-        } catch {}
+        } catch { }
       }
     }
   }, [])
@@ -67,6 +67,7 @@ export default function NewProposalPage() {
             sampleFileUrl: data.sampleFileUrl,
             mangakaId: mangakaId,
             coverImageUrl: data.coverImageUrl,
+            sourceZipFileAssetId: data.sourceZipFileAssetId,
           })
           setSuccessMessage('draft')
           setTimeout(() => router.push('/dashboard/series'), 1200)
@@ -86,6 +87,7 @@ export default function NewProposalPage() {
           sampleFileUrl: data.sampleFileUrl,
           mangakaId: mangakaId,
           coverImageUrl: data.coverImageUrl,
+          sourceZipFileAssetId: data.sourceZipFileAssetId,
         })
 
         // Dispatch notifications to Mangaka, Editorial Board, and Editor-in-Chief
