@@ -57,8 +57,6 @@ function SidebarInner() {
     EditorialBoard: [
       { label: 'Manga List', href: '/dashboard/manga-list', icon: BookOpen },
       { label: 'Review Proposals', href: '/dashboard/reviews', icon: PencilLine },
-      { label: 'Reader Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-      { label: 'Create Account', href: '/signup', icon: UserPlus },
       { label: 'Ranking', href: '/dashboard/ranking', icon: Trophy },
     ],
     EditorInChief: [

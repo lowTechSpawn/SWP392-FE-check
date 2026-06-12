@@ -1,5 +1,20 @@
 import { fetchAPI } from "./api";
 
+export interface ProposalPageResponse {
+  proposalPageId: string;
+  seriesId: string;
+  pageNo: number;
+  previewFileAssetId: string;
+  createdAt: string;
+  url?: string;
+}
+
+export interface SourceZipFileResponse {
+  fileAssetId: string;
+  fileName: string;
+  url: string;
+}
+
 export interface SeriesProposal {
   id: string;
   title: string;
@@ -17,6 +32,10 @@ export interface SeriesProposal {
   tantouEditorName?: string;
   rejectReason?: string | null;
   sourceZipFileAssetId?: string | null;
+  sourceZipFile?: SourceZipFileResponse | null;
+  sourceZipPublicUrl?: string | null;
+  rawStatus?: string;
+  proposalPages?: ProposalPageResponse[];
 }
 
 const mapGenreNamesToGuids = async (genreString: string): Promise<string[]> => {
@@ -78,6 +97,9 @@ const mapSeriesResponse = (s: any): SeriesProposal => {
   const coverColor = colors[charSum % colors.length];
 
   const sourceZipFileAssetId = s.sourceZipFileAssetId || s.SourceZipFileAssetId || null;
+  const sourceZipFile = s.sourceZipFile || s.SourceZipFile || null;
+  const sourceZipPublicUrl = s.sourceZipPublicUrl || s.SourceZipPublicUrl || null;
+  const proposalPages = s.proposalPages || s.ProposalPages || [];
 
   return {
     id: seriesId,
@@ -96,6 +118,17 @@ const mapSeriesResponse = (s: any): SeriesProposal => {
     rating: 4.8,
     rejectReason,
     sourceZipFileAssetId,
+    sourceZipFile,
+    sourceZipPublicUrl,
+    rawStatus: status,
+    proposalPages: proposalPages.map((p: any) => ({
+      proposalPageId: p.proposalPageId || p.ProposalPageId,
+      seriesId: p.seriesId || p.SeriesId,
+      pageNo: p.pageNo || p.PageNo,
+      previewFileAssetId: p.previewFileAssetId || p.PreviewFileAssetId,
+      createdAt: p.createdAt || p.CreatedAt,
+      url: p.url || p.Url || undefined,
+    })),
   };
 };
 
@@ -107,7 +140,53 @@ export const seriesService = {
 
   getSeriesById: async (id: string): Promise<SeriesProposal> => {
     const res = await fetchAPI<{ data: any }>(`/api/series/${id}`);
-    return mapSeriesResponse(res.data || res);
+    const proposal = mapSeriesResponse(res.data || res);
+
+    // Parse legacy sampleFileUrl to proposalPages if empty
+    if ((!proposal.proposalPages || proposal.proposalPages.length === 0) && proposal.sampleFileUrl) {
+      const ids = proposal.sampleFileUrl.split(',').filter(Boolean);
+      proposal.proposalPages = ids.map((fileId, idx) => ({
+        proposalPageId: fileId.trim(),
+        seriesId: proposal.id,
+        pageNo: idx + 1,
+        previewFileAssetId: fileId.trim(),
+        createdAt: new Date().toISOString()
+      }));
+    }
+
+    // Resolve public URLs for each proposal page
+    if (proposal.proposalPages && proposal.proposalPages.length > 0) {
+      proposal.proposalPages = await Promise.all(
+        proposal.proposalPages.map(async (page) => {
+          if (!page.url && page.previewFileAssetId && !page.previewFileAssetId.startsWith('http')) {
+            try {
+              const fileRes = await fetchAPI<{ data: any }>(`/api/files/${page.previewFileAssetId}`);
+              const fileAsset = fileRes.data || fileRes;
+              return {
+                ...page,
+                url: fileAsset.publicUrl || fileAsset.PublicUrl || undefined
+              };
+            } catch (err) {
+              console.error(`Failed to fetch file asset URL for ${page.previewFileAssetId}:`, err);
+            }
+          }
+          return page;
+        })
+      );
+    }
+
+    // Resolve public URL for source ZIP asset if missing
+    if (!proposal.sourceZipPublicUrl && proposal.sourceZipFileAssetId) {
+      try {
+        const fileRes = await fetchAPI<{ data: any }>(`/api/files/${proposal.sourceZipFileAssetId}`);
+        const fileAsset = fileRes.data || fileRes;
+        proposal.sourceZipPublicUrl = fileAsset.publicUrl || fileAsset.PublicUrl || null;
+      } catch (err) {
+        console.error(`Failed to fetch source ZIP URL for ${proposal.sourceZipFileAssetId}:`, err);
+      }
+    }
+
+    return proposal;
   },
 
   submitProposal: async (proposal: any): Promise<SeriesProposal> => {
@@ -285,5 +364,36 @@ export const seriesService = {
       console.warn("Failed to submit board vote to backend:", error);
     }
     return { success: true, message: "Vote cast successfully." };
+  },
+
+  getBoardDecisions: async (seriesId: string): Promise<any[]> => {
+    const res = await fetchAPI<{ data: any[] }>(`/api/series/${seriesId}/board-decisions`);
+    return res.data || res || [];
+  },
+
+  getBoardVotes: async (boardDecisionId: string): Promise<any[]> => {
+    const res = await fetchAPI<{ data: any[] }>(`/api/board-decisions/${boardDecisionId}/votes`);
+    return res.data || res || [];
+  },
+
+  castBoardVote: async (boardDecisionId: string, voteValue: boolean, comment: string): Promise<any> => {
+    return await fetchAPI<any>(`/api/board-decisions/${boardDecisionId}/votes`, {
+      method: 'POST',
+      body: JSON.stringify({ voteValue, comment }),
+    });
+  },
+
+  extendBoardDeadline: async (boardDecisionId: string, newDeadline: string, reason: string): Promise<any> => {
+    return await fetchAPI<any>(`/api/board-decisions/${boardDecisionId}/extend-deadline`, {
+      method: 'POST',
+      body: JSON.stringify({ newDeadline, reason }),
+    });
+  },
+
+  overrideBoardDecision: async (boardDecisionId: string, decision: 'Approved' | 'Rejected', reason: string): Promise<any> => {
+    return await fetchAPI<any>(`/api/board-decisions/${boardDecisionId}/special-decision`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, reason }),
+    });
   }
 };
