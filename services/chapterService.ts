@@ -70,7 +70,8 @@ export const chapterService = {
     };
     return fetchAPI<any>(`/api/chapters/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(payload)
-    });
+      body: JSON.stringify(payload),
+      suppressGlobalError: true
+    } as any);
   }
 };

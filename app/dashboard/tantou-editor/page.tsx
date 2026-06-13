@@ -570,14 +570,22 @@ function TantouEditorWorkspace() {
 
       if (isApproved) {
         if (activeManuscript.chapterId) {
-          await chapterService.updateChapter(activeManuscript.chapterId, { status: 'Published' })
+          try {
+            await chapterService.updateChapter(activeManuscript.chapterId, { status: 'Published' })
+          } catch (chapterErr) {
+            console.warn("Could not update chapter status to Published (might not have permission):", chapterErr)
+          }
         }
         toast.success(
           `Manuscript approved! Chapter "${activeManuscript.chapterTitle}" đã được xuất bản.`
         )
       } else {
         if (activeManuscript.chapterId) {
-          await chapterService.updateChapter(activeManuscript.chapterId, { status: 'In Progress' })
+          try {
+            await chapterService.updateChapter(activeManuscript.chapterId, { status: 'In Progress' })
+          } catch (chapterErr) {
+            console.warn("Could not update chapter status to In Progress (might not have permission):", chapterErr)
+          }
         }
         toast.warning(
           `Revision requested. Chapter "${activeManuscript.chapterTitle}" đã trả về "In Progress".`
