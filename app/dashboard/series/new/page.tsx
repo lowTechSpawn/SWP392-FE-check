@@ -209,14 +209,14 @@ export default function NewProposalPage() {
           <div>
             {successMessage === 'submitted' ? (
               <>
-                <p className="font-bold text-slate-900 dark:text-slate-100">Proposal submitted for review!</p>
+                <p className="font-bold text-slate-900">Proposal submitted for review!</p>
                 <p className="text-muted-foreground text-xs mt-0.5">
                   The Editorial Board has been notified. Redirecting to My Proposals…
                 </p>
               </>
             ) : (
               <>
-                <p className="font-bold text-slate-900 dark:text-slate-100">Draft saved successfully!</p>
+                <p className="font-bold text-slate-900">Draft saved successfully!</p>
                 <p className="text-muted-foreground text-xs mt-0.5">Redirecting to My Proposals…</p>
               </>
             )}

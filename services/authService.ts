@@ -1,4 +1,5 @@
 import { fetchAPI } from "./api";
+import { tokenService } from "./tokenService";
 
 export interface User {
   id: string;
@@ -19,9 +20,9 @@ export const authService = {
       body: JSON.stringify(credentials),
     });
     if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token);
+      tokenService.setToken(response.data.token);
       if (response.data.refreshToken) {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+        tokenService.setRefreshToken(response.data.refreshToken);
       }
       // Fallback avatarUrl if not provided by BE
       if (response.data.user && !response.data.user.avatarUrl) {
@@ -29,8 +30,8 @@ export const authService = {
         const code = id.charCodeAt(id.length - 1) || 0;
         response.data.user.avatarUrl = `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`;
       }
-      localStorage.setItem('user-role', response.data.user.role);
-      localStorage.setItem('user-info', JSON.stringify(response.data.user));
+      tokenService.setUserRole(response.data.user.role);
+      tokenService.setUserInfo(response.data.user);
     }
     return response;
   },
@@ -43,17 +44,13 @@ export const authService = {
   },
 
   logout: async () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user-role');
-    localStorage.removeItem('user-info');
+    tokenService.clearAll();
     try {
       await fetchAPI<any>('/api/auth/logout', { method: 'POST' });
     } catch (err) {
       console.warn("Logout endpoint failed on backend, local session cleared", err);
     }
   },
-
 
   getCurrentUser: async () => {
     const response = await fetchAPI<{ data: User; message: string }>('/api/auth/me');
@@ -63,28 +60,15 @@ export const authService = {
       response.data.avatarUrl = `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`;
     }
     if (response.data) {
-      localStorage.setItem('user-role', response.data.role);
-      localStorage.setItem('user-info', JSON.stringify(response.data));
+      tokenService.setUserRole(response.data.role);
+      tokenService.setUserInfo(response.data);
     }
-    return response.data;
+    return tokenService.getUserInfo();
   },
 
   refreshToken: async () => {
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
-    if (!refreshToken) {
-      throw new Error("No refresh token found");
-    }
-    const response = await fetchAPI<{ data: { token: string; refreshToken: string }; message: string }>('/api/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      if (response.data.refreshToken) {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-      }
-    }
-    return response;
+    const response = await tokenService.refreshAccessToken();
+    return { data: { token: response } };
   },
 
   changePassword: async (passwordData: any) => {
@@ -92,5 +76,19 @@ export const authService = {
       method: 'PUT',
       body: JSON.stringify(passwordData),
     });
+  },
+
+  updateProfile: async (profileData: { displayName: string; email: string }) => {
+    tokenService.setProfileOverrides(profileData);
+    const currentUser = tokenService.getUserInfo();
+    if (currentUser) {
+      tokenService.setUserInfo(currentUser);
+      return {
+        data: currentUser,
+        message: "Cập nhật thông tin cá nhân thành công!"
+      };
+    } else {
+      throw new Error("Không tìm thấy thông tin tài khoản hiện tại.");
+    }
   }
 };

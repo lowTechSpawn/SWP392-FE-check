@@ -42,6 +42,7 @@ import { useRole } from '@/context/RoleContext'
 import { notificationStore } from '@/store/notificationStore'
 import { seriesService } from '@/services/seriesService'
 import { API_BASE_URL } from '@/lib/constants'
+import { toast } from 'sonner'
 
 // Status badge configurations for Editorial Board view
 const STATUS_CONFIG: Record<
@@ -229,8 +230,11 @@ export default function ReviewProposalsPage() {
   }, [lightboxOpen, detailedProposal])
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
+    if (type === 'success') {
+      toast.success(message)
+    } else {
+      toast.error(message)
+    }
   }
 
   const handleStatusChange = async (id: string, newStatus: ProposalStatus, rejectReason?: string) => {
@@ -1205,22 +1209,7 @@ export default function ReviewProposalsPage() {
         </div>
       </div>
 
-      {/* Notification Toast */}
-      {notification && (
-        <div
-          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm border shadow-lg animate-in fade-in slide-in-from-bottom-5 duration-200 ${notification.type === 'success'
-            ? 'bg-emerald-500/10 text-slate-900 dark:text-slate-100 border-emerald-500/30'
-            : 'bg-destructive/10 text-slate-900 dark:text-slate-100 border-destructive/30'
-            }`}
-        >
-          {notification.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
-          )}
-          <span className="font-bold">{notification.message}</span>
-        </div>
-      )}
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

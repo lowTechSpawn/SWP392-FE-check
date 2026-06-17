@@ -445,7 +445,7 @@ function TantouEditorWorkspace() {
     }
   }, [activeManuscript])
 
-  // Filtered Supervised Series list for this editor
+  //BR74:Filters manuscript dashboard to show only works of creators supervised by the active editor.
   const supervisedSeries = useMemo(() => {
     const assignedIds = new Set(assignedMangakas.map(m => m.id.toLowerCase()))
     return seriesList.filter(
@@ -1153,31 +1153,6 @@ function TantouEditorWorkspace() {
                                 {deadlineStr}
                               </span>
                             </div>
-                            {/* {proposal.sourceZipFileAssetId ? (
-                              <div className="py-2.5">
-                                <a
-                                  href={`${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all border border-primary/20"
-                                >
-                                  <FileArchive className="w-4 h-4" /> Download Source ZIP (.zip)
-                                </a>
-                              </div>
-                            ) : (
-                              proposal.sampleFileUrl && (
-                                <div className="py-2.5">
-                                  <a
-                                    href={proposal.sampleFileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all border border-primary/20"
-                                  >
-                                    <FileText className="w-4 h-4" /> Download Sample File (.zip)
-                                  </a>
-                                </div>
-                              )
-                            )} */}
                           </div>
                         </div>
                       </div>
