@@ -1,9 +1,29 @@
 export interface ManuscriptVersion {
+  version: string
+  status: 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED'
+  submittedAt: string
+  reviewedAt?: string
+  revisionNumber?: number // for BR-83 display, e.g. 1 for v1, 2 for v2
+  feedback?: string
+}
+
+export interface ManuscriptItem {
   id: string
   seriesId: string
-  versionLabel: string
-  fileUrl: string
-  submittedAt: string
-  status: 'Pending' | 'Approved' | 'Revision Required'
-  revisionNotes?: string
+  seriesTitle: string
+  chapterNumber: number
+  chapterTitle: string
+  latestVersion: string
+  status: 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED'
+  progress: number // chapter drawing progress (e.g., 0 to 100) for BR-84 check
+  history: ManuscriptVersion[]
+  pages: string[] // mock page previews
+}
+
+export interface Annotation {
+  id: string
+  manuscriptId: string
+  versionName: string
+  text: string
+  createdAt: string
 }

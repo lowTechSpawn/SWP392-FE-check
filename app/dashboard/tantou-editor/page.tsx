@@ -45,16 +45,8 @@ import {
   type Task,
   type ChapterStatus,
 } from '@/lib/chapters-store'
-import {
-  getManuscripts,
-  getAnnotations,
-  addAnnotation,
-  updateManuscriptStatus,
-  syncManuscriptsFromBackend,
-  syncAnnotationsFromBackend,
-  type ManuscriptItem,
-  type Annotation,
-} from '@/lib/manuscripts-store'
+import { manuscriptService } from '@/services/manuscriptService'
+import type { ManuscriptItem, Annotation } from '@/types/manuscript'
 import { toast } from 'sonner'
 import { seriesService, type SeriesProposal } from '@/services/seriesService'
 import { userService } from '@/services/userService'
@@ -390,7 +382,7 @@ function TantouEditorWorkspace() {
       }
     }
 
-    setManuscripts(getManuscripts())
+    setManuscripts(manuscriptService.getManuscripts())
 
     try {
       const allChaps = await chapterService.listChapters()
@@ -401,7 +393,7 @@ function TantouEditorWorkspace() {
 
     // Background sync manuscripts
     try {
-      const synced = await syncManuscriptsFromBackend()
+      const synced = await manuscriptService.syncManuscriptsFromBackend()
       if (synced) setManuscripts(synced)
     } catch (e) {
       console.warn('Failed to sync manuscripts from backend:', e)
@@ -436,8 +428,8 @@ function TantouEditorWorkspace() {
 
   useEffect(() => {
     if (activeManuscript) {
-      setAnnotations(getAnnotations(activeManuscript.id, activeManuscript.latestVersion))
-      syncAnnotationsFromBackend(activeManuscript.id)
+      setAnnotations(manuscriptService.getAnnotations(activeManuscript.id, activeManuscript.latestVersion))
+      manuscriptService.syncAnnotationsFromBackend(activeManuscript.id)
         .then((synced) => {
           if (synced) setAnnotations(synced)
         })
@@ -516,7 +508,7 @@ function TantouEditorWorkspace() {
     e.preventDefault()
     if (!activeManuscript || !newAnnotationText.trim()) return
 
-    addAnnotation(
+    manuscriptService.addAnnotation(
       activeManuscript.id,
       activeManuscript.latestVersion,
       newAnnotationText.trim()
@@ -541,7 +533,7 @@ function TantouEditorWorkspace() {
     }
 
     try {
-      const success = await updateManuscriptStatus(
+      const success = await manuscriptService.updateManuscriptStatus(
         activeManuscript.id,
         status,
         feedbackText.trim()

@@ -21,16 +21,8 @@ import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 
-import {
-  getManuscripts,
-  getAnnotations,
-  addAnnotation,
-  updateManuscriptStatus,
-  syncManuscriptsFromBackend,
-  syncAnnotationsFromBackend,
-  type ManuscriptItem,
-  type Annotation
-} from '@/lib/manuscripts-store'
+import { manuscriptService } from '@/services/manuscriptService'
+import type { ManuscriptItem, Annotation } from '@/types/manuscript'
 
 export default function ManuscriptsPage() {
   const { role } = useRole()
@@ -49,10 +41,10 @@ export default function ManuscriptsPage() {
   // Load data from store
   useEffect(() => {
     setMounted(true)
-    setManuscripts(getManuscripts())
+    setManuscripts(manuscriptService.getManuscripts())
 
     // Background sync from Backend
-    syncManuscriptsFromBackend().then((synced) => {
+    manuscriptService.syncManuscriptsFromBackend().then((synced) => {
       setManuscripts(synced)
     })
   }, [])
@@ -69,10 +61,10 @@ export default function ManuscriptsPage() {
 
   useEffect(() => {
     if (activeManuscript) {
-      setAnnotations(getAnnotations(activeManuscript.id, activeManuscript.latestVersion))
+      setAnnotations(manuscriptService.getAnnotations(activeManuscript.id, activeManuscript.latestVersion))
 
       // Background sync from Backend
-      syncAnnotationsFromBackend(activeManuscript.id).then((synced) => {
+      manuscriptService.syncAnnotationsFromBackend(activeManuscript.id).then((synced) => {
         setAnnotations(synced)
       })
     }
@@ -91,7 +83,7 @@ export default function ManuscriptsPage() {
 
   const handleBackToList = () => {
     setActiveManuscriptId(null)
-    setManuscripts(getManuscripts())
+    setManuscripts(manuscriptService.getManuscripts())
   }
 
   // Handle adding version-bound annotations (BR-78)
@@ -99,7 +91,7 @@ export default function ManuscriptsPage() {
     e.preventDefault()
     if (!activeManuscript || !newAnnotationText.trim()) return
 
-    addAnnotation(activeManuscript.id, activeManuscript.latestVersion, newAnnotationText.trim()).then((ann) => {
+    manuscriptService.addAnnotation(activeManuscript.id, activeManuscript.latestVersion, newAnnotationText.trim()).then((ann) => {
       setAnnotations(prev => [...prev, ann])
       setNewAnnotationText('')
       toast.success('Annotation added to this version draft!')
@@ -118,7 +110,7 @@ export default function ManuscriptsPage() {
       return
     }
 
-    updateManuscriptStatus(activeManuscript.id, status, feedbackText.trim()).then((success) => {
+    manuscriptService.updateManuscriptStatus(activeManuscript.id, status, feedbackText.trim()).then((success) => {
       if (success) {
         if (status === 'APPROVED') {
           toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)

@@ -1,4 +1,4 @@
-export interface Annotation {
+export interface ReviewAnnotation {
   id: string
   versionId: string
   pageNumber: number
