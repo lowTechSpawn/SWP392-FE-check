@@ -19,14 +19,10 @@ import {
   CalendarDays,
   Eye,
 } from 'lucide-react'
-import {
-  getProposalsByMangaka,
-  hasPendingProposal,
-  type Proposal,
-  type ProposalStatus,
-} from '@/lib/proposals-store'
+import { proposalService } from '@/services/proposalService'
+import type { Proposal, ProposalStatus } from '@/types/proposal'
 
-const DEFAULT_MANGAKA_ID = 'U01'
+const { getProposalsByMangaka, hasPendingProposal } = proposalService
 
 const STATUS_CONFIG: Record<ProposalStatus, { label: string; className: string; icon: React.ElementType }> = {
   Draft: { label: 'Draft', className: 'bg-slate-500/10 text-slate-500 border-slate-500/20', icon: FileEdit },
@@ -45,13 +41,13 @@ export default function MangakaDashboardPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [mounted, setMounted] = useState(false)
   const [mangakaName, setMangakaName] = useState('Mangaka')
-  const [mangakaId, setMangakaId] = useState(DEFAULT_MANGAKA_ID)
+  const [mangakaId, setMangakaId] = useState('')
   const [isBlocked, setIsBlocked] = useState(false)
   const [assignedEditor, setAssignedEditor] = useState<{ name: string; email: string } | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('user-info')
-    let currentId = DEFAULT_MANGAKA_ID
+    let currentId = ''
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
@@ -71,13 +67,17 @@ export default function MangakaDashboardPage() {
       } catch { }
     }
 
-    getProposalsByMangaka(currentId).then((list) => {
-      setProposals(list)
-      hasPendingProposal(currentId).then((blocked) => {
-        setIsBlocked(blocked)
-        setMounted(true)
+    if (currentId) {
+      getProposalsByMangaka(currentId).then((list) => {
+        setProposals(list)
+        hasPendingProposal(currentId).then((blocked) => {
+          setIsBlocked(blocked)
+          setMounted(true)
+        })
       })
-    })
+    } else {
+      setMounted(true)
+    }
   }, [])
 
   if (!mounted) return null

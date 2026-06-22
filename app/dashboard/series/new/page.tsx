@@ -6,19 +6,12 @@ import { ArrowLeft, CheckCircle, WifiOff } from 'lucide-react'
 import Link from 'next/link'
 import { SeriesProposalForm } from '@/components/forms/series-proposal-form'
 import type { SeriesProposalInput } from '@/lib/validation'
-import {
-  hasPendingProposal,
-  isTitleDuplicate,
-  saveDraft,
-  submitProposal,
-  getProposalById,
-  updateDraft,
-  type Proposal,
-} from '@/lib/proposals-store'
+import { proposalService } from '@/services/proposalService'
+import type { Proposal } from '@/types/proposal'
 import { useRole } from '@/context/RoleContext'
 import { notificationStore } from '@/store/notificationStore'
 
-const DEFAULT_MANGAKA_ID = 'U01'
+const { hasPendingProposal, isTitleDuplicate, saveDraft, submitProposal, getProposalById, updateDraft } = proposalService
 
 export default function NewProposalPage() {
   const router = useRouter()
@@ -44,7 +37,7 @@ export default function NewProposalPage() {
   }, [])
 
   const [mangakaName, setMangakaName] = useState('Mangaka')
-  const [mangakaId, setMangakaId] = useState(DEFAULT_MANGAKA_ID)
+  const [mangakaId, setMangakaId] = useState('')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -230,11 +223,11 @@ export default function NewProposalPage() {
         <div className="mb-6 p-3 bg-primary/5 border border-primary/15 rounded-xl text-xs text-muted-foreground space-y-1">
           <p className="font-bold text-primary text-[11px] uppercase tracking-wide">Validation Rules</p>
           <ul className="list-disc list-inside space-y-0.5">
-            <li>Title: required, max 100 characters (BR-15)</li>
-            <li>Genre: at least one required (BR-15)</li>
-            <li>Synopsis: 200–2000 characters (BR-15)</li>
-            <li>Sample Pages: minimum 5 pages (BR-15)</li>
-            <li>Title must not duplicate an existing active series (BR-17)</li>
+            <li>Title: required, max 100 characters</li>
+            <li>Genre: at least one required</li>
+            <li>Synopsis: 200–2000 characters</li>
+            <li>Sample Pages: minimum 5 pages</li>
+            <li>Title must not duplicate an existing active series</li>
           </ul>
         </div>
 

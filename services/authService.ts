@@ -1,18 +1,6 @@
+import { type User } from "@/types/user";
 import { fetchAPI } from "./api";
 import { tokenService } from "./tokenService";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Mangaka' | 'Assistant' | 'TantouEditor' | 'EditorialBoard' | 'EditorInChief' | 'Admin';
-  avatarUrl: string;
-  assignedEditorId?: string;
-  assignedEditorName?: string;
-  assignedEditorEmail?: string;
-  assignedMangakas?: { id: string; name: string; email: string }[];
-}
-
 export const authService = {
   login: async (credentials?: any) => {
     const response = await fetchAPI<{ data: { token: string; refreshToken: string; user: User }; message: string }>('/api/auth/login', {
@@ -79,13 +67,29 @@ export const authService = {
   },
 
   updateProfile: async (profileData: { displayName: string; email: string }) => {
-    tokenService.setProfileOverrides(profileData);
+    const response = await fetchAPI<{ data: { displayName: string; email: string }; message: string }>('/api/users/me', {
+      method: 'PUT',
+      body: JSON.stringify({
+        displayName: profileData.displayName,
+        email: profileData.email
+      }),
+    });
+
     const currentUser = tokenService.getUserInfo();
     if (currentUser) {
-      tokenService.setUserInfo(currentUser);
+      // Clear profile overrides to ensure clean state
+      tokenService.removeProfileOverrides();
+
+      const updatedUser = {
+        ...currentUser,
+        name: response.data?.displayName || profileData.displayName,
+        email: response.data?.email || profileData.email,
+      };
+      tokenService.setUserInfo(updatedUser);
+
       return {
-        data: currentUser,
-        message: "Cập nhật thông tin cá nhân thành công!"
+        data: updatedUser,
+        message: response.message || "Cập nhật thông tin cá nhân thành công!"
       };
     } else {
       throw new Error("Không tìm thấy thông tin tài khoản hiện tại.");

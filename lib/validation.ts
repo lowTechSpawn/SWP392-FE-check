@@ -7,7 +7,7 @@ export const seriesProposalSchema = z.object({
     .min(1, 'Title is required')
     .max(100, 'Title must be ≤ 100 characters'),
   genre: z.string().min(1, 'Genre is required'),
-  publicationType: z.enum(['Weekly', 'Bi-Weekly', 'Monthly', 'Quarterly', 'One-Shot'], {
+  publicationType: z.enum(['Weekly', 'Monthly', 'One-Shot'], {
     message: 'Publication type is required',
   }),
   // BR-15: Synopsis must be 200–2000 characters

@@ -32,13 +32,11 @@ import {
   MessageSquare,
   Users,
 } from 'lucide-react'
-import {
-  getProposals,
-  updateProposalStatus,
-  type Proposal,
-  type ProposalStatus,
-} from '@/lib/proposals-store'
+import { proposalService } from '@/services/proposalService'
+import type { Proposal, ProposalStatus } from '@/types/proposal'
 import { useRole } from '@/context/RoleContext'
+
+const { getProposals, updateProposalStatus } = proposalService
 import { notificationStore } from '@/store/notificationStore'
 import { seriesService } from '@/services/seriesService'
 import { API_BASE_URL } from '@/lib/constants'
@@ -1308,7 +1306,7 @@ export default function ReviewProposalsPage() {
 
                   {/* Badges / Meta */}
                   <div className="flex flex-wrap gap-2">
-                    {proposal.genre.split(', ').map((g) => (
+                    {proposal.genre.split(', ').map((g: string) => (
                       <span
                         key={g}
                         className="bg-muted text-muted-foreground text-xs font-semibold px-2.5 py-0.5 rounded-lg"

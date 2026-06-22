@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { Search, Filter, BookOpen, Star } from 'lucide-react'
-import { getProposals, type Proposal } from '@/lib/proposals-store'
+import { proposalService } from '@/services/proposalService'
+import type { Proposal } from '@/types/proposal'
+const { getProposals } = proposalService
 import { getUsers } from '@/lib/users-store'
 
 interface Manga {

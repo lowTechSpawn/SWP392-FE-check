@@ -23,12 +23,10 @@ import {
   Volume2,
   Sparkles,
 } from 'lucide-react'
-import {
-  getProposals,
-  updateProposalStatus,
-  type Proposal,
-  type ProposalStatus,
-} from '@/lib/proposals-store'
+import { proposalService } from '@/services/proposalService'
+import type { Proposal, ProposalStatus } from '@/types/proposal'
+
+const { getProposals, updateProposalStatus } = proposalService
 import { useRole } from '@/context/RoleContext'
 import { Progress } from '@/components/ui/progress'
 import { notificationStore } from '@/store/notificationStore'

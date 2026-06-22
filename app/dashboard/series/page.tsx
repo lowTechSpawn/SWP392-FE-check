@@ -17,17 +17,11 @@ import {
   Filter,
   CalendarDays,
 } from 'lucide-react'
-import {
-  getProposalsByMangaka,
-  deleteDraft,
-  hasPendingProposal,
-  type Proposal,
-  type ProposalStatus,
-} from '@/lib/proposals-store'
+import { proposalService } from '@/services/proposalService'
+import type { Proposal, ProposalStatus } from '@/types/proposal'
 import { useRole } from '@/context/RoleContext'
 
-// Fake current mangaka — will be replaced with real auth
-const MOCK_MANGAKA_ID = 'U01'
+const { getProposalsByMangaka, deleteDraft, hasPendingProposal } = proposalService
 
 // Status badge config
 const STATUS_CONFIG: Record<
@@ -212,11 +206,12 @@ export default function MyProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'All'>('All')
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const [mangakaId, setMangakaId] = useState('U01')
+  const [mangakaId, setMangakaId] = useState('')
 
   const [isBlocked, setIsBlocked] = useState(false)
 
   const reload = useCallback(async (currentId: string) => {
+    if (!currentId) return
     const list = await getProposalsByMangaka(currentId)
     setProposals(list)
     const blocked = await hasPendingProposal(currentId)
@@ -225,7 +220,7 @@ export default function MyProposalsPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('user-info')
-    let currentId = 'U01'
+    let currentId = ''
     if (saved) {
       try {
         const parsed = JSON.parse(saved)

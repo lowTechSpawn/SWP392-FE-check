@@ -49,7 +49,7 @@ import { calculateChapterDeadline, calculateChapterProgress } from '@/lib/busine
 export default function ChaptersPage() {
   const { role } = useRole()
   const [mounted, setMounted] = useState(false)
-  const [mangakaId, setMangakaId] = useState('U01')
+  const [mangakaId, setMangakaId] = useState('')
 
   useEffect(() => {
     const saved = localStorage.getItem('user-info')
@@ -59,7 +59,7 @@ export default function ChaptersPage() {
         if (parsed?.id) {
           setMangakaId(parsed.id)
         }
-      } catch {}
+      } catch { }
     }
   }, [])
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -131,11 +131,11 @@ export default function ChaptersPage() {
 
   const mapBackendTaskStatus = (status: any, submissions?: any[]): TaskStatus => {
     const statusStr = String(status).trim().toUpperCase();
-    const latestSubmission = submissions && submissions.length > 0 
-      ? submissions[submissions.length - 1] 
+    const latestSubmission = submissions && submissions.length > 0
+      ? submissions[submissions.length - 1]
       : null;
-    const latestSubStatus = latestSubmission 
-      ? String(latestSubmission.status).trim().toUpperCase() 
+    const latestSubStatus = latestSubmission
+      ? String(latestSubmission.status).trim().toUpperCase()
       : '';
 
     if (statusStr === '3' || statusStr === 'APPROVED') {
@@ -165,13 +165,13 @@ export default function ChaptersPage() {
       }
       const response = await fetchAPI<{ data: any[] }>(endpoint)
       const data = response.data || response || []
-      
+
       if (Array.isArray(data)) {
         const mapped = data.map((t: any) => {
-          const latestSub = t.submissions && t.submissions.length > 0 
-            ? t.submissions[t.submissions.length - 1] 
+          const latestSub = t.submissions && t.submissions.length > 0
+            ? t.submissions[t.submissions.length - 1]
             : null;
-          
+
           let uiStatus = mapBackendTaskStatus(t.status, t.submissions)
           if (uiStatus === 'Pending') {
             try {
@@ -179,7 +179,7 @@ export default function ChaptersPage() {
               if (started.includes(t.pageTaskId || t.id)) {
                 uiStatus = 'In-Progress'
               }
-            } catch {}
+            } catch { }
           }
 
           return {
@@ -264,14 +264,14 @@ export default function ChaptersPage() {
       // 3. Load Assistant list from backend
       const usersRes = await userService.getUsers()
       const assistantsList = (usersRes.data || []).filter(u => u.roleName?.toLowerCase() === 'assistant')
-      
+
       // Load all tasks to calculate active tasks per assistant
       const allTasksList = await fetchTasks()
       setAllTasks(allTasksList)
       const mappedAssistants = assistantsList.map(u => {
         const activeTasks = allTasksList.filter(
-          t => t.assistantId === u.userId && 
-          (t.status === 'Pending' || t.status === 'In-Progress' || t.status === 'Submitted' || t.status === 'Rejected')
+          t => t.assistantId === u.userId &&
+            (t.status === 'Pending' || t.status === 'In-Progress' || t.status === 'Submitted' || t.status === 'Rejected')
         ).length
         return {
           id: u.userId,
@@ -328,12 +328,12 @@ export default function ChaptersPage() {
     const extensions = { storyboardFiles: ['pdf', 'jpg'], manuscriptFiles: ['zip', 'tif', 'jpg'] }
     const list = field === 'storyboardFiles' ? newChapterStoryboardFiles : newChapterManuscriptFiles
     const ext = extensions[field][Math.floor(Math.random() * extensions[field].length)]
-    
+
     const chapterNoVal = newChapterNo || 'X'
     const name = field === 'storyboardFiles'
       ? `Ch${chapterNoVal}_Storyboard_p${list.length + 1}.${ext}`
       : `Ch${chapterNoVal}_Pages_${list.length * 5 + 1}-${(list.length + 1) * 5}.${ext}`
-      
+
     const newFile = {
       name,
       size: `${Math.floor(Math.random() * 30) + 5} MB`,
@@ -419,7 +419,7 @@ export default function ChaptersPage() {
       showToast('Bạn cần có series đang Active để thử demo.', 'error')
       return
     }
-    
+
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + 30)
     const dateStr = futureDate.toISOString().split('T')[0]
@@ -498,7 +498,7 @@ export default function ChaptersPage() {
       const created = res.data || res
       showToast(`Đã tạo thành công Chapter ${created.chapterNo || created.number || newChapterNo}: ${created.title || newChapterTitle}!`)
       setIsChapterModalOpen(false)
-      
+
       // Reset form states
       setNewChapterSeriesId(selectedSeriesId)
       setNewChapterNo('')
@@ -564,7 +564,7 @@ export default function ChaptersPage() {
       setNewTaskPageEnd(3)
       setNewTaskDueDate('')
       setNewTaskAttachments([])
-      
+
       // Update chapter status to 'In Progress' if it is 'Draft'
       if (selectedChapter && selectedChapter.status === 'Draft') {
         chapterService.updateChapter(selectedChapterId, { status: 'In Progress' }).finally(() => {
@@ -632,7 +632,7 @@ export default function ChaptersPage() {
         started.push(taskId)
         localStorage.setItem('started_tasks', JSON.stringify(started))
       }
-    } catch {}
+    } catch { }
     refreshData()
   }
 
@@ -686,13 +686,13 @@ export default function ChaptersPage() {
   // Tính phần trăm tiến độ của chapter hiện tại
   const approvedPages = selectedChapter
     ? chapterTasks.filter(t => t.status === 'Approved').reduce((acc, t) => {
-        // Tách số trang từ chuỗi (ví dụ: "1-3" -> 3 trang, "5" -> 1 trang)
-        const parts = t.pages.split('-')
-        if (parts.length === 2) {
-          return acc + (parseInt(parts[1]) - parseInt(parts[0]) + 1)
-        }
-        return acc + 1
-      }, 0)
+      // Tách số trang từ chuỗi (ví dụ: "1-3" -> 3 trang, "5" -> 1 trang)
+      const parts = t.pages.split('-')
+      if (parts.length === 2) {
+        return acc + (parseInt(parts[1]) - parseInt(parts[0]) + 1)
+      }
+      return acc + 1
+    }, 0)
     : 0
   const progressPercent = selectedChapter
     ? Math.min(100, calculateChapterProgress(approvedPages, selectedChapter.totalPages))
@@ -702,11 +702,10 @@ export default function ChaptersPage() {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-bold shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${
-          toast.type === 'success'
+        <div className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-bold shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${toast.type === 'success'
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400'
             : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-800 dark:text-red-400'
-        }`}>
+          }`}>
           {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
           {toast.message}
         </div>
@@ -727,8 +726,8 @@ export default function ChaptersPage() {
               {role === 'Mangaka'
                 ? 'Create chapters, assign duties to your assistants, and review submissions.'
                 : role === 'Assistant'
-                ? 'Check your assigned drawing tasks, update work status, and submit drawings.'
-                : 'Oversee and review chapter development and assistant tasks.'}
+                  ? 'Check your assigned drawing tasks, update work status, and submit drawings.'
+                  : 'Oversee and review chapter development and assistant tasks.'}
             </p>
           </div>
         </div>
@@ -784,7 +783,7 @@ export default function ChaptersPage() {
 
           {/* Main Grid: Left Chapters List, Right Detail Workspace */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+
             {/* Chapters List Column */}
             <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-muted/20">
@@ -830,9 +829,8 @@ export default function ChaptersPage() {
                           setSelectedChapterId(chap.id)
                           refreshData()
                         }}
-                        className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${
-                          isSelected ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-muted/30'
-                        }`}
+                        className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-muted/30'
+                          }`}
                       >
                         <div className="space-y-1 min-w-0">
                           <p className="font-bold text-sm text-foreground truncate">
@@ -1153,7 +1151,7 @@ export default function ChaptersPage() {
                           <Play className="w-3.5 h-3.5" /> Accept & Start
                         </button>
                       )}
-                      
+
                       {(task.status === 'In-Progress' || task.status === 'Rejected') && (
                         <button
                           onClick={() => {
@@ -1277,7 +1275,7 @@ export default function ChaptersPage() {
             </div>
 
             <form onSubmit={handleCreateChapter} className="space-y-6">
-              
+
               {/* Section 1: Thông tin cơ bản */}
               <div className="space-y-4 border-b border-border/50 pb-5">
                 <h4 className="text-sm font-bold flex items-center gap-2 text-foreground">
@@ -1291,9 +1289,8 @@ export default function ChaptersPage() {
                     Tác phẩm (Series) <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${
-                      errors.seriesId ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
-                    }`}
+                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.seriesId ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                      }`}
                     value={newChapterSeriesId}
                     onChange={(e) => {
                       setNewChapterSeriesId(e.target.value)
@@ -1324,9 +1321,8 @@ export default function ChaptersPage() {
                       type="number"
                       placeholder="VD: 12"
                       min={1}
-                      className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${
-                        errors.chapterNo ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
-                      }`}
+                      className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.chapterNo ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                        }`}
                       value={newChapterNo}
                       onChange={(e) => {
                         setNewChapterNo(e.target.value)
@@ -1364,9 +1360,8 @@ export default function ChaptersPage() {
                   <input
                     type="text"
                     placeholder="VD: Sự Thức Tỉnh Của Rồng Thần"
-                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${
-                      errors.title ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
-                    }`}
+                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.title ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                      }`}
                     value={newChapterTitle}
                     onChange={(e) => {
                       setNewChapterTitle(e.target.value)
@@ -1387,9 +1382,8 @@ export default function ChaptersPage() {
                   </label>
                   <input
                     type="date"
-                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${
-                      errors.publicationDate ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
-                    }`}
+                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.publicationDate ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                      }`}
                     value={newChapterPubDate}
                     onChange={(e) => {
                       setNewChapterPubDate(e.target.value)
@@ -1401,7 +1395,7 @@ export default function ChaptersPage() {
                     }}
                   />
                   {errors.publicationDate && <p className="text-xs text-red-500 mt-1">{errors.publicationDate}</p>}
-                  
+
                   {newChapterPubDate && !errors.publicationDate && (
                     <div className="mt-2.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs flex items-center gap-2">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -1496,11 +1490,10 @@ export default function ChaptersPage() {
                 <p className="text-xs text-muted-foreground">
                   Đính kèm phác thảo thô (pencil) hoặc bản vẽ nét (ink) để bắt đầu phân chia công việc vẽ.
                 </p>
-                <div className={`p-5 border-2 border-dashed rounded-2xl text-center transition-colors ${
-                  errors.manuscriptFiles 
-                    ? 'border-red-500 bg-red-500/5' 
+                <div className={`p-5 border-2 border-dashed rounded-2xl text-center transition-colors ${errors.manuscriptFiles
+                    ? 'border-red-500 bg-red-500/5'
                     : 'border-primary/20 hover:border-primary/40 bg-primary/5'
-                }`}>
+                  }`}>
                   <Upload className={`w-8 h-8 mx-auto mb-2 ${errors.manuscriptFiles ? 'text-red-400' : 'text-primary'} opacity-65`} />
                   <p className="text-xs text-muted-foreground">Kéo thả bản thảo vào đây hoặc</p>
                   <button
@@ -1610,7 +1603,7 @@ export default function ChaptersPage() {
                   className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground font-semibold"
                   required
                 />
-                
+
                 {/* Suggestions List */}
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Gợi ý loại task (Click để chọn nhanh):</span>
@@ -1626,11 +1619,10 @@ export default function ChaptersPage() {
                             const pagesText = `${newTaskPageStart}-${newTaskPageEnd}`;
                             setNewTaskDesc(suggestion.template.replace('{pages}', pagesText));
                           }}
-                          className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col gap-1 cursor-pointer ${
-                            isSelected
+                          className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col gap-1 cursor-pointer ${isSelected
                               ? 'bg-primary/10 border-primary text-foreground'
                               : 'bg-muted/40 border-border/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-foreground">{suggestion.name}</span>
@@ -1836,15 +1828,15 @@ export default function ChaptersPage() {
                       {activeTaskToReview.type} (Pages {activeTaskToReview.pages})
                     </span>
                   </div>
-                  
+
                   <p className="text-sm font-bold text-foreground leading-snug">
                     {activeTaskToReview.description}
                   </p>
-                  
+
                   <p className="text-xs text-muted-foreground">
                     Submitted by: <strong>{activeTaskToReview.assistantName}</strong>
                   </p>
-                  
+
                   <div className="p-3 bg-muted/50 rounded-xl text-xs leading-relaxed text-foreground border border-border">
                     <p className="font-bold text-muted-foreground mb-1 text-[10px] uppercase">Assistant Notes & Edits:</p>
                     <p className="italic whitespace-pre-line">{activeTaskToReview.submitDescription || 'Đã hoàn thành công việc, gửi Mangaka duyệt.'}</p>

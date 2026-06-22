@@ -16,22 +16,6 @@ export const ROUTES = {
   DASHBOARD: "/dashboard",
 } as const;
 
-// Domain Constants - Manga Publishing
-export const GENRES = [
-  'Action',
-  'Drama',
-  'Romance',
-  'Fantasy',
-  'Sci-Fi',
-  'Comedy',
-  'Thriller',
-  'Horror',
-  'Slice of Life',
-  'Mystery',
-] as const
-
-export const PUBLICATION_TYPES = ['Weekly', 'Monthly', 'One-shot'] as const
-
 export const SERIES_STATUS = {
   PROPOSED: 'Proposed',
   ACTIVE: 'Active',

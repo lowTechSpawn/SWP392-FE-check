@@ -1,9 +1,16 @@
-export type UserRole = 'Mangaka' | 'Assistant' | 'TantouEditor' | 'EditorialBoard'
+import { type Role } from '@/lib/roles';
 
 export interface User {
-  id: string
-  name: string
-  email: string
-  roles: UserRole[]
-  active: boolean
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  avatarUrl: string;
+  username?: string;
+  status?: 'Active' | 'Inactive';
+  editorId?: string;
+  assignedEditorId?: string;
+  assignedEditorName?: string;
+  assignedEditorEmail?: string;
+  assignedMangakas?: { id: string; name: string; email: string }[];
 }

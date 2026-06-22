@@ -48,7 +48,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 
 // Import users store utilities
-import { type User } from '@/lib/users-store'
+import { type User } from '@/types/user'
 import { authService } from '@/services/authService'
 import { userService } from '@/services/userService'
 import { systemService, type RoleResponse, type GenreResponse } from '@/services/systemService'
@@ -181,7 +181,7 @@ export default function AdminPage() {
     return usersList.filter(u => {
       const matchSearch =
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (u.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchRole = roleFilter === 'all' || u.role === roleFilter
@@ -584,7 +584,7 @@ export default function AdminPage() {
                               <span className="text-[10px] text-muted-foreground italic">Admin</span>
                             ) : user.status === 'Active' ? (
                               <Button
-                                onClick={() => handleToggleStatus(user.id, user.status)}
+                                onClick={() => handleToggleStatus(user.id, user.status || 'Active')}
                                 variant="outline"
                                 className="text-[10px] font-bold px-3 py-1.5 rounded-xl border cursor-pointer transition-all flex items-center gap-1 mx-auto hover:bg-rose-500/10 hover:text-rose-600 border-rose-500/20 text-rose-500/80"
                               >

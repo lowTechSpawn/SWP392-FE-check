@@ -4,17 +4,8 @@
  */
 
 import { type Role } from './roles'
+import { type User } from '@/types/user'
 
-export interface User {
-  id: string
-  username: string
-  name: string
-  email: string
-  role: Role
-  status: 'Active' | 'Inactive'
-  avatarUrl: string
-  editorId?: string // for Mangaka, points to a Tantou Editor user id
-}
 
 const STORAGE_USERS_KEY = 'mangaflow_users'
 
@@ -61,8 +52,8 @@ export function createUser(data: Omit<User, 'id' | 'status' | 'avatarUrl'>): Use
   const users = loadUsers()
 
   // Validate uniqueness
-  const isUsernameExists = users.some(u => u.username.toLowerCase() === data.username.toLowerCase())
-  if (isUsernameExists) {
+  const isUsernameExists = users.some(u => (u.username || '').toLowerCase() === (data.username || '').toLowerCase())
+  if (isUsernameExists && data.username) {
     throw new Error(`Username "${data.username}" đã tồn tại trên hệ thống.`)
   }
 
