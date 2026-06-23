@@ -1,5 +1,4 @@
 /**
- * Client-side user store backed by localStorage.
  * Powers the Admin Account Creation, Role Assignment, and Editor gán workflow (BR-01).
  */
 
