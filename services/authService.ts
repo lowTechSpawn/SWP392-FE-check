@@ -1,9 +1,25 @@
 import { type User } from "@/types/user";
 import { fetchAPI } from "./api";
 import { tokenService } from "./tokenService";
+const mapUserProfileToUser = (u: any): User => {
+  if (!u) return {} as User;
+  return {
+    id: u.userId || u.id || '',
+    name: u.displayName || u.name || '',
+    email: u.email || '',
+    role: u.roleName || u.role || 'Mangaka',
+    avatarUrl: u.avatarUrl || undefined,
+    username: u.userName || u.username || '',
+    status: u.deletedAt === null ? 'Active' : 'Inactive',
+    createdAt: u.createdAt,
+    assignedEditorId: u.assignedEditorId || undefined,
+    assignedEditorName: u.assignedEditorName || undefined
+  };
+};
+
 export const authService = {
   login: async (credentials?: any) => {
-    const response = await fetchAPI<{ data: { token: string; refreshToken: string; user: User }; message: string }>('/api/auth/login', {
+    const response = await fetchAPI<{ data: { token: string; refreshToken: string; user: any }; message: string }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -12,8 +28,9 @@ export const authService = {
       if (response.data.refreshToken) {
         tokenService.setRefreshToken(response.data.refreshToken);
       }
-      tokenService.setUserRole(response.data.user.role);
-      tokenService.setUserInfo(response.data.user);
+      const mappedUser = mapUserProfileToUser(response.data.user);
+      tokenService.setUserRole(mappedUser.role);
+      tokenService.setUserInfo(mappedUser);
     }
     return response;
   },
@@ -35,10 +52,11 @@ export const authService = {
   },
 
   getCurrentUser: async () => {
-    const response = await fetchAPI<{ data: User; message: string }>('/api/auth/me');
+    const response = await fetchAPI<{ data: any; message: string }>('/api/auth/me');
     if (response.data) {
-      tokenService.setUserRole(response.data.role);
-      tokenService.setUserInfo(response.data);
+      const mappedUser = mapUserProfileToUser(response.data);
+      tokenService.setUserRole(mappedUser.role);
+      tokenService.setUserInfo(mappedUser);
     }
     return tokenService.getUserInfo();
   },
@@ -56,7 +74,7 @@ export const authService = {
   },
 
   updateProfile: async (profileData: { displayName: string; email: string }) => {
-    const response = await fetchAPI<{ data: { displayName: string; email: string }; message: string }>('/api/users/me', {
+    const response = await fetchAPI<{ data: any; message: string }>('/api/users/me', {
       method: 'PUT',
       body: JSON.stringify({
         displayName: profileData.displayName,
@@ -66,13 +84,17 @@ export const authService = {
 
     const currentUser = tokenService.getUserInfo();
     if (currentUser) {
-      // Clear profile overrides to ensure clean state
       tokenService.removeProfileOverrides();
+
+      const mappedUser = mapUserProfileToUser(response.data || {
+        ...currentUser,
+        displayName: profileData.displayName,
+        email: profileData.email
+      });
 
       const updatedUser = {
         ...currentUser,
-        name: response.data?.displayName || profileData.displayName,
-        email: response.data?.email || profileData.email,
+        ...mappedUser
       };
       tokenService.setUserInfo(updatedUser);
 
@@ -82,6 +104,25 @@ export const authService = {
       };
     } else {
       throw new Error("Không tìm thấy thông tin tài khoản hiện tại.");
+    }
+  },
+
+  updateAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetchAPI<{ data: any; message: string }>('/api/users/me/avatar', {
+      method: 'POST',
+      body: formData,
+    });
+    if (response.data) {
+      const mappedUser = mapUserProfileToUser(response.data);
+      tokenService.setUserInfo(mappedUser);
+      return {
+        data: mappedUser,
+        message: response.message || "Cập nhật ảnh đại diện thành công!"
+      };
+    } else {
+      throw new Error("Không thể cập nhật ảnh đại diện từ phản hồi hệ thống.");
     }
   }
 };

@@ -30,6 +30,34 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [updatingProfile, setUpdatingProfile] = useState(false)
+  const [updatingAvatar, setUpdatingAvatar] = useState(false)
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Limit file size (5MB max)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error('Ảnh đại diện không được vượt quá 5MB.')
+      return
+    }
+
+    setUpdatingAvatar(true)
+    try {
+      const response = await authService.updateAvatar(file)
+      setUser(response.data)
+      // Trigger update on header and other components
+      window.dispatchEvent(new Event('user-profile-updated'))
+      toast.success(response.message || 'Cập nhật ảnh đại diện thành công!')
+    } catch (err: any) {
+      toast.error(err.message || 'Cập nhật ảnh đại diện thất bại.')
+    } finally {
+      setUpdatingAvatar(false)
+      // Reset input value to allow selecting same file again
+      e.target.value = ''
+    }
+  }
 
   // Change Password Form State
   const [currentPassword, setCurrentPassword] = useState('')
@@ -188,17 +216,48 @@ export default function ProfilePage() {
         {/* Left Side: Summary Card */}
         <div className="md:col-span-1 bg-card border border-border/60 rounded-3xl p-6 flex flex-col items-center text-center shadow-xl space-y-4">
           <div className="relative group">
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.name}
-                className="w-24 h-24 rounded-2xl object-cover border-2 border-border shadow-inner"
-              />
-            ) : (
-              <div className="bg-primary/10 text-primary w-24 h-24 rounded-2xl flex items-center justify-center font-bold text-3xl shadow-inner">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-            )}
+            {/* Avatar Preview */}
+            <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-border shadow-inner bg-background">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="bg-primary/10 text-primary w-full h-full flex items-center justify-center font-bold text-3xl">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )}
+
+              {/* Uploading Spinner Overlay */}
+              {updatingAvatar && (
+                <div className="absolute inset-0 bg-background/75 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              )}
+
+              {/* Hover Trigger Overlay (only if not currently uploading) */}
+              {!updatingAvatar && (
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white"
+                >
+                  <UserIcon className="w-5 h-5" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Đổi ảnh</span>
+                </label>
+              )}
+            </div>
+
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              id="avatar-upload"
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+              disabled={updatingAvatar}
+            />
           </div>
 
           <div className="space-y-1">
