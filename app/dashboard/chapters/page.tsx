@@ -89,6 +89,10 @@ export default function ChaptersPage() {
   const [newChapterNo, setNewChapterNo] = useState<string>('')
   const [newChapterTitle, setNewChapterTitle] = useState('')
   const [newChapterPages, setNewChapterPages] = useState<number>(24)
+  const [isEditChapterOpen, setIsEditChapterOpen] = useState(false)
+  const [editChapterId, setEditChapterId] = useState<string>('')
+  const [editChapterTitle, setEditChapterTitle] = useState('')
+  const [editChapterPages, setEditChapterPages] = useState<number>(0)
   const [newChapterPubDate, setNewChapterPubDate] = useState('')
   const [newChapterSynopsis, setNewChapterSynopsis] = useState('')
   const [newChapterNotes, setNewChapterNotes] = useState('')
@@ -450,7 +454,35 @@ export default function ChaptersPage() {
     setErrors({})
     showToast('Đã điền dữ liệu mẫu (demo quy trình thực)!', 'success')
   }
+ const openEditChapter = () => {
+    const chap = chapters.find(c => c.id === selectedChapterId) as any
+    if (!chap) {
+      showToast('Chưa chọn chapter để sửa!', 'error')
+      return
+    }
+    setEditChapterId(chap.id)
+    setEditChapterTitle(chap.title || '')
+    setEditChapterPages(chap.totalPages ?? chap.pages ?? 0)
+    setIsEditChapterOpen(true)
+  }
 
+  const handleSaveEditChapter = async () => {
+    if (!editChapterTitle.trim()) {
+      showToast('Tiêu đề không được để trống!', 'error')
+      return
+    }
+    try {
+      await chapterService.updateChapter(editChapterId, {
+        title: editChapterTitle.trim(),
+        totalPages: editChapterPages
+      })
+      showToast('Đã cập nhật chapter!', 'success')
+      setIsEditChapterOpen(false)
+      refreshData()
+    } catch {
+      showToast('Cập nhật thất bại.', 'error')
+    }
+  }
   // 1. Tạo Chapter mới
   const handleCreateChapter = (e: React.FormEvent) => {
     e.preventDefault()
@@ -780,6 +812,13 @@ export default function ChaptersPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm shadow-primary/15 hover:bg-primary/90 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Create Chapter
+            </button>
+            <button
+              type="button"
+              onClick={openEditChapter}
+              className="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-secondary/80 transition-all cursor-pointer"
+            >
+              <FileEdit className="w-4 h-4" /> Edit Chapter
             </button>
           </div>
 
@@ -1236,7 +1275,63 @@ export default function ChaptersPage() {
       {/* ========================================================================= */}
       {/* MODALS                                                                    */}
       {/* ========================================================================= */}
+      {/* Edit Chapter Modal */}
+      {isEditChapterOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
+                <FileEdit className="w-5 h-5 text-primary" /> Sửa Chapter
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsEditChapterOpen(false)}
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground">Tiêu đề chapter</label>
+              <input
+                type="text"
+                value={editChapterTitle}
+                onChange={(e) => setEditChapterTitle(e.target.value)}
+                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Nhập tiêu đề mới"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground">Tổng số trang</label>
+              <input
+                type="number"
+                value={editChapterPages}
+                onChange={(e) => setEditChapterPages(Number(e.target.value))}
+                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsEditChapterOpen(false)}
+                className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground rounded-xl transition-colors cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEditChapter}
+                className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all cursor-pointer"
+              >
+                Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* A. Create Chapter Modal (Mangaka) */}
       {isChapterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
