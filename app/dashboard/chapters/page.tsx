@@ -533,7 +533,10 @@ export default function ChaptersPage() {
       showToast('Vui lòng nhập mô tả công việc!', 'error')
       return
     }
-
+    if (!newTaskAssistantId || newTaskAssistantId === 'Unassigned') {
+      showToast('Vui lòng chọn một assistant để giao việc!', 'error')
+      return
+    }
     // Fetch latest manuscript for chapter
     fetchAPI<{ data: any[] } | any[]>(`/api/chapters/${selectedChapterId}/manuscripts`).then((res) => {
       const list = (res as any).data || res
