@@ -25,7 +25,8 @@ export const chapterService = {
       totalPages: c.totalPages,
       publicationDate: c.publicationDate?.split('T')[0] || '',
       deadline: c.submissionDeadline?.split('T')[0] || c.deadline?.split('T')[0] || '',
-      createdAt: c.createdAt || new Date().toISOString()
+      createdAt: c.createdAt || new Date().toISOString(),
+      referenceFiles: c.referenceFiles || []
     }));
   },
 
@@ -41,7 +42,8 @@ export const chapterService = {
       totalPages: c.totalPages,
       publicationDate: c.publicationDate?.split('T')[0] || '',
       deadline: c.submissionDeadline?.split('T')[0] || c.deadline?.split('T')[0] || '',
-      createdAt: c.createdAt || new Date().toISOString()
+      createdAt: c.createdAt || new Date().toISOString(),
+      referenceFiles: c.referenceFiles || []
     }));
   },
 

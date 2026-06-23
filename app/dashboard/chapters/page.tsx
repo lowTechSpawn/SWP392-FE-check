@@ -954,7 +954,17 @@ export default function ChaptersPage() {
                         <strong>Chapter Deadline:</strong> {selectedChapter.deadline} (Submission target to Editorial Board).
                       </span>
                     </div>
-
+                    
+                    {selectedChapter.referenceFiles && selectedChapter.referenceFiles.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-muted-foreground">📎 Tài liệu tham khảo</p>
+                        {selectedChapter.referenceFiles.map((f: any) => (
+                          <a key={f.fileAssetId} href={f.publicUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary hover:underline truncate">
+                            📄 {f.originalFileName}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                     {/* Progress tracking */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-semibold">
