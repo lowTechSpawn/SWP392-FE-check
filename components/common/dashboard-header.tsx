@@ -11,7 +11,8 @@ import {
   Info,
   Sparkles,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  User
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { authService } from '@/services/authService'
@@ -283,8 +284,18 @@ export function DashboardHeader() {
               {/* Actions list */}
               <div className="pt-1.5 space-y-0.5">
                 <button
+                  onClick={() => {
+                    setIsProfileOpen(false)
+                    router.push('/dashboard/profile')
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
+                >
+                  <User className="w-4 h-4" />
+                  Hồ sơ cá nhân
+                </button>
+                <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Đăng xuất

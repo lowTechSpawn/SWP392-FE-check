@@ -149,7 +149,7 @@ export default function AdminPage() {
             email: u.email,
             role,
             status,
-            avatarUrl: `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`,
+            avatarUrl: (u as any).avatarUrl || undefined,
             editorId: u.assignedEditorId || undefined,
             createdAt: u.createdAt
           }
@@ -526,11 +526,17 @@ export default function AdminPage() {
                         <TableRow key={user.id} className="border-b border-border hover:bg-muted/15 transition-colors">
                           {/* Avatar */}
                           <TableCell className="flex justify-center py-2.5">
-                            <img
-                              src={user.avatarUrl}
-                              alt={user.name}
-                              className="w-8 h-8 rounded-full object-cover border border-border"
-                            />
+                            {user.avatarUrl ? (
+                              <img
+                                src={user.avatarUrl}
+                                alt={user.name}
+                                className="w-8 h-8 rounded-full object-cover border border-border"
+                              />
+                            ) : (
+                              <div className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 border border-border">
+                                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                            )}
                           </TableCell>
 
                           {/* Name & ID */}

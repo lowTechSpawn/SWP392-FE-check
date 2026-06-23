@@ -12,12 +12,6 @@ export const authService = {
       if (response.data.refreshToken) {
         tokenService.setRefreshToken(response.data.refreshToken);
       }
-      // Fallback avatarUrl if not provided by BE
-      if (response.data.user && !response.data.user.avatarUrl) {
-        const id = response.data.user.id || "default";
-        const code = id.charCodeAt(id.length - 1) || 0;
-        response.data.user.avatarUrl = `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`;
-      }
       tokenService.setUserRole(response.data.user.role);
       tokenService.setUserInfo(response.data.user);
     }
@@ -42,11 +36,6 @@ export const authService = {
 
   getCurrentUser: async () => {
     const response = await fetchAPI<{ data: User; message: string }>('/api/auth/me');
-    if (response.data && !response.data.avatarUrl) {
-      const id = response.data.id || "default";
-      const code = id.charCodeAt(id.length - 1) || 0;
-      response.data.avatarUrl = `https://xsgames.co/randomusers/assets/avatars/${code % 2 === 0 ? 'male' : 'female'}/${code % 50}.jpg`;
-    }
     if (response.data) {
       tokenService.setUserRole(response.data.role);
       tokenService.setUserInfo(response.data);
