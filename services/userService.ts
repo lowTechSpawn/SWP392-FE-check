@@ -65,6 +65,13 @@ export const userService = {
     });
   },
 
+  updateUser: async (id: string, updateData: { userName?: string; email?: string; displayName?: string; roleId?: string; newPassword?: string }) => {
+    return fetchAPI<{ data: any; message: string }>(`/api/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updateData),
+    });
+  },
+
   assignEditorToMangaka: async (mangakaId: string, editorId: string) => {
     if (typeof window !== 'undefined') {
       try {

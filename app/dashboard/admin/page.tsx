@@ -79,6 +79,19 @@ export default function AdminPage() {
   const [formPassword, setFormPassword] = useState('')
   const [formConfirmPassword, setFormConfirmPassword] = useState('')
 
+  // Edit User Modal States
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [editFormName, setEditFormName] = useState('')
+  const [editFormUsername, setEditFormUsername] = useState('')
+  const [editFormEmail, setEditFormEmail] = useState('')
+  const [editFormRoleId, setEditFormRoleId] = useState('')
+  const [editFormPassword, setEditFormPassword] = useState('')
+  const [editFormConfirmPassword, setEditFormConfirmPassword] = useState('')
+  const [updatingUser, setUpdatingUser] = useState(false)
+
+  // View User Modal State
+  const [viewingUser, setViewingUser] = useState<User | null>(null)
+
   // --- States for System Management (Roles/Genres CRUD) ---
   const [rolesList, setRolesList] = useState<RoleResponse[]>([])
   const [genresList, setGenresList] = useState<GenreResponse[]>([])
@@ -229,6 +242,62 @@ export default function AdminPage() {
       refreshUsers()
     } catch (err: any) {
       toast.error(err.message || 'Đã xảy ra lỗi khi gán Editor.')
+    }
+  }
+
+  const handleViewUser = (user: User) => {
+    setViewingUser(user)
+  }
+
+  const handleOpenEditModal = (user: User) => {
+    setEditingUser(user)
+    setEditFormName(user.name)
+    setEditFormUsername(user.username || '')
+    setEditFormEmail(user.email)
+
+    const matchedRole = rolesList.find(r => r.roleName.toLowerCase() === user.role.toLowerCase())
+    setEditFormRoleId(matchedRole?.roleId || '')
+
+    setEditFormPassword('')
+    setEditFormConfirmPassword('')
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser) return
+
+    if (!editFormName.trim() || !editFormUsername.trim() || !editFormEmail.trim() || !editFormRoleId) {
+      toast.error('Vui lòng điền đầy đủ các thông tin bắt buộc.')
+      return
+    }
+
+    if (editFormPassword && editFormPassword !== editFormConfirmPassword) {
+      toast.error('Mật khẩu mới và xác nhận mật khẩu không khớp.')
+      return
+    }
+
+    if (editFormPassword && editFormPassword.length < 8) {
+      toast.error('Mật khẩu mới phải có độ dài ít nhất 8 ký tự.')
+      return
+    }
+
+    setUpdatingUser(true)
+    try {
+      await userService.updateUser(editingUser.id, {
+        displayName: editFormName.trim(),
+        userName: editFormUsername.trim(),
+        email: editFormEmail.trim(),
+        roleId: editFormRoleId,
+        newPassword: editFormPassword ? editFormPassword : undefined
+      })
+
+      toast.success(`Cập nhật tài khoản "${editFormName}" thành công!`)
+      setEditingUser(null)
+      refreshUsers()
+    } catch (err: any) {
+      toast.error(err.message || 'Cập nhật tài khoản thất bại.')
+    } finally {
+      setUpdatingUser(false)
     }
   }
 
@@ -605,16 +674,45 @@ export default function AdminPage() {
                           <TableCell className="text-center">
                             {user.role === 'Admin' ? (
                               <span className="text-[10px] text-muted-foreground italic">Admin</span>
-                            ) : user.status === 'Active' ? (
-                              <Button
-                                onClick={() => handleToggleStatus(user.id, user.status || 'Active')}
-                                variant="outline"
-                                className="text-[10px] font-bold px-3 py-1.5 rounded-xl border cursor-pointer transition-all flex items-center gap-1 mx-auto hover:bg-rose-500/10 hover:text-rose-600 border-rose-500/20 text-rose-500/80"
-                              >
-                                <UserX className="w-3 h-3" /> Khóa tài khoản
-                              </Button>
                             ) : (
-                              <span className="text-[10px] text-rose-600/85 font-semibold">Đã khóa</span>
+                              <div className="flex items-center justify-center gap-1.5">
+                                {/* View Details (Read) */}
+                                <Button
+                                  onClick={() => handleViewUser(user)}
+                                  variant="outline"
+                                  size="icon"
+                                  className="w-8 h-8 rounded-xl border border-border hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                                  title="Xem chi tiết"
+                                >
+                                  <Info className="w-3.5 h-3.5" />
+                                </Button>
+
+                                {/* Edit User (Update) */}
+                                <Button
+                                  onClick={() => handleOpenEditModal(user)}
+                                  variant="outline"
+                                  size="icon"
+                                  className="w-8 h-8 rounded-xl border border-border hover:bg-primary/10 hover:text-primary cursor-pointer"
+                                  title="Chỉnh sửa tài khoản"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </Button>
+
+                                {/* Block/Soft Delete */}
+                                {user.status === 'Active' ? (
+                                  <Button
+                                    onClick={() => handleToggleStatus(user.id, user.status || 'Active')}
+                                    variant="outline"
+                                    size="icon"
+                                    className="w-8 h-8 rounded-xl border border-rose-500/20 hover:bg-rose-500/10 text-rose-500/80 hover:text-rose-600 cursor-pointer"
+                                    title="Khóa tài khoản"
+                                  >
+                                    <UserX className="w-3.5 h-3.5" />
+                                  </Button>
+                                ) : (
+                                  <span className="text-[10px] text-rose-600/85 font-semibold px-1">Đã khóa</span>
+                                )}
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>
@@ -1098,6 +1196,229 @@ export default function AdminPage() {
                 className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
               >
                 {editingGenre ? 'Lưu thay đổi' : 'Thêm mới'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View User Details Dialog Modal */}
+      <Dialog open={viewingUser !== null} onOpenChange={(open) => !open && setViewingUser(null)}>
+        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Info className="w-5 h-5 text-primary" />
+              Chi tiết tài khoản
+            </DialogTitle>
+          </DialogHeader>
+
+          {viewingUser && (
+            <div className="space-y-4 pt-3 text-sm">
+              <div className="flex justify-center pb-2">
+                {viewingUser.avatarUrl ? (
+                  <img
+                    src={viewingUser.avatarUrl}
+                    alt={viewingUser.name}
+                    className="w-20 h-20 rounded-full object-cover border-2 border-border shadow-md"
+                  />
+                ) : (
+                  <div className="bg-primary/10 text-primary w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl border-2 border-border shadow-md">
+                    {viewingUser.name ? viewingUser.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 border-t border-border/50 pt-3">
+                <span className="text-muted-foreground font-semibold">Họ và tên:</span>
+                <span className="col-span-2 text-foreground font-bold">{viewingUser.name}</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-muted-foreground font-semibold">Tên tài khoản:</span>
+                <span className="col-span-2 text-foreground font-mono">{viewingUser.username}</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-muted-foreground font-semibold">Email:</span>
+                <span className="col-span-2 text-foreground break-all">{viewingUser.email}</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-muted-foreground font-semibold">Vai trò:</span>
+                <span className="col-span-2">
+                  <Badge className="bg-primary/10 text-primary border-primary/20 font-bold text-xs px-2.5 py-0.5 rounded-full border">
+                    {viewingUser.role}
+                  </Badge>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-muted-foreground font-semibold">Ngày tạo:</span>
+                <span className="col-span-2 text-foreground">
+                  {viewingUser.createdAt ? new Date(viewingUser.createdAt).toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }) : '—'}
+                </span>
+              </div>
+
+              {viewingUser.role === 'Mangaka' && (
+                <div className="grid grid-cols-3 gap-2">
+                  <span className="text-muted-foreground font-semibold">Editor phụ trách:</span>
+                  <span className="col-span-2 text-foreground font-bold">{getEditorName(viewingUser.editorId)}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-2">
+                <span className="text-muted-foreground font-semibold">Trạng thái:</span>
+                <span className="col-span-2">
+                  {viewingUser.status === 'Active' ? (
+                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border border-emerald-500/20 font-bold text-xs px-2.5 py-0.5 rounded-full">
+                      Hoạt động
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/20 font-bold text-xs px-2.5 py-0.5 rounded-full">
+                      Đã khóa
+                    </Badge>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-border">
+                <Button
+                  onClick={() => setViewingUser(null)}
+                  className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  Đóng
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Details Dialog Modal */}
+      <Dialog open={editingUser !== null} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-primary" />
+              Chỉnh sửa thông tin tài khoản
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleEditSubmit} className="space-y-4 pt-3">
+            {/* Full Name */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Họ và tên <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Nhập họ và tên..."
+                value={editFormName}
+                onChange={(e) => setEditFormName(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                required
+              />
+            </div>
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Tên tài khoản (Username) <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Nhập tên tài khoản..."
+                value={editFormUsername}
+                onChange={(e) => setEditFormUsername(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground font-mono"
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Địa chỉ Email <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="email"
+                placeholder="Nhập email..."
+                value={editFormEmail}
+                onChange={(e) => setEditFormEmail(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                required
+              />
+            </div>
+
+            {/* System Role */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Vai trò hệ thống <span className="text-destructive">*</span>
+              </label>
+              <select
+                value={editFormRoleId}
+                onChange={(e) => setEditFormRoleId(e.target.value)}
+                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                required
+              >
+                <option value="">-- Chọn vai trò --</option>
+                {rolesList.map(role => (
+                  <option key={role.roleId} value={role.roleId}>{role.roleName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* New Password */}
+            <div className="space-y-1.5 border-t border-border/50 pt-3">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Mật khẩu mới (Tùy chọn)
+              </label>
+              <input
+                type="password"
+                placeholder="Để trống nếu không muốn đổi mật khẩu"
+                value={editFormPassword}
+                onChange={(e) => setEditFormPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+              />
+            </div>
+
+            {/* Confirm New Password */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Xác nhận mật khẩu mới
+              </label>
+              <input
+                type="password"
+                placeholder="Xác nhận mật khẩu mới..."
+                value={editFormConfirmPassword}
+                onChange={(e) => setEditFormConfirmPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+              />
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+              <Button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                variant="outline"
+                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+                disabled={updatingUser}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+                disabled={updatingUser}
+              >
+                {updatingUser ? 'Đang cập nhật...' : 'Cập nhật tài khoản'}
               </Button>
             </div>
           </form>
