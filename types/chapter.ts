@@ -6,4 +6,5 @@ export interface Chapter {
   deadline: string
   overdue: boolean
   progress: number
+  referenceFiles?: { fileAssetId: string; originalFileName: string; publicUrl?: string; mimeType?: string }[]
 }
