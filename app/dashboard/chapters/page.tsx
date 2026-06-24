@@ -205,7 +205,8 @@ export default function ChaptersPage() {
             submittedWorkUrl: latestSub?.submittedFileAssetUrl || (latestSub ? 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800' : undefined),
             submitDescription: latestSub?.note || undefined,
             submissionId: latestSub?.submissionId || latestSub?.id || undefined,
-            feedback: latestSub?.rejectReason || undefined
+            feedback: latestSub?.rejectReason || undefined,
+            referenceFiles: t.taskReferences || t.referenceFiles || []
           }
         })
         return chapterId ? mapped.filter(t => t.chapterId === chapterId) : mapped

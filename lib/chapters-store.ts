@@ -45,6 +45,7 @@ export interface Task {
   submittedFiles?: { name: string; size: string; type: string }[] // Các file hình ảnh/sản phẩm Assistant đã nộp
   submitDescription?: string // Lời nhắn hoặc mô tả chỉnh sửa từ Assistant khi nộp bài
   submissionId?: string // to support backend approve/reject calls
+  referenceFiles?: { fileAssetId: string; publicUrl: string; originalFileName: string; mimeType?: string }[]
 }
 
 export interface Chapter {

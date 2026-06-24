@@ -610,63 +610,6 @@ export default function ReviewProposalsPage() {
                 })()
               )}
 
-              {/* Manuscript Preview (5 Pages) */}
-              {previewPages.length > 0 && (
-                <div className="bg-card border border-border p-6 rounded-2xl space-y-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
-                        Mandatory Manuscript Preview (5 Pages)
-                      </h3>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Required sample pages submitted by the Mangaka for review
-                      </p>
-                    </div>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 bg-primary/10 text-primary rounded-lg border border-primary/20">
-                      {previewPages.length} PAGES
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    {previewPages.map((page: any, idx: number) => {
-                      const imgUrl = page.url
-                        || (page.previewFileAssetId?.startsWith('http')
-                          ? page.previewFileAssetId
-                          : `${API_BASE_URL}/api/files/${page.previewFileAssetId}`);
-                      return (
-                        <div
-                          key={page.proposalPageId || idx}
-                          onClick={() => {
-                            setLightboxActiveIndex(idx);
-                            setLightboxOpen(true);
-                          }}
-                          className="group relative cursor-pointer aspect-[3/4] bg-muted border border-border hover:border-primary/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={imgUrl}
-                            alt={`Page ${page.pageNo || idx + 1}`}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                            <div className="bg-background/90 backdrop-blur-sm p-1.5 rounded-lg shadow-sm text-primary text-[10px] font-bold flex items-center gap-1">
-                              <ZoomIn className="w-3.5 h-3.5" /> Inspect
-                            </div>
-                          </div>
-
-                          <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md">
-                            Page {page.pageNo || idx + 1}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Evaluation Panel */}
               <div className="bg-card border border-border p-6 rounded-2xl space-y-6 shadow-sm">
                 <div className="flex items-center justify-between border-b border-border pb-3">
