@@ -109,7 +109,7 @@ export default function ChaptersPage() {
   const [newTaskDesc, setNewTaskDesc] = useState('')
   const [newTaskAssistantId, setNewTaskAssistantId] = useState('Unassigned')
   const [newTaskDueDate, setNewTaskDueDate] = useState<string>('')
-  const [newTaskAttachments, setNewTaskAttachments] = useState<{ name: string; size: string; type: string }[]>([])
+  const [newTaskAttachments, setNewTaskAttachments] = useState<any[]>([])
 
   // Review states (Approve / Reject)
   const [reviewFeedback, setReviewFeedback] = useState('')
@@ -216,7 +216,7 @@ export default function ChaptersPage() {
     return []
   }
 
-  const refreshData = async () => {
+  const refreshData = async (preferredChapterId?: string) => {
     try {
       // 1. Fetch series and filter by active and mangaka ownership
       const allProposals = await seriesService.listSeries()
@@ -246,7 +246,7 @@ export default function ChaptersPage() {
         const chapterList = await chapterService.getChaptersBySeries(currentSeriesId)
         setChapters(chapterList)
 
-        let currentChapterId = selectedChapterId
+        let currentChapterId = preferredChapterId || selectedChapterId
         if (!currentChapterId && chapterList.length > 0) {
           currentChapterId = chapterList[0].id
           setSelectedChapterId(currentChapterId)
@@ -564,9 +564,14 @@ export default function ChaptersPage() {
       setErrors({})
 
       setSelectedChapterId(created.chapterId || created.id)
-      refreshData()
+      refreshData(created.chapterId || created.id)
     }).catch((err: any) => {
-      showToast(err.message || 'Failed to create chapter.', 'error')
+      const msg = err?.message || ''
+      if (msg.includes('Conflict') || msg.includes('already exists') || msg.includes('409')) {
+        showToast('Số chương này đã tồn tại trong tác phẩm. Vui lòng chọn số chương khác.', 'error')
+      } else {
+        showToast(msg || 'Tạo chapter thất bại.', 'error')
+      }
     })
   }
 
@@ -609,8 +614,22 @@ export default function ChaptersPage() {
         method: 'POST',
         body: JSON.stringify(payload)
       })
-    }).then(() => {
+    }).then(async (taskRes: any) => {
+      const created = (taskRes as any)?.data || taskRes
+      const newTaskId = created?.pageTaskId || created?.id
+      const realFiles = newTaskAttachments.filter((f: any) => f instanceof File)
+      if (newTaskId && realFiles.length > 0) {
+        const formData = new FormData()
+        formData.append('category', 'TaskReference')
+        realFiles.forEach((f: File) => formData.append('files', f))
+        const uploadRes = await fetchAPI<{ data: { files: { fileAssetId: string }[] } }>('/api/files', { method: 'POST', body: formData })
+        const fileAssetIds = uploadRes.data.files.map(f => f.fileAssetId)
+        if (fileAssetIds.length > 0) {
+          await fetchAPI(`/api/page-tasks/${newTaskId}/reference-files`, { method: 'POST', body: JSON.stringify({ fileAssetIds }) })
+        }
+      }
       showToast(`Đã tạo task và giao việc thành công!`)
+      setNewTaskAttachments([])
       setIsTaskModalOpen(false)
       setNewTaskDesc('')
       setNewTaskType('Line Art')
@@ -628,7 +647,12 @@ export default function ChaptersPage() {
         refreshData()
       }
     }).catch((err: any) => {
-      showToast(err.message || 'Failed to assign page task.', 'error')
+      const msg = err?.message || ''
+      if (msg.includes('Conflict') || msg.includes('overlap') || msg.includes('409')) {
+        showToast('Khoảng trang này đã được giao cho task khác. Vui lòng chọn khoảng trang khác.', 'error')
+      } else {
+        showToast(msg || 'Giao task thất bại.', 'error')
+      }
     })
   }
 
@@ -772,18 +796,10 @@ export default function ChaptersPage() {
   }
 
   // Tính phần trăm tiến độ của chapter hiện tại
-  const approvedPages = selectedChapter
-    ? chapterTasks.filter(t => t.status === 'Approved').reduce((acc, t) => {
-      // Tách số trang từ chuỗi (ví dụ: "1-3" -> 3 trang, "5" -> 1 trang)
-      const parts = t.pages.split('-')
-      if (parts.length === 2) {
-        return acc + (parseInt(parts[1]) - parseInt(parts[0]) + 1)
-      }
-      return acc + 1
-    }, 0)
-    : 0
-  const progressPercent = selectedChapter
-    ? Math.min(100, calculateChapterProgress(approvedPages, selectedChapter.totalPages))
+ const totalTasksOfChapter = chapterTasks.length
+  const approvedTasksOfChapter = chapterTasks.filter(t => t.status === 'Approved').length
+  const progressPercent = totalTasksOfChapter > 0
+    ? Math.round((approvedTasksOfChapter / totalTasksOfChapter) * 100)
     : 0
 
   return (
@@ -988,7 +1004,7 @@ export default function ChaptersPage() {
                     {/* Progress tracking */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-muted-foreground">Drawing page progress (Approved by Mangaka)</span>
+                        <span className="text-muted-foreground">Task progress (Approved by Mangaka)</span>
                         <span className="text-primary font-bold">{progressPercent}%</span>
                       </div>
                       <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -998,7 +1014,7 @@ export default function ChaptersPage() {
                         />
                       </div>
                       <p className="text-[10px] text-muted-foreground italic text-right">
-                        {approvedPages} of {selectedChapter.totalPages} pages completed and approved
+                       {approvedTasksOfChapter} of {totalTasksOfChapter} tasks completed and approved
                       </p>
                     </div>
 
@@ -1896,13 +1912,15 @@ export default function ChaptersPage() {
                 </label>
                 <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
                   <p className="text-xs text-muted-foreground">Đính kèm các file tài liệu hướng dẫn vẽ</p>
-                  <button
-                    type="button"
-                    onClick={handleTaskMockUpload}
-                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    <Upload className="w-3.5 h-3.5" /> Đính kèm tệp mẫu (Mock File)
-                  </button>
+                  <label className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" /> Chọn File
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => setNewTaskAttachments(prev => [...prev, ...Array.from(e.target.files || [])])}
+                    />
+                  </label>
                 </div>
                 {newTaskAttachments.length > 0 && (
                   <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">

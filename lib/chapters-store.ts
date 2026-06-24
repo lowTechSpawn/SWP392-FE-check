@@ -61,7 +61,7 @@ export interface Chapter {
   notes?: string // Added to support notes from SubmitChapterPage
   storyboardFiles?: any[] // Added to support storyboard files from SubmitChapterPage
   manuscriptFiles?: any[] // Added to support manuscript files from SubmitChapterPage
-  referenceFiles?: { fileAssetId: string; publicUrl: string; originalFileName: string }[]
+  referenceFiles?: { fileAssetId: string; publicUrl: string; originalFileName: string; mimeType?: string }[]
 }
 
 const STORAGE_CHAPTERS_KEY = 'mangaflow_chapters'
