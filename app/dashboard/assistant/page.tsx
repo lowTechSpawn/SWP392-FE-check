@@ -445,7 +445,16 @@ export default function AssistantDashboardPage() {
                     <p className="text-xs text-muted-foreground leading-relaxed bg-muted/30 p-3 rounded-xl border border-border/40">
                       {task.description}
                     </p>
-
+                    {task.referenceFiles && task.referenceFiles.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground">📎 Tài liệu hướng dẫn</p>
+                        {task.referenceFiles.map((f: any) => (
+                          <a key={f.fileAssetId} href={f.publicUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary hover:underline truncate">
+                            📄 {f.originalFileName}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                     {/* Rejections & Feedback Box */}
                     {task.status === 'Rejected' && task.feedback && (
                       <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-600 dark:text-red-400 space-y-1">
