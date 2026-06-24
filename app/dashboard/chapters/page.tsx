@@ -109,7 +109,7 @@ export default function ChaptersPage() {
   const [newTaskDesc, setNewTaskDesc] = useState('')
   const [newTaskAssistantId, setNewTaskAssistantId] = useState('Unassigned')
   const [newTaskDueDate, setNewTaskDueDate] = useState<string>('')
-  const [newTaskAttachments, setNewTaskAttachments] = useState<{ name: string; size: string; type: string }[]>([])
+  const [newTaskAttachments, setNewTaskAttachments] = useState<any[]>([])
 
   // Review states (Approve / Reject)
   const [reviewFeedback, setReviewFeedback] = useState('')
@@ -566,7 +566,12 @@ export default function ChaptersPage() {
       setSelectedChapterId(created.chapterId || created.id)
       refreshData()
     }).catch((err: any) => {
-      showToast(err.message || 'Failed to create chapter.', 'error')
+      const msg = err?.message || ''
+      if (msg.includes('Conflict') || msg.includes('already exists') || msg.includes('409')) {
+        showToast('Số chương này đã tồn tại trong tác phẩm. Vui lòng chọn số chương khác.', 'error')
+      } else {
+        showToast(msg || 'Tạo chapter thất bại.', 'error')
+      }
     })
   }
 
@@ -609,8 +614,22 @@ export default function ChaptersPage() {
         method: 'POST',
         body: JSON.stringify(payload)
       })
-    }).then(() => {
+    }).then(async (taskRes: any) => {
+      const created = (taskRes as any)?.data || taskRes
+      const newTaskId = created?.pageTaskId || created?.id
+      const realFiles = newTaskAttachments.filter((f: any) => f instanceof File)
+      if (newTaskId && realFiles.length > 0) {
+        const formData = new FormData()
+        formData.append('category', 'TaskReference')
+        realFiles.forEach((f: File) => formData.append('files', f))
+        const uploadRes = await fetchAPI<{ data: { files: { fileAssetId: string }[] } }>('/api/files', { method: 'POST', body: formData })
+        const fileAssetIds = uploadRes.data.files.map(f => f.fileAssetId)
+        if (fileAssetIds.length > 0) {
+          await fetchAPI(`/api/page-tasks/${newTaskId}/reference-files`, { method: 'POST', body: JSON.stringify({ fileAssetIds }) })
+        }
+      }
       showToast(`Đã tạo task và giao việc thành công!`)
+      setNewTaskAttachments([])
       setIsTaskModalOpen(false)
       setNewTaskDesc('')
       setNewTaskType('Line Art')
@@ -1876,13 +1895,15 @@ export default function ChaptersPage() {
                 </label>
                 <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
                   <p className="text-xs text-muted-foreground">Đính kèm các file tài liệu hướng dẫn vẽ</p>
-                  <button
-                    type="button"
-                    onClick={handleTaskMockUpload}
-                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    <Upload className="w-3.5 h-3.5" /> Attach Mock File
-                  </button>
+                  <label className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" /> Chọn File
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => setNewTaskAttachments(prev => [...prev, ...Array.from(e.target.files || [])])}
+                    />
+                  </label>
                 </div>
                 {newTaskAttachments.length > 0 && (
                   <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
