@@ -103,7 +103,7 @@ export default function ChaptersPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Form states for creating task
-  const [newTaskType, setNewTaskType] = useState<string>('Line Art')
+  const [newTaskType, setNewTaskType] = useState<string>('')
   const [newTaskPageStart, setNewTaskPageStart] = useState<number>(1)
   const [newTaskPageEnd, setNewTaskPageEnd] = useState<number>(3)
   const [newTaskDesc, setNewTaskDesc] = useState('')
