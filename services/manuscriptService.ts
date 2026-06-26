@@ -4,10 +4,11 @@ import type { ManuscriptItem, Annotation, ManuscriptVersion } from '@/types/manu
 let memoryManuscripts: ManuscriptItem[] = []
 let memoryAnnotations: Annotation[] = []
 
-const mapBackendManuscriptStatus = (status: string): 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED' => {
+const mapBackendManuscriptStatus = (status: string): ManuscriptItem['status'] => {
   if (!status) return 'SUBMITTED'
   const clean = status.trim().toUpperCase()
   if (clean === 'APPROVED') return 'APPROVED'
+  if (clean === 'PUBLISHED') return 'PUBLISHED'
   if (clean === 'REJECTED' || clean === 'REVISION REQUIRED' || clean === 'REVISIONREQUIRED') return 'REVISION REQUIRED'
   return 'SUBMITTED'
 }
@@ -28,7 +29,7 @@ export const manuscriptService = {
   // BR-80: Manuscript Approval Lock / Status Transitions
   async updateManuscriptStatus(
     id: string,
-    newStatus: 'APPROVED' | 'REVISION REQUIRED',
+    newStatus: ManuscriptItem['status'],
     feedbackText: string
   ): Promise<boolean> {
     const idx = memoryManuscripts.findIndex(m => m.id === id)
@@ -36,9 +37,23 @@ export const manuscriptService = {
       memoryManuscripts[idx].status = newStatus
     }
 
+    const backendStatus =
+      newStatus === 'APPROVED'
+        ? 'Approved'
+        : newStatus === 'PUBLISHED'
+          ? 'Published'
+          : 'RevisionRequired'
+
+    const defaultFeedback =
+      newStatus === 'APPROVED'
+        ? 'Manuscript approved.'
+        : newStatus === 'PUBLISHED'
+          ? 'Manuscript published.'
+          : 'Revision required.'
+
     const payload = {
-      status: newStatus === 'APPROVED' ? 'Approved' : 'Rejected',
-      feedback: feedbackText || (newStatus === 'APPROVED' ? 'Bản vẽ đã được phê duyệt.' : 'Cần sửa đổi bản vẽ.')
+      status: backendStatus,
+      feedback: feedbackText || defaultFeedback
     }
 
     try {
@@ -155,6 +170,7 @@ export const manuscriptService = {
 
           return {
             id: m.manuscriptId || m.id,
+            chapterId: m.chapterId,
             seriesId: m.seriesId || 'S01',
             seriesTitle: m.seriesTitle || seriesMap.get(m.seriesId) || 'Sakura Knights',
             chapterNumber: m.chapterNumber || 1,

@@ -193,11 +193,9 @@ export default function ProfilePage() {
     Admin: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   }
 
-  const formattedDate = user?.id ? (() => {
-    // Generate mock date if not present (since CreatedAt isn't on User response but on UserProfileResponse)
-    const mockDate = new Date(2026, 0, 15)
-    return mockDate.toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })
-  })() : ''
+  const formattedDate = user?.id && user.createdAt
+    ? new Date(user.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })
+    : ''
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
@@ -275,7 +273,7 @@ export default function ProfilePage() {
           <div className="w-full pt-4 border-t border-border/60 space-y-3 text-left">
             <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
               <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0" />
-              <span>Thành viên từ: {formattedDate || '15 tháng 1, 2026'}</span>
+              <span>Thành viên từ: {formattedDate || 'Chưa cập nhật'}</span>
             </div>
             <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
               <Shield className="w-4 h-4 text-muted-foreground/60 shrink-0" />

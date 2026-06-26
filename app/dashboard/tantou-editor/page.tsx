@@ -53,166 +53,6 @@ import { userService } from '@/services/userService'
 import { chapterService } from '@/services/chapterService'
 import { API_BASE_URL } from '@/lib/constants'
 
-interface FileItem {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  size: string
-  children?: FileItem[]
-  previewType?: 'image' | 'pdf' | 'text'
-  content?: string
-  pageNo?: number
-}
-
-const getProposalFileTree = (proposal: SeriesProposal | null): FileItem[] => {
-  if (!proposal) return []
-
-  const title = proposal.title
-  const description = proposal.description
-
-  const pagesList: FileItem[] = (proposal.proposalPages && proposal.proposalPages.length > 0)
-    ? proposal.proposalPages.map((p) => {
-      return {
-        name: `page_${p.pageNo.toString().padStart(2, '0')}.png`,
-        path: `root/drafts/page_${p.pageNo.toString().padStart(2, '0')}.png`,
-        type: 'file' as const,
-        size: 'Image Page',
-        previewType: 'image' as const,
-        pageNo: p.pageNo,
-        content: `${API_BASE_URL}/api/files/${p.previewFileAssetId}`,
-      }
-    })
-    : Array.from({ length: 5 }).map((_, idx) => {
-      const pageNum = idx + 1
-      return {
-        name: `page_${pageNum.toString().padStart(2, '0')}.png`,
-        path: `root/drafts/page_${pageNum.toString().padStart(2, '0')}.png`,
-        type: 'file' as const,
-        size: `${(1.5 + idx * 0.1).toFixed(1)} MB`,
-        previewType: 'image' as const,
-        pageNo: pageNum,
-      }
-    })
-
-  return [
-    {
-      name: 'storyboards',
-      path: 'root/storyboards',
-      type: 'folder' as const,
-      size: '',
-      children: [
-        {
-          name: 'storyboard_ch1_draft.pdf',
-          path: 'root/storyboards/storyboard_ch1_draft.pdf',
-          type: 'file' as const,
-          size: '5.8 MB',
-          previewType: 'pdf' as const,
-          pageNo: 1,
-        },
-        {
-          name: 'storyboard_ch2_draft.pdf',
-          path: 'root/storyboards/storyboard_ch2_draft.pdf',
-          type: 'file' as const,
-          size: '4.2 MB',
-          previewType: 'pdf' as const,
-          pageNo: 2,
-        },
-      ],
-    },
-    {
-      name: 'final_manuscript_drafts',
-      path: 'root/drafts',
-      type: 'folder' as const,
-      size: '',
-      children: pagesList,
-    },
-    {
-      name: 'character_concepts.pdf',
-      path: 'root/character_concepts.pdf',
-      type: 'file' as const,
-      size: '2.4 MB',
-      previewType: 'pdf' as const,
-      pageNo: 3,
-    },
-    {
-      name: 'world_setting_outline.txt',
-      path: 'root/world_setting_outline.txt',
-      type: 'file' as const,
-      size: '12 KB',
-      previewType: 'text' as const,
-      content: `WORLD SETTING OUTLINE:\n\nSeries Title: ${title}\n\nKey Concepts:\n1. Main Theme & Tone\n   - A unique exploration of characters in a fantasy/slice-of-life setting.\n   - Visual pacing focuses heavily on emotional close-ups and landscape panels.\n\n2. Magic/Power System\n   - Standardized arcane rules, visual signatures for active spells.\n   - Elf magic: ancient patterns, slow but high output.\n   - Human magic: highly efficient, militaristic.\n\n3. Story Arc Structure\n   - Chapter 1: Introduction of main quest and companion relationships.\n   - Chapter 2: Journey across border mountains; encountering ancient spirits.\n\n4. Synopsis Outline:\n   ${description || 'No detailed synopsis outlines available.'}`,
-    },
-  ]
-}
-
-const findFileByPath = (items: FileItem[], path: string | null): FileItem | null => {
-  if (!path) return null
-  for (const item of items) {
-    if (item.path === path) return item
-    if (item.children) {
-      const found = findFileByPath(item.children, path)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-const MangaPageMockup = ({ pageNo }: { pageNo: number }) => (
-  <svg viewBox="0 0 400 600" className="w-full h-auto bg-white border border-border shadow-md rounded-lg max-w-[320px] mx-auto select-none">
-    <rect width="400" height="600" fill="#f8fafc" />
-    <rect x="20" y="20" width="360" height="560" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 4" />
-
-    <text x="30" y="40" fontSize="10" fontFamily="monospace" fill="#94a3b8" fontWeight="bold">PAGE {pageNo} - DRAFT WORK</text>
-
-    <rect x="30" y="60" width="340" height="180" fill="#f1f5f9" stroke="#334155" strokeWidth="2" />
-    <path d="M 30,60 L 370,240" stroke="#cbd5e1" strokeWidth="1" />
-    <ellipse cx="100" cy="120" rx="35" ry="25" fill="#fff" stroke="#334155" strokeWidth="1.5" />
-    <text x="82" y="123" fontSize="8" fontFamily="sans-serif" fill="#000" fontWeight="bold">Himmel...</text>
-
-    <rect x="30" y="250" width="160" height="300" fill="#e2e8f0" stroke="#334155" strokeWidth="2" />
-    <ellipse cx="110" cy="380" rx="40" ry="30" fill="#fff" stroke="#334155" strokeWidth="1.5" />
-    <text x="82" y="383" fontSize="8" fontFamily="sans-serif" fill="#000" fontWeight="bold">It's beautiful.</text>
-
-    <rect x="200" y="250" width="170" height="300" fill="#cbd5e1" stroke="#334155" strokeWidth="2" />
-    <line x1="200" y1="250" x2="370" y2="550" stroke="#475569" strokeWidth="1.5" />
-    <line x1="370" y1="250" x2="200" y2="550" stroke="#475569" strokeWidth="1.5" />
-    <ellipse cx="285" cy="400" rx="45" ry="25" fill="#fff" stroke="#334155" strokeWidth="1.5" />
-    <text x="260" y="403" fontSize="9" fontFamily="sans-serif" fill="#000" fontWeight="bold">FLASSHH!</text>
-  </svg>
-)
-
-const PdfPageMockup = ({ filename, page }: { filename: string; page: number }) => (
-  <div className="bg-white border border-border shadow-md rounded-lg p-6 max-w-[360px] mx-auto min-h-[480px] flex flex-col justify-between text-left select-none text-slate-800">
-    <div className="space-y-4">
-      <div className="flex justify-between items-center border-b pb-2 text-[10px] text-slate-400 font-mono">
-        <span>DOCUMENT PREVIEW ({filename})</span>
-        <span>PAGE {page} OF 8</span>
-      </div>
-      <div className="h-6 bg-slate-100 rounded w-3/4" />
-      <div className="h-4 bg-slate-50 rounded w-1/2" />
-
-      <div className="space-y-2.5 pt-4">
-        <div className="h-3 bg-slate-50 rounded w-full" />
-        <div className="h-3 bg-slate-50 rounded w-full" />
-        <div className="h-3 bg-slate-50 rounded w-11/12" />
-        <div className="h-3 bg-slate-50 rounded w-full" />
-      </div>
-
-      <div className="h-32 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex items-center justify-center text-xs text-slate-400 font-medium">
-        [Storyboard Scene Outline {page}]
-      </div>
-
-      <div className="space-y-2.5">
-        <div className="h-3 bg-slate-50 rounded w-full" />
-        <div className="h-3 bg-slate-50 rounded w-5/6" />
-      </div>
-    </div>
-
-    <div className="text-center text-[9px] text-slate-400 font-mono mt-4">
-      Confidential - Manga Proposal Submission
-    </div>
-  </div>
-)
 
 function TantouEditorWorkspace() {
   const { role } = useRole()
@@ -248,22 +88,7 @@ function TantouEditorWorkspace() {
   const [showRejectInput, setShowRejectInput] = useState(false)
   const [rejectReasonText, setRejectReasonText] = useState('')
 
-  // File Explorer states for proposal reviews
-  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
-    'root': true,
-    'root/storyboards': true,
-    'root/drafts': true,
-  })
-  const [explorerZoom, setExplorerZoom] = useState(100)
-  const [explorerPdfPage, setExplorerPdfPage] = useState(1)
 
-  // Reset file explorer states when proposal changes
-  useEffect(() => {
-    setSelectedFilePath(null)
-    setExplorerZoom(100)
-    setExplorerPdfPage(1)
-  }, [selectedProposalId])
 
   const [detailedProposal, setDetailedProposal] = useState<SeriesProposal | null>(null)
   const [detailedProposalLoading, setDetailedProposalLoading] = useState(false)
@@ -557,6 +382,25 @@ function TantouEditorWorkspace() {
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to update manuscript review status.')
+    }
+  }
+
+  const handlePublishManuscript = async (manuscript: ManuscriptItem) => {
+    try {
+      const success = await manuscriptService.updateManuscriptStatus(
+        manuscript.id,
+        'PUBLISHED',
+        'Manuscript published.'
+      )
+
+      if (success) {
+        toast.success(`Manuscript for "${manuscript.seriesTitle}" published.`)
+        handleBackToManuscripts()
+      } else {
+        toast.error('Failed to publish manuscript.')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to publish manuscript.')
     }
   }
 
@@ -1746,19 +1590,34 @@ function TantouEditorWorkspace() {
 
                     {/* Actions */}
                     <div className="grid grid-cols-1 gap-2">
-                      <button
-                        onClick={() => handleDecision('APPROVED')}
-                        disabled={activeManuscript.progress < 100}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                      >
-                        <CheckCircle2 className="w-4 h-4" /> Approve & Lock (BR-80)
-                      </button>
-                      <button
-                        onClick={() => handleDecision('REVISION REQUIRED')}
-                        className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                      >
-                        <AlertTriangle className="w-4 h-4" /> Request Revision
-                      </button>
+                      {activeManuscript.status === 'APPROVED' ? (
+                        <button
+                          onClick={() => handlePublishManuscript(activeManuscript)}
+                          className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <FileCheck className="w-4 h-4" /> Publish Manuscript
+                        </button>
+                      ) : activeManuscript.status === 'PUBLISHED' ? (
+                        <div className="w-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" /> Published
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleDecision('APPROVED')}
+                            disabled={activeManuscript.progress < 100}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Approve & Lock (BR-80)
+                          </button>
+                          <button
+                            onClick={() => handleDecision('REVISION REQUIRED')}
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <AlertTriangle className="w-4 h-4" /> Request Revision
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1809,6 +1668,8 @@ function TantouEditorWorkspace() {
                             <span
                               className={`text-[9px] uppercase font-black px-2.5 py-0.5 rounded-full border ${m.status === 'APPROVED'
                                 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                : m.status === 'PUBLISHED'
+                                  ? 'bg-primary/10 text-primary border-primary/20'
                                 : m.status === 'REVISION REQUIRED'
                                   ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
                                   : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20 animate-pulse'
@@ -1825,6 +1686,19 @@ function TantouEditorWorkspace() {
                                 Review
                               </button>
                             )}
+                            {m.status === 'APPROVED' && (
+                              <button
+                                onClick={() => handlePublishManuscript(m)}
+                                className="bg-primary hover:bg-primary/95 text-primary-foreground font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-xl cursor-pointer transition-colors shadow-sm"
+                              >
+                                Publish
+                              </button>
+                            )}
+                            {m.status === 'PUBLISHED' && (
+                              <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-xl">
+                                Published
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -1840,6 +1714,8 @@ function TantouEditorWorkspace() {
                                 <span
                                   className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${h.status === 'APPROVED'
                                     ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                    : h.status === 'PUBLISHED'
+                                      ? 'bg-primary/10 text-primary border-primary/20'
                                     : h.status === 'REVISION REQUIRED'
                                       ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
                                       : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'

@@ -4,6 +4,7 @@
  */
 
 import { fetchAPI } from '@/services/api'
+import { API_BASE_URL } from '@/lib/constants'
 
 export type ChapterStatus = 'Draft' | 'In Progress' | 'Ready for Editor' | 'Published'
 
@@ -142,6 +143,37 @@ function loadTasks(): Task[] {
 function saveTasks(tasks: Task[]): void {
   if (typeof window === 'undefined') return
   localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasks))
+}
+
+function getSubmissionStatus(submission: any): string {
+  return String(submission?.status).trim().toUpperCase()
+}
+
+function getLatestSubmission(submissions?: any[]): any | null {
+  if (!Array.isArray(submissions) || submissions.length === 0) return null
+
+  const sorted = [...submissions].sort((a, b) => {
+    const bVersion = Number(b?.versionNo ?? b?.VersionNo ?? 0)
+    const aVersion = Number(a?.versionNo ?? a?.VersionNo ?? 0)
+    if (bVersion !== aVersion) return bVersion - aVersion
+
+    const bSubmittedAt = new Date(b?.submittedAt ?? b?.SubmittedAt ?? 0).getTime()
+    const aSubmittedAt = new Date(a?.submittedAt ?? a?.SubmittedAt ?? 0).getTime()
+    return bSubmittedAt - aSubmittedAt
+  })
+
+  return sorted.find(s => {
+    const status = getSubmissionStatus(s)
+    return status === '0' || status === 'SUBMITTED'
+  }) || sorted[0]
+}
+
+function getSubmissionFileUrl(submission: any): string | undefined {
+  const directUrl = submission?.submittedFileAssetUrl || submission?.publicUrl || submission?.PublicUrl
+  if (directUrl) return directUrl
+
+  const fileAssetId = submission?.submittedFileAssetId || submission?.SubmittedFileAssetId
+  return fileAssetId ? `${API_BASE_URL}/api/files/${fileAssetId}` : undefined
 }
 
 // ---------- Public Store API ----------
@@ -486,6 +518,8 @@ export async function syncTasksFromBackend(chapterId?: string): Promise<Task[]> 
         const assistant = assistants.find(a => a.id === t.assistantId || a.name === t.assistantName)
         const assistantName = t.assistantName || (assistant ? assistant.name : 'Unassigned')
         
+        const latestSub = getLatestSubmission(t.submissions)
+
         return {
           id: t.pageTaskId || t.id,
           chapterId: t.chapterId,
@@ -498,11 +532,9 @@ export async function syncTasksFromBackend(chapterId?: string): Promise<Task[]> 
           dueDate: t.dueDate || undefined,
           pageStart: t.pageStart,
           pageEnd: t.pageEnd,
-          submittedWorkUrl: t.submissions && t.submissions.length > 0 
-            ? t.submissions[0].submittedFileAssetUrl || 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800' 
-            : undefined,
-          submitDescription: t.submissions && t.submissions.length > 0 ? t.submissions[0].note : undefined,
-          submissionId: t.submissions && t.submissions.length > 0 ? t.submissions[0].submissionId : undefined,
+          submittedWorkUrl: getSubmissionFileUrl(latestSub),
+          submitDescription: latestSub?.note || undefined,
+          submissionId: latestSub?.submissionId || latestSub?.id || undefined,
         }
       })
 

@@ -41,6 +41,7 @@ import {
   type TaskStatus
 } from '@/lib/chapters-store'
 import { fetchAPI } from '@/services/api'
+import { API_BASE_URL } from '@/lib/constants'
 import { seriesService } from '@/services/seriesService'
 import { chapterService } from '@/services/chapterService'
 import { userService } from '@/services/userService'
@@ -147,14 +148,39 @@ export default function ChaptersPage() {
     refreshData()
   }, [role, selectedSeriesId, selectedChapterId, selectedAssistantId, mangakaId])
 
+  const getSubmissionStatus = (submission: any) => String(submission?.status).trim().toUpperCase()
+
+  const getLatestSubmission = (submissions?: any[]) => {
+    if (!Array.isArray(submissions) || submissions.length === 0) return null
+
+    const sorted = [...submissions].sort((a, b) => {
+      const bVersion = Number(b?.versionNo ?? b?.VersionNo ?? 0)
+      const aVersion = Number(a?.versionNo ?? a?.VersionNo ?? 0)
+      if (bVersion !== aVersion) return bVersion - aVersion
+
+      const bSubmittedAt = new Date(b?.submittedAt ?? b?.SubmittedAt ?? 0).getTime()
+      const aSubmittedAt = new Date(a?.submittedAt ?? a?.SubmittedAt ?? 0).getTime()
+      return bSubmittedAt - aSubmittedAt
+    })
+
+    return sorted.find(s => {
+      const status = getSubmissionStatus(s)
+      return status === '0' || status === 'SUBMITTED'
+    }) || sorted[0]
+  }
+
+  const getSubmissionFileUrl = (submission: any) => {
+    const directUrl = submission?.submittedFileAssetUrl || submission?.publicUrl || submission?.PublicUrl
+    if (directUrl) return directUrl
+
+    const fileAssetId = submission?.submittedFileAssetId || submission?.SubmittedFileAssetId
+    return fileAssetId ? `${API_BASE_URL}/api/files/${fileAssetId}` : undefined
+  }
+
   const mapBackendTaskStatus = (status: any, submissions?: any[]): TaskStatus => {
     const statusStr = String(status).trim().toUpperCase();
-    const latestSubmission = submissions && submissions.length > 0
-      ? submissions[submissions.length - 1]
-      : null;
-    const latestSubStatus = latestSubmission
-      ? String(latestSubmission.status).trim().toUpperCase()
-      : '';
+    const latestSubmission = getLatestSubmission(submissions);
+    const latestSubStatus = getSubmissionStatus(latestSubmission);
 
     if (statusStr === '3' || statusStr === 'APPROVED') {
       return 'Approved';
@@ -186,9 +212,7 @@ export default function ChaptersPage() {
 
       if (Array.isArray(data)) {
         const mapped = data.map((t: any) => {
-          const latestSub = t.submissions && t.submissions.length > 0
-            ? t.submissions[t.submissions.length - 1]
-            : null;
+          const latestSub = getLatestSubmission(t.submissions);
 
           let uiStatus = mapBackendTaskStatus(t.status, t.submissions)
           if (uiStatus === 'Pending') {
@@ -212,8 +236,8 @@ export default function ChaptersPage() {
             dueDate: t.dueDate || undefined,
             pageStart: t.pageStart,
             pageEnd: t.pageEnd,
-            submittedWorkUrl: latestSub?.submittedFileAssetUrl || undefined,
-            submittedFileAssetId: latestSub?.submittedFileAssetId || undefined,
+            submittedWorkUrl: getSubmissionFileUrl(latestSub),
+            submittedFileAssetId: latestSub?.submittedFileAssetId || latestSub?.SubmittedFileAssetId || undefined,
             submitDescription: latestSub?.note || undefined,
             submissionId: latestSub?.submissionId || latestSub?.id || undefined,
             feedback: latestSub?.rejectReason || undefined,
