@@ -2087,7 +2087,17 @@ const openEditTask = (task: Task) => {
             <p className="text-xs text-muted-foreground">Mỗi lần gửi sẽ tạo một version mới.</p>
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">File bản thảo</label>
-              <input type="file" onChange={(e) => setSubmitManuscriptFile(e.target.files?.[0] || null)} className="w-full text-sm" />
+             <label className="flex items-center gap-3 w-full px-3 py-2 rounded-xl border border-border bg-background text-sm cursor-pointer hover:bg-muted transition-colors">
+                <span className="shrink-0 px-3 py-1 rounded-lg bg-primary/10 text-primary font-bold text-xs">Chọn file</span>
+                <span className="text-muted-foreground truncate">
+                  {submitManuscriptFile ? submitManuscriptFile.name : 'Chưa chọn tệp nào'}
+                </span>
+                <input
+                  type="file"
+                  onChange={(e) => setSubmitManuscriptFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                />
+              </label>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">Ghi chú</label>
