@@ -150,7 +150,7 @@ export default function ChaptersPage() {
   const mapBackendTaskStatus = (status: any, submissions?: any[]): TaskStatus => {
     const statusStr = String(status).trim().toUpperCase();
     const latestSubmission = submissions && submissions.length > 0
-      ? submissions[submissions.length - 1]
+      ? [...submissions].sort((a: any, b: any) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime())[submissions.length - 1]
       : null;
     const latestSubStatus = latestSubmission
       ? String(latestSubmission.status).trim().toUpperCase()
@@ -186,9 +186,12 @@ export default function ChaptersPage() {
 
       if (Array.isArray(data)) {
         const mapped = data.map((t: any) => {
-          const latestSub = t.submissions && t.submissions.length > 0
-            ? t.submissions[t.submissions.length - 1]
-            : null;
+          const sortedSubs = (t.submissions || []).slice().sort((a: any, b: any) => {
+            const da = new Date(a.submittedAt || a.createdAt || a.submittedDate || 0).getTime()
+            const db = new Date(b.submittedAt || b.createdAt || b.submittedDate || 0).getTime()
+            return da - db // cu -> moi
+          })
+          const latestSub = sortedSubs.length > 0 ? sortedSubs[sortedSubs.length - 1] : null;
 
           let uiStatus = mapBackendTaskStatus(t.status, t.submissions)
           if (uiStatus === 'Pending') {
