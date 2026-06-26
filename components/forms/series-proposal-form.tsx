@@ -283,11 +283,11 @@ export function SeriesProposalForm({
         <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-sm animate-in fade-in duration-200">
           <AlertCircle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
           <div>
-            <p className="font-bold text-amber-600">Active proposal already exists</p>
+            <p className="font-bold text-amber-600">Đã có đề xuất đang xử lý</p>
             <p className="text-muted-foreground text-xs mt-0.5">
-              You already have a proposal in <span className="font-semibold">Pending Review</span> or{' '}
-              <span className="font-semibold">Under Review</span>. You cannot submit or save another
-              until the current one is resolved. (BR-19)
+              Bạn đã có đề xuất ở trạng thái <span className="font-semibold">Chờ duyệt</span> hoặc{' '}
+              <span className="font-semibold">Đang duyệt</span>. Không thể gửi hoặc lưu đề xuất khác
+              cho đến khi đề xuất hiện tại được xử lý. (BR-19)
             </p>
           </div>
         </div>
@@ -306,7 +306,7 @@ export function SeriesProposalForm({
         <div className="md:col-span-2 space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="text-sm font-semibold text-foreground/80">
-              Title <span className="text-destructive">*</span>
+              Tên bộ truyện <span className="text-destructive">*</span>
             </label>
             <span className="text-[11px] text-muted-foreground font-mono">
               {titleValue.length}/100
@@ -314,7 +314,7 @@ export function SeriesProposalForm({
           </div>
           <input
             {...register('title')}
-            placeholder="Enter series title..."
+            placeholder="Nhập tên bộ truyện..."
             maxLength={100}
             className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/50"
             disabled={isLoading || hasActivePendingProposal}
@@ -327,7 +327,7 @@ export function SeriesProposalForm({
         {/* Genre Field (Custom Multi-select Popover) */}
         <div className="space-y-1.5 relative" ref={dropdownRef}>
           <label className="text-sm font-semibold text-foreground/80">
-            Genre <span className="text-destructive">*</span>
+             Thể loại <span className="text-destructive">*</span>
           </label>
 
           {/* Hidden input to register genre with react-hook-form */}
@@ -343,7 +343,7 @@ export function SeriesProposalForm({
             disabled={isLoading || hasActivePendingProposal}
           >
             <span className="truncate text-foreground/90">
-              {selectedGenres.length > 0 ? selectedGenres.join(', ') : 'Select genres…'}
+              {selectedGenres.length > 0 ? selectedGenres.join(', ') : 'Chọn thể loại…'}
             </span>
             {isOpen ? (
               <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 ml-2" />
@@ -400,16 +400,16 @@ export function SeriesProposalForm({
         {/* Publication Type */}
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-foreground/80">
-            Publication Type <span className="text-destructive">*</span>
+            Hình thức xuất bản <span className="text-destructive">*</span>
           </label>
           <select
             {...register('publicationType')}
             className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
             disabled={isLoading || hasActivePendingProposal}
           >
-            <option value="Weekly">Weekly</option>
-            <option value="Monthly">Monthly</option>
-            <option value="One-Shot">One-Shot</option>
+            <option value="Weekly">Hàng tuần</option>
+            <option value="Monthly">Hàng tháng</option>
+            <option value="One-Shot">Truyện ngắn một kỳ</option>
           </select>
           {errors.publicationType && (
             <span className="text-destructive text-xs font-semibold">{errors.publicationType.message}</span>
@@ -421,16 +421,16 @@ export function SeriesProposalForm({
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-foreground/80">
-            Synopsis <span className="text-destructive">*</span>
+            Tóm tắt nội dung <span className="text-destructive">*</span>
           </label>
           <span className={`text-[11px] font-mono font-semibold ${synopsisReady ? 'text-emerald-600' : 'text-amber-500'}`}>
             {synopsisLen}/{SYNOPSIS_MAX}
-            {!synopsisReady && ` (min ${SYNOPSIS_MIN})`}
+            {!synopsisReady && ` (tối thiểu ${SYNOPSIS_MIN})`}
           </span>
         </div>
         <textarea
           {...register('synopsis')}
-          placeholder="Describe your series story arc, main characters, themes, and target audience…"
+          placeholder="Mô tả mạch truyện, nhân vật chính, chủ đề và nhóm độc giả mục tiêu…"
           rows={6}
           className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/50 resize-none"
           disabled={isLoading || hasActivePendingProposal}

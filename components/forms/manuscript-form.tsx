@@ -34,35 +34,35 @@ export function ManuscriptForm({ seriesId, seriesTitle, onSubmit, isLoading }: M
       await onSubmit(data)
       reset({ seriesId })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit manuscript')
+      setError(err instanceof Error ? err.message : 'Không thể nộp bản thảo.')
     }
   }
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 max-w-2xl">
       <div>
-        <h2 className="text-2xl font-bold">Submit Manuscript</h2>
-        <p className="text-gray-600">Series: {seriesTitle}</p>
+        <h2 className="text-2xl font-bold">Nộp bản thảo</h2>
+        <p className="text-gray-600">Bộ truyện: {seriesTitle}</p>
       </div>
 
       {error && <div className="p-4 bg-red-50 text-red-700 rounded border border-red-200">{error}</div>}
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Manuscript File URL</label>
+        <label className="block text-sm font-medium">Đường dẫn tệp bản thảo</label>
         <input
           {...register('fileUrl')}
           placeholder="https://example.com/manuscript.pdf"
           className="w-full px-3 py-2 border rounded"
         />
-        <p className="text-xs text-gray-500">Supported formats: PDF, DOCX, ZIP</p>
+        <p className="text-xs text-gray-500">Định dạng hỗ trợ: PDF, DOCX, ZIP</p>
         {errors.fileUrl && <span className="text-red-600 text-sm">{errors.fileUrl.message}</span>}
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Notes (optional)</label>
+        <label className="block text-sm font-medium">Ghi chú (tùy chọn)</label>
         <textarea
           {...register('notes')}
-          placeholder="Add any notes or context about this submission..."
+          placeholder="Nhập ghi chú hoặc bối cảnh cho lần nộp này..."
           rows={4}
           className="w-full px-3 py-2 border rounded"
         />
@@ -70,12 +70,12 @@ export function ManuscriptForm({ seriesId, seriesTitle, onSubmit, isLoading }: M
       </div>
 
       <div className="p-4 bg-blue-50 text-blue-700 rounded border border-blue-200 text-sm">
-        <p>✓ All pages must be approved before submission</p>
-        <p>✓ This creates a new version for editor review</p>
+        <p>✓ Tất cả trang phải được duyệt trước khi nộp</p>
+        <p>✓ Hệ thống sẽ tạo phiên bản mới để biên tập viên xem xét</p>
       </div>
 
       <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? 'Submitting...' : 'Submit Manuscript'}
+        {isLoading ? 'Đang nộp...' : 'Nộp bản thảo'}
       </Button>
     </form>
   )

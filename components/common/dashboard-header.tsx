@@ -249,7 +249,7 @@ export function DashboardHeader() {
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 p-1 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none"
-            aria-label="User profile menu"
+            aria-label="Menu hồ sơ người dùng"
           >
             {userInfo?.avatarUrl ? (
               <img

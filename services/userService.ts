@@ -25,6 +25,17 @@ export interface UserProfileResponse {
   assignedEditorName?: string;
 }
 
+export interface UserAssignmentResponse {
+  assignmentId: string;
+  fromUserId: string;
+  fromUserName: string;
+  toUserId: string;
+  toUserName: string;
+  toUserEmail?: string;
+  assignedAt: string;
+  unassignedAt?: string | null;
+}
+
 export const userService = {
   getAssistants: async () => {
     const res = await fetchAPI<{ data: UserProfileResponse[]; message: string }>("/api/users/assistants");
@@ -32,30 +43,6 @@ export const userService = {
   },
   getUsers: async () => {
     const res = await fetchAPI<{ data: UserProfileResponse[]; message: string }>("/api/users");
-    const users = res.data || [];
-
-    // Merge editor assignment overrides from local storage
-    if (typeof window !== 'undefined') {
-      try {
-        const overrides = JSON.parse(localStorage.getItem('editor_assignments_override') || '{}');
-        const modifiedUsers = users.map(u => {
-          if (u.roleName?.toLowerCase() === 'mangaka' && overrides[u.userId]) {
-            const editorId = overrides[u.userId];
-            const editor = users.find(e => e.userId === editorId);
-            return {
-              ...u,
-              assignedEditorId: editorId,
-              assignedEditorName: editor ? editor.displayName : 'Tantou Editor'
-            };
-          }
-          return u;
-        });
-        return {
-          ...res,
-          data: modifiedUsers
-        };
-      } catch { }
-    }
     return res;
   },
 
@@ -72,20 +59,20 @@ export const userService = {
     });
   },
 
-  assignEditorToMangaka: async (mangakaId: string, editorId: string) => {
-    await fetchAPI("/api/user-assignments/assign-editor", {
-      method: "POST",
-      body: JSON.stringify({ mangakaId, editorId }),
-    });
+  getMyAssignment: async (userId?: string): Promise<UserAssignmentResponse[]> => {
+    const endpoint = userId
+      ? `/api/user-assignments/me?userId=${encodeURIComponent(userId)}`
+      : "/api/user-assignments/me";
+    const res = await fetchAPI<{ data: UserAssignmentResponse | UserAssignmentResponse[]; message: string }>(endpoint);
+    if (!res.data) return [];
+    return Array.isArray(res.data) ? res.data : [res.data];
+  },
 
-    if (typeof window !== 'undefined') {
-      try {
-        const overrides = JSON.parse(localStorage.getItem('editor_assignments_override') || '{}');
-        overrides[mangakaId] = editorId;
-        localStorage.setItem('editor_assignments_override', JSON.stringify(overrides));
-      } catch { }
-    }
-    return { message: "Assignment updated successfully." };
+  assignEditorToMangaka: async (mangakaId: string, editorId: string, assignmentId: string) => {
+    return fetchAPI<{ data?: any; message: string }>("/api/reassign", {
+      method: "POST",
+      body: JSON.stringify({ assignmentId, mangakaId, fromUserId: editorId }),
+    });
   },
 
   getMyMangakas: async () => {

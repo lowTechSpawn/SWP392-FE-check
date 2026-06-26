@@ -39,24 +39,24 @@ export function VoteEntryForm({ series, chapters, onSubmit, isLoading }: VoteEnt
       reset()
       setSelectedSeriesId('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit vote data')
+      setError(err instanceof Error ? err.message : 'Không thể gửi dữ liệu bình chọn.')
     }
   }
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 max-w-2xl">
-      <h2 className="text-2xl font-bold">Reader Vote Data Entry</h2>
+      <h2 className="text-2xl font-bold">Nhập dữ liệu bình chọn độc giả</h2>
 
       {error && <div className="p-4 bg-red-50 text-red-700 rounded border border-red-200">{error}</div>}
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Series</label>
+        <label className="block text-sm font-medium">Bộ truyện</label>
         <select
           {...register('seriesId')}
           onChange={(e) => setSelectedSeriesId(e.target.value)}
           className="w-full px-3 py-2 border rounded"
         >
-          <option value="">Select a series</option>
+          <option value="">Chọn bộ truyện</option>
           {series.map((s) => (
             <option key={s.id} value={s.id}>
               {s.title}
@@ -67,9 +67,9 @@ export function VoteEntryForm({ series, chapters, onSubmit, isLoading }: VoteEnt
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Chapter</label>
+        <label className="block text-sm font-medium">Chương</label>
         <select {...register('chapterId')} className="w-full px-3 py-2 border rounded">
-          <option value="">Select a chapter</option>
+          <option value="">Chọn chương</option>
           {filteredChapters.map((ch) => (
             <option key={ch.id} value={ch.id}>
               {ch.title}
@@ -81,7 +81,7 @@ export function VoteEntryForm({ series, chapters, onSubmit, isLoading }: VoteEnt
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium">Total Readers</label>
+          <label className="block text-sm font-medium">Tổng độc giả</label>
           <input
             {...register('readerCount', { valueAsNumber: true })}
             type="number"
@@ -92,7 +92,7 @@ export function VoteEntryForm({ series, chapters, onSubmit, isLoading }: VoteEnt
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium">Total Votes</label>
+          <label className="block text-sm font-medium">Tổng lượt bình chọn</label>
           <input
             {...register('voteCount', { valueAsNumber: true })}
             type="number"
@@ -106,14 +106,14 @@ export function VoteEntryForm({ series, chapters, onSubmit, isLoading }: VoteEnt
 
       {readerCount > 0 && (
         <div className="p-4 bg-gray-50 rounded">
-          <p className="text-sm font-medium">Vote Score</p>
+          <p className="text-sm font-medium">Điểm bình chọn</p>
           <p className="text-2xl font-bold text-blue-600">{((voteCount / readerCount) * 100).toFixed(2)}%</p>
-          <p className="text-xs text-gray-600 mt-2">Calculated as (votes ÷ readers) × 100</p>
+          <p className="text-xs text-gray-600 mt-2">Tính theo công thức (lượt bình chọn ÷ độc giả) × 100</p>
         </div>
       )}
 
       <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? 'Submitting...' : 'Submit Vote Data'}
+        {isLoading ? 'Đang gửi...' : 'Gửi dữ liệu bình chọn'}
       </Button>
     </form>
   )

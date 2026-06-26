@@ -1,7 +1,7 @@
 export function Loading() {
   return (
     <div>
-      <p>Loading...</p>
+      <p>Đang tải...</p>
     </div>
   );
 }
