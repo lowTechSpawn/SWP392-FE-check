@@ -655,10 +655,7 @@ const openEditTask = (task: Task) => {
   // 2. Tạo Task & Giao việc cho Assistant
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newTaskType.trim()) {
-      showToast('Vui lòng nhập hoặc chọn loại task!', 'error')
-      return
-    }
+    
     if (newTaskPageStart > newTaskPageEnd) {
       showToast('Trang bắt đầu không thể lớn hơn trang kết thúc!', 'error')
       return
@@ -939,7 +936,7 @@ const openEditTask = (task: Task) => {
                 >
                   {mangakaSeries.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.title} ({s.id})
+                      {s.title}
                     </option>
                   ))}
                 </select>
@@ -1688,7 +1685,7 @@ const openEditTask = (task: Task) => {
                     <div className="mt-2.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs flex items-center gap-2">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span className="text-amber-700 dark:text-amber-400">
-                        <strong>BR-42:</strong> Hạn chót nộp bản thảo hoàn chỉnh cho Editor:{' '}
+                        Hạn chót nộp bản thảo hoàn chỉnh cho Editor:{' '}
                         <strong>
                           {(() => {
                             const d = new Date(newChapterPubDate)
@@ -1893,7 +1890,6 @@ const openEditTask = (task: Task) => {
                   value={newTaskType}
                   onChange={(e) => setNewTaskType(e.target.value)}
                   className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground font-semibold"
-                  required
                 />
 
                 {/* Suggestions List */}
