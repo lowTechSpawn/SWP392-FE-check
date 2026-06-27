@@ -341,7 +341,7 @@ export default function ChaptersPage() {
 
   // --- Action Handlers for Mangaka ---
 
-  // 1. Helper kiểm tra ngày xuất bản (BR-42)
+  // 1. Helper kiểm tra ngày xuất bản
   const validatePublicationDate = (pubDate: string, createdDate = new Date()) => {
     const pub = new Date(pubDate)
     const created = new Date(createdDate)
@@ -362,7 +362,7 @@ export default function ChaptersPage() {
     return null
   }
 
-  // Helper kiểm tra quyền tạo Chapter (BR-40)
+  // Helper kiểm tra quyền tạo Chapter
   const canCreateChapter = (userId: string, series: Series) => {
     return series.mangakaId === userId && series.status === 'Active'
   }

@@ -64,7 +64,7 @@ export interface RankingRow {
   voteCount: number
   readerCount: number
   score: number
-  status: 'TOP 3' | 'BOTTOM 20% (BR-94)' | '—'
+  status: 'TOP 3' | 'BOTTOM 20%' | '—'
 }
 
 export default function RankingPage() {
@@ -90,7 +90,7 @@ export default function RankingPage() {
   
   const periods = ['2026-Q2', '2026-Q1', '2025-Q4']
 
-  // Determine if active user is Authorized Admin for Vote Imports (BR-87)
+  // Determine if active user is Authorized Admin for Vote Imports
   const isAuthorized = useMemo(() => {
     return role === 'EditorialBoard' || role === 'EditorInChief'
   }, [role])
@@ -173,14 +173,14 @@ export default function RankingPage() {
       const total = sorted.length
       const calculatedRankings = sorted.map((v, index) => {
         const rank = index + 1
-        let status: 'TOP 3' | 'BOTTOM 20% (BR-94)' | '—' = '—'
+        let status: 'TOP 3' | 'BOTTOM 20%' | '—' = '—'
 
         if (rank <= 3) {
           status = 'TOP 3'
         } else if (total >= 5) {
           const bottomCount = Math.ceil((total * 20) / 100)
           if (rank > total - bottomCount) {
-            status = 'BOTTOM 20% (BR-94)'
+            status = 'BOTTOM 20%'
           }
         }
         return {
@@ -206,7 +206,7 @@ export default function RankingPage() {
     return series?.genre || 'Fantasy'
   }
 
-  // Handle vote import submission (BR-89 validations)
+  // Handle vote import submission (validations)
   const handleImportSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -220,9 +220,9 @@ export default function RankingPage() {
       return
     }
 
-    // BR-89 constraint: readerCount >= voteCount
+    // constraint: readerCount >= voteCount
     if (formVoteCount > formReaderCount) {
-      toast.error('Vote count cannot exceed total readers (BR-89 violation).')
+      toast.error('Vote count cannot exceed total readers.')
       return
     }
 
@@ -252,7 +252,7 @@ export default function RankingPage() {
     })
   }
 
-  // Handle vote confirmation (BR-92)
+  // Handle vote confirmation
   const handleConfirmVote = (id: string, title: string) => {
     fetchAPI(`/api/vote-records/${id}/confirm`, {
       method: 'PUT'
@@ -276,16 +276,16 @@ export default function RankingPage() {
             Series Ranking
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Automated ranking based on reader votes (BR-90)
+            Automated ranking based on reader votes
           </p>
         </div>
 
-        {/* Import Button: only visible to Editorial Board or Editor-in-Chief (BR-87) */}
+        {/* Import Button: only visible to Editorial Board or Editor-in-Chief */}
         {isAuthorized ? (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-all">
-                <Plus className="w-4 h-4" /> Enter Vote Data (BR-87)
+                <Plus className="w-4 h-4" /> Enter Vote Data
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
@@ -387,7 +387,7 @@ export default function RankingPage() {
         )}
       </div>
 
-      {/* Pending Confirmation (BR-92 Area) */}
+      {/* Pending Confirmation */}
       {pendingVotes.length > 0 && (
         <Card className="border-amber-500/25 bg-amber-500/5 rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500 font-bold text-sm">
@@ -422,7 +422,7 @@ export default function RankingPage() {
                       onClick={() => handleConfirmVote(vote.id, vote.seriesTitle)}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shrink-0 cursor-pointer transition-colors"
                     >
-                      <Check className="w-3.5 h-3.5 mr-1" /> Confirm (BR-92)
+                      <Check className="w-3.5 h-3.5 mr-1" /> Confirm
                     </Button>
                   ) : (
                     <span className="text-[10px] text-muted-foreground italic">Awaiting Admin Confirmation</span>
@@ -465,7 +465,7 @@ export default function RankingPage() {
                 <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Genre</TableHead>
                 <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Votes</TableHead>
                 <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Readers</TableHead>
-                <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Score (BR-90)</TableHead>
+                <TableHead className="text-right font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Score</TableHead>
                 <TableHead className="w-48 text-center font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -524,7 +524,7 @@ export default function RankingPage() {
                         {row.readerCount.toLocaleString()}
                       </TableCell>
 
-                      {/* Vote percentage score (BR-90) */}
+                      {/* Vote percentage score */}
                       <TableCell className={`text-right text-sm ${scoreClass}`}>
                         {row.score.toFixed(2)}%
                       </TableCell>
@@ -535,9 +535,9 @@ export default function RankingPage() {
                           <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border border-emerald-500/20 font-bold text-[10px] px-2.5 py-0.5 rounded-full">
                             TOP 3
                           </Badge>
-                        ) : row.status === 'BOTTOM 20% (BR-94)' ? (
+                        ) : row.status === 'BOTTOM 20%' ? (
                           <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/20 font-bold text-[10px] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3 shrink-0" /> BOTTOM 20% (BR-94)
+                            <AlertTriangle className="w-3 h-3 shrink-0" /> BOTTOM 20%
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground/30 text-xs">—</span>
@@ -556,7 +556,7 @@ export default function RankingPage() {
       <div className="flex items-start gap-2.5 p-4 bg-muted/30 border border-border/40 rounded-2xl text-[11px] text-muted-foreground leading-relaxed">
         <Info className="w-4 h-4 text-muted-foreground/60 shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold text-foreground">BRs enforced:</span> BR-87 (Entry Authority), BR-88 (Uniqueness), BR-89 (Validation), BR-90 (Formula), BR-91 (Tie-break), BR-92 (Auto-recalculate), BR-94 (Bottom 20% flag)
+          <span className="font-bold text-foreground">Rules enforced:</span> Entry authority, uniqueness, validation, formula, tie-break, auto-recalculate, bottom 20% flag
         </div>
       </div>
     </div>

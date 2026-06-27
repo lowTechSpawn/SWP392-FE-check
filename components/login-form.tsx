@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -19,9 +18,7 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
   FieldError,
-  FieldDescription,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AlertCircle } from "lucide-react"
@@ -115,9 +112,6 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        Bằng cách nhấp tiếp tục, bạn đồng ý với <a href="#">Điều khoản Dịch vụ</a> và <a href="#">Chính sách Bảo mật</a> của chúng tôi.
-      </FieldDescription>
     </div>
   )
 }

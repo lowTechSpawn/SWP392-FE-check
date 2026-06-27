@@ -303,7 +303,7 @@ export default function MyProposalsPage() {
           {isBlocked ? (
             <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs font-semibold text-amber-600">
               <AlertTriangle className="w-4 h-4" />
-              <span>Proposal in review — blocked (BR-19)</span>
+              <span>Proposal in review — blocked</span>
             </div>
           ) : (
             <Link
@@ -340,12 +340,12 @@ export default function MyProposalsPage() {
         ))}
       </div>
 
-      {/* BR-19 warning banner */}
+      {/* warning banner */}
       {isBlocked && (
         <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-sm">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-amber-600">You have an active proposal in review (BR-19)</p>
+            <p className="font-bold text-amber-600">You have an active proposal in review</p>
             <p className="text-muted-foreground text-xs mt-0.5">
               You may only submit a new proposal once the current one (status: Pending Review or Under
               Review) has been resolved by the Editorial Board.

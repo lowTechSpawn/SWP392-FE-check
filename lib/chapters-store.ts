@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Client-side chapters and tasks store backed by localStorage.
  * Powers the Mangaka Chapter Creation, Assistant Task Assignment, and Approval workflow.
  */
@@ -23,7 +23,7 @@ export interface Series {
   title: string
   mangakaId: string
   coverColor: string
-  status?: string // Added to support BR-40 validation
+  status?: string // Added to support validation
 }
 
 export interface Task {

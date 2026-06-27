@@ -3,7 +3,7 @@ export interface ManuscriptVersion {
   status: 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED' | 'PUBLISHED'
   submittedAt: string
   reviewedAt?: string
-  revisionNumber?: number // for BR-83 display, e.g. 1 for v1, 2 for v2
+  revisionNumber?: number // for display, e.g. 1 for v1, 2 for v2
   feedback?: string
   fileUrl?: string
 }
@@ -17,7 +17,7 @@ export interface ManuscriptItem {
   chapterTitle: string
   latestVersion: string
   status: 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED' | 'PUBLISHED'
-  progress: number // chapter drawing progress (e.g., 0 to 100) for BR-84 check
+  progress: number // chapter drawing progress (e.g., 0 to 100) for check
   history: ManuscriptVersion[]
   pages: string[] // mock page previews
   fileUrl?: string

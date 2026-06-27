@@ -1,7 +1,7 @@
 import { CHAPTER_DEADLINE_DAYS_BEFORE, BOTTOM_PERCENTILE_FOR_CANCELLATION } from './constants'
 
 /**
- * Calculate chapter deadline based on publication date [BR-42]
+ * Calculate chapter deadline based on publication date
  * Deadline = publication date - 14 days
  */
 export function calculateChapterDeadline(publicationDate: Date | string): Date {
@@ -12,7 +12,7 @@ export function calculateChapterDeadline(publicationDate: Date | string): Date {
 }
 
 /**
- * Calculate reader vote score percentage [BR-90]
+ * Calculate reader vote score percentage
  * Score = (voteCount / readerCount) × 100%
  */
 export function calculateVoteScore(voteCount: number, readerCount: number): number {
@@ -53,7 +53,7 @@ export function formatDateTime(date: Date | string): string {
 }
 
 /**
- * Check if a series score is in bottom 20% [BR-94]
+ * Check if a series score is in bottom 20%
  * Used for cancellation review flag
  */
 export function isBelowCancellationThreshold(
@@ -67,7 +67,7 @@ export function isBelowCancellationThreshold(
 }
 
 /**
- * Calculate chapter progress percentage [BR-61]
+ * Calculate chapter progress percentage
  */
 export function calculateChapterProgress(approvedPages: number, totalPages: number): number {
   if (totalPages === 0) return 0
@@ -96,7 +96,7 @@ export function formatDurationUntilDeadline(deadline: Date | string): string {
 }
 
 /**
- * Generate estimation of assistant earnings [BR-124]
+ * Generate estimation of assistant earnings
  * Based on pages completed × unit price
  */
 export function estimateAssistantEarnings(
@@ -107,7 +107,7 @@ export function estimateAssistantEarnings(
 }
 
 /**
- * Validate quorum for voting [BR-29]
+ * Validate quorum for voting
  */
 export function hasVotingQuorum(votes: Record<string, any> | any[], quorum: number = 3): boolean {
   const voteCount = Array.isArray(votes) ? votes.length : Object.keys(votes).length
@@ -122,7 +122,7 @@ export function areAllPagesApproved(pageStatuses: string[]): boolean {
 }
 
 /**
- * Determine series status based on voting [BR-33]
+ * Determine series status based on voting
  */
 export function determineSeriesStatus(
   approvalsCount: number,

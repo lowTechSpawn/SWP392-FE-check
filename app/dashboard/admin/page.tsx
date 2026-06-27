@@ -348,7 +348,7 @@ export default function AdminPage() {
     }
   }
 
-  // Handle Create Account Submission (BR-01)
+  // Handle Create Account Submission
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -516,7 +516,7 @@ export default function AdminPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {role === 'Admin'
-              ? 'Thiết lập tài khoản nội bộ và phân quyền vai trò cho hệ thống (BR-01)'
+              ? 'Thiết lập tài khoản nội bộ và phân quyền vai trò cho hệ thống'
               : 'Xem danh sách tác giả, trợ lý vẽ và biên tập viên phụ trách trong hệ thống'}
           </p>
         </div>
@@ -1184,9 +1184,6 @@ export default function AdminPage() {
                           <div className="min-w-0">
                             <p className="font-bold text-foreground truncate">
                               {item.fromUserName || getEditorName(item.fromUserId)}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground font-mono truncate">
-                              {item.fromUserId}
                             </p>
                           </div>
                           <Badge className={isActive

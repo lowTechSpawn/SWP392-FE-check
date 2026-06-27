@@ -61,8 +61,8 @@ export const userService = {
 
   getMyAssignment: async (userId?: string): Promise<UserAssignmentResponse[]> => {
     const endpoint = userId
-      ? `/api/user-assignments/me?userId=${encodeURIComponent(userId)}`
-      : "/api/user-assignments/me";
+      ? `/api/user-assignments/${encodeURIComponent(userId)}`
+      : "/api/user-assignments/from-me";
     const res = await fetchAPI<{ data: UserAssignmentResponse | UserAssignmentResponse[]; message: string }>(endpoint);
     if (!res.data) return [];
     return Array.isArray(res.data) ? res.data : [res.data];

@@ -58,7 +58,7 @@ export default function NewProposalPage() {
 
   const [blockedByBR19, setBlockedByBR19] = useState(false)
 
-  // BR-19: check if mangaka already has an active pending proposal
+  // check if mangaka already has an active pending proposal
   useEffect(() => {
     if (mangakaId) {
       hasPendingProposal(mangakaId).then(setBlockedByBR19)
@@ -99,7 +99,7 @@ export default function NewProposalPage() {
           return
         }
 
-        // Submit — run BR-17 check
+        // Submit — run check
         if (await isTitleDuplicate(data.title, editId || undefined)) {
           throw new Error(`Title "${data.title}" is already used by an existing proposal or active series`)
         }

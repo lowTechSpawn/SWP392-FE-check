@@ -72,7 +72,7 @@ export const proposalService = {
   },
 
   /**
-   * BR-19: Returns true if the mangaka already has a proposal in Pending Review or Under Review.
+   * Returns true if the mangaka already has a proposal in Pending Review or Under Review.
    */
   hasPendingProposal: async (mangakaId: string): Promise<boolean> => {
     const list = await proposalService.getProposals();
@@ -84,7 +84,7 @@ export const proposalService = {
   },
 
   /**
-   * BR-17: Returns true if there is already an Active series with this exact title.
+   * Returns true if there is already an Active series with this exact title.
    */
   isTitleDuplicate: async (title: string, excludeId?: string): Promise<boolean> => {
     const list = await proposalService.getProposals();

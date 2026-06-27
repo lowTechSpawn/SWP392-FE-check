@@ -354,10 +354,10 @@ function TantouEditorWorkspace() {
   const handleDecision = async (status: 'APPROVED' | 'REVISION REQUIRED') => {
     if (!activeManuscript) return
 
-    // BR-84 Guard: Cannot approve if chapter drawing progress < 100%
+    // BR Guard: Cannot approve if chapter drawing progress < 100%
     if (status === 'APPROVED' && activeManuscript.progress < 100) {
       toast.error(
-        `BR-84 Violation: Chapter drawing progress is only ${activeManuscript.progress}%. Must be 100% to approve.`
+        `Chapter drawing progress is only ${activeManuscript.progress}%. Must be 100% to approve.`
       )
       return
     }
@@ -370,7 +370,7 @@ function TantouEditorWorkspace() {
       )
       if (success) {
         if (status === 'APPROVED') {
-          toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)
+          toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked!`)
         } else {
           toast.warning(
             `Revision requested for "${activeManuscript.seriesTitle}". Status updated.`
@@ -394,6 +394,7 @@ function TantouEditorWorkspace() {
       )
 
       if (success) {
+        await chapterService.updateChapter(manuscript.chapterId, { status: 'Published' })
         toast.success(`Manuscript for "${manuscript.seriesTitle}" published.`)
         handleBackToManuscripts()
       } else {
@@ -844,8 +845,8 @@ function TantouEditorWorkspace() {
 
           const displayLabel = normalizedStatus === 'UnderReview' ? 'Under Review'
             : normalizedStatus === 'BoardVoting' ? 'Board Voting'
-            : normalizedStatus === 'PendingReview' ? 'Pending Review'
-            : normalizedStatus;
+              : normalizedStatus === 'PendingReview' ? 'Pending Review'
+                : normalizedStatus;
 
           return (
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${bg}`}>
@@ -1393,11 +1394,10 @@ function TantouEditorWorkspace() {
                               {!isRejected && (
                                 <button
                                   onClick={() => setSelectedProposalId(proposal.id)}
-                                  className={`w-full md:w-auto px-4 py-2.5 text-xs font-black rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
-                                    isApprovedOrActive
-                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                      : 'bg-primary hover:bg-primary/95 text-primary-foreground'
-                                  }`}
+                                  className={`w-full md:w-auto px-4 py-2.5 text-xs font-black rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${isApprovedOrActive
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                    : 'bg-primary hover:bg-primary/95 text-primary-foreground'
+                                    }`}
                                 >
                                   <FileText className="w-4 h-4" />
                                   {isApprovedOrActive ? 'View Details' : 'Review & Decide'}
@@ -1502,7 +1502,7 @@ function TantouEditorWorkspace() {
                   <div className="bg-card border border-border p-5 rounded-2xl space-y-4 shadow-sm">
                     <div className="flex items-center justify-between border-b border-border/40 pb-3">
                       <h4 className="text-xs font-extrabold uppercase tracking-wide text-foreground">
-                        Annotations (BR-78 bound)
+                        Annotations
                       </h4>
                       <span className="text-[9px] text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/65">
                         Locked to {activeManuscript.latestVersion}
@@ -1569,7 +1569,7 @@ function TantouEditorWorkspace() {
                       <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-600 rounded-xl text-xs font-bold leading-normal">
                         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                         <span>
-                          BR-84 Warning: Chapter drawing progress is only {activeManuscript.progress}%. Approval is disabled until it reaches 100%.
+                          Warning: Chapter drawing progress is only {activeManuscript.progress}%. Approval is disabled until it reaches 100%.
                         </span>
                       </div>
                     )}
@@ -1608,7 +1608,7 @@ function TantouEditorWorkspace() {
                             disabled={activeManuscript.progress < 100}
                             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5 shadow-sm"
                           >
-                            <CheckCircle2 className="w-4 h-4" /> Approve & Lock (BR-80)
+                            <CheckCircle2 className="w-4 h-4" /> Approve & Lock
                           </button>
                           <button
                             onClick={() => handleDecision('REVISION REQUIRED')}
@@ -1670,9 +1670,9 @@ function TantouEditorWorkspace() {
                                 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                                 : m.status === 'PUBLISHED'
                                   ? 'bg-primary/10 text-primary border-primary/20'
-                                : m.status === 'REVISION REQUIRED'
-                                  ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                                  : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20 animate-pulse'
+                                  : m.status === 'REVISION REQUIRED'
+                                    ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                    : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20 animate-pulse'
                                 }`}
                             >
                               {m.status}
@@ -1716,9 +1716,9 @@ function TantouEditorWorkspace() {
                                     ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                                     : h.status === 'PUBLISHED'
                                       ? 'bg-primary/10 text-primary border-primary/20'
-                                    : h.status === 'REVISION REQUIRED'
-                                      ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                                      : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+                                      : h.status === 'REVISION REQUIRED'
+                                        ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                        : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
                                     }`}
                                 >
                                   {h.status}
@@ -1735,7 +1735,7 @@ function TantouEditorWorkspace() {
 
                               {h.revisionNumber && (
                                 <span className="bg-amber-500/10 text-amber-600 border border-amber-500/20 font-black text-[9px] rounded px-2 py-0.5">
-                                  REV #{h.revisionNumber}/3 (BR-83)
+                                  REV #{h.revisionNumber}/3
                                 </span>
                               )}
                             </div>

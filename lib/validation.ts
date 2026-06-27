@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-// BR-15: Proposal Validation Requirements
+// Proposal Validation Requirements
 export const seriesProposalSchema = z.object({
   title: z
     .string()
@@ -10,7 +10,7 @@ export const seriesProposalSchema = z.object({
   publicationType: z.enum(['Weekly', 'Monthly', 'One-Shot'], {
     message: 'Hình thức xuất bản là bắt buộc',
   }),
-  // BR-15: Synopsis must be 100–2000 characters
+  // Synopsis must be 100–2000 characters
   synopsis: z
     .string()
     .min(100, 'Tóm tắt cốt truyện phải ≥ 100 ký tự')
@@ -22,7 +22,7 @@ export const seriesProposalSchema = z.object({
 
 export type SeriesProposalInput = z.infer<typeof seriesProposalSchema>
 
-// BR-54: Chapter task deadline validation rules
+// Chapter task deadline validation rules
 export const chapterTaskSchema = z.object({
   chapterId: z.string().min(1, 'Chapter là bắt buộc'),
   pageStart: z.number().min(1, 'Trang bắt đầu phải ít nhất là 1'),
@@ -41,7 +41,7 @@ export const manuscriptSchema = z.object({
 
 export type ManuscriptInput = z.infer<typeof manuscriptSchema>
 
-// BR-89: VoteRecord Validation constraints (readerCount >= voteCount >= 0)
+// VoteRecord Validation constraints (readerCount >= voteCount >= 0)
 export const voteEntrySchema = z
   .object({
     seriesId: z.string().min(1, 'Tác phẩm là bắt buộc'),
@@ -56,7 +56,7 @@ export const voteEntrySchema = z
 
 export type VoteEntryInput = z.infer<typeof voteEntrySchema>
 
-// BR-59: Mandatory fields for page tasks
+// Mandatory fields for page tasks
 export const pageTaskSchema = z.object({
   chapterId: z.string().min(1, 'Chapter là bắt buộc'),
   pageNumber: z.number().min(1, 'Số trang phải ít nhất là 1'),

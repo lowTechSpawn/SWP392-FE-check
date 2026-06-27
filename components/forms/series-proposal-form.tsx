@@ -78,7 +78,7 @@ const uploadCoverImageToBackend = async (file: File): Promise<string> => {
 interface SeriesProposalFormProps {
   onSubmit: (data: SeriesProposalInput, action: 'draft' | 'submit') => Promise<void>
   isLoading?: boolean
-  /** If provided, block both buttons and show warning (BR-19) */
+  /** If provided, block both buttons and show warning */
   hasActivePendingProposal?: boolean
   defaultValues?: Partial<SeriesProposalInput>
 }
@@ -278,7 +278,7 @@ export function SeriesProposalForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
 
-      {/* BR-19 block banner */}
+      {/* block banner */}
       {hasActivePendingProposal && (
         <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-sm animate-in fade-in duration-200">
           <AlertCircle className="w-5 h-5 shrink-0 text-amber-500 mt-0.5" />
@@ -287,7 +287,7 @@ export function SeriesProposalForm({
             <p className="text-muted-foreground text-xs mt-0.5">
               Bạn đã có đề xuất ở trạng thái <span className="font-semibold">Chờ duyệt</span> hoặc{' '}
               <span className="font-semibold">Đang duyệt</span>. Không thể gửi hoặc lưu đề xuất khác
-              cho đến khi đề xuất hiện tại được xử lý. (BR-19)
+              cho đến khi đề xuất hiện tại được xử lý.
             </p>
           </div>
         </div>
@@ -417,7 +417,7 @@ export function SeriesProposalForm({
         </div>
       </div>
 
-      {/* Synopsis — BR-15: 200–2000 chars */}
+      {/* Synopsis — 200–2000 chars */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-foreground/80">

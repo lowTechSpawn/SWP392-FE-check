@@ -26,7 +26,7 @@ export const manuscriptService = {
     return memoryAnnotations.filter(a => a.manuscriptId === manuscriptId && a.versionName === versionName)
   },
 
-  // BR-80: Manuscript Approval Lock / Status Transitions
+  // Manuscript Approval Lock / Status Transitions
   async updateManuscriptStatus(
     id: string,
     newStatus: ManuscriptItem['status'],
@@ -68,7 +68,7 @@ export const manuscriptService = {
     }
   },
 
-  // BR-78: Annotation Version Binding
+  // Annotation Version Binding
   async addAnnotation(manuscriptId: string, versionName: string, text: string): Promise<Annotation> {
     const payload = {
       pageNo: 1, // Default page coordinate fallback

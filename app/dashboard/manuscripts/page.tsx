@@ -89,7 +89,7 @@ export default function ManuscriptsPage() {
     setManuscripts(manuscriptService.getManuscripts())
   }
 
-  // Handle adding version-bound annotations (BR-78)
+  // aandle adding version-bound annotations
   const handleAddAnnotation = (e: React.FormEvent) => {
     e.preventDefault()
     if (!activeManuscript || !newAnnotationText.trim()) return
@@ -103,20 +103,20 @@ export default function ManuscriptsPage() {
     })
   }
 
-  // Handle decision outcomes (BR-80, BR-84)
+  // aandle decision outcomes (, )
   const handleDecision = (status: 'APPROVED' | 'REVISION REQUIRED') => {
     if (!activeManuscript) return
 
-    // BR-84 Guard: Cannot approve if chapter drawing progress < 100%
+    // Guard: Cannot approve if chapter drawing progress < 100%
     if (status === 'APPROVED' && activeManuscript.progress < 100) {
-      toast.error(`BR-84 Violation: Chapter drawing progress is only ${activeManuscript.progress}%. Must be 100% to approve.`)
+      toast.error(`Violation: Chapter drawing progress is only ${activeManuscript.progress}%. Must be 100% to approve.`)
       return
     }
 
     manuscriptService.updateManuscriptStatus(activeManuscript.id, status, feedbackText.trim()).then((success) => {
       if (success) {
         if (status === 'APPROVED') {
-          toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked (BR-80)!`)
+          toast.success(`Manuscript for "${activeManuscript.seriesTitle}" approved and locked!`)
         } else {
           toast.warning(`Revision requested for "${activeManuscript.seriesTitle}". Draft status updated to Revision Required.`)
         }
@@ -144,7 +144,7 @@ export default function ManuscriptsPage() {
       {/* If Reviewing a Specific Manuscript (Image 2 View) */}
       {activeManuscript ? (
         <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Header & Back Button */}
+          {/* aeader & Back Button */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
             <div className="flex items-center gap-3">
               <button
@@ -217,11 +217,11 @@ export default function ManuscriptsPage() {
                 )}
               </Card>
 
-              {/* Annotations panel (BR-78) */}
+              {/* Annotations panel */}
               <Card className="border-border bg-card p-5 rounded-2xl space-y-4 shadow-sm">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h3 className="text-sm font-bold text-foreground">
-                    Annotations (BR-78: version-bound)
+                    Annotations (version-bound)
                   </h3>
                   <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded border">
                     Locked to {activeManuscript.latestVersion}
@@ -270,11 +270,11 @@ export default function ManuscriptsPage() {
                   </p>
                 </div>
 
-                {/* BR-84 Warning Banner */}
+                {/* Warning Banner */}
                 {activeManuscript.progress < 100 && (
                   <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-500 rounded-xl text-xs leading-relaxed font-bold">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>BR-84 Alert: Cannot approve — chapter completion is {activeManuscript.progress}%, must be 100%</span>
+                    <span>Alert: Cannot approve — chapter completion is {activeManuscript.progress}%, must be 100%</span>
                   </div>
                 )}
 
@@ -298,7 +298,7 @@ export default function ManuscriptsPage() {
                       disabled={activeManuscript.progress < 100}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5"
                     >
-                      <CheckCircle2 className="w-4 h-4" /> Approve (BR-80: Lock)
+                      <CheckCircle2 className="w-4 h-4" /> Approve (Lock)
                     </Button>
                     <Button
                       onClick={() => handleDecision('REVISION REQUIRED')}
@@ -314,7 +314,7 @@ export default function ManuscriptsPage() {
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 opacity-50">
                       <Button disabled className="w-full bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">
-                        Approve (BR-80: Lock)
+                        Approve (Lock)
                       </Button>
                       <Button disabled className="w-full bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl">
                         Request Revision
@@ -329,7 +329,7 @@ export default function ManuscriptsPage() {
       ) : (
         /* Manuscripts List View (Image 1 View) */
         <div className="space-y-8 animate-in fade-in duration-200">
-          {/* Page Header */}
+          {/* Page aeader */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -369,7 +369,7 @@ export default function ManuscriptsPage() {
 
           <div className="grid grid-cols-1 gap-6">
             {filteredManuscripts.map((m) => {
-              const isSpecialHistoryCard = m.id === 'M04'
+              const isSpecialaistoryCard = m.id === 'M04'
               const latestVer = m.history[0]
 
               // Status colors styling
@@ -385,11 +385,11 @@ export default function ManuscriptsPage() {
               return (
                 <Card
                   key={m.id}
-                  className={`border border-border bg-card rounded-2xl overflow-hidden hover:border-primary/20 transition-all ${isSpecialHistoryCard ? 'border-amber-500/15' : ''
+                  className={`border border-border bg-card rounded-2xl overflow-hidden hover:border-primary/20 transition-all ${isSpecialaistoryCard ? 'border-amber-500/15' : ''
                     }`}
                 >
                   <div className="p-6 space-y-4">
-                    {/* Header line */}
+                    {/* aeader line */}
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -423,8 +423,8 @@ export default function ManuscriptsPage() {
                     </div>
 
                     {/* Body content */}
-                    {isSpecialHistoryCard ? (
-                      /* Special Detailed Revision History Card (Card 1 in screenshot) */
+                    {isSpecialaistoryCard ? (
+                      /* Special Detailed Revision aistory Card (Card 1 in screenshot) */
                       <div className="space-y-3 pt-2 border-t border-border/40">
                         <div className="space-y-2">
                           {m.history.map((h, hIdx) => (
@@ -449,7 +449,7 @@ export default function ManuscriptsPage() {
 
                               {h.revisionNumber && (
                                 <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20 font-bold text-[9px] rounded px-1.5 py-0.5 w-fit">
-                                  REV #{h.revisionNumber}/3 (BR-83)
+                                  REV #{h.revisionNumber}/3
                                 </Badge>
                               )}
                             </div>
