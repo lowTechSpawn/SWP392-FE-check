@@ -11,7 +11,6 @@ import {
   Layers,
   ClipboardList,
   BarChart3,
-  LogOut,
   Menu,
   X,
   ChevronDown,
@@ -28,9 +27,6 @@ function SidebarInner() {
   const searchParams = useSearchParams()
   const { role, setRole } = useRole()
   const [isOpen, setIsOpen] = useState(false)
-  const [showRoleSelector, setShowRoleSelector] = useState(false)
-
-  const roles = ['Mangaka', 'Assistant', 'TantouEditor', 'EditorialBoard', 'EditorInChief', 'Admin'] as const
 
   const menuItems = {
     Mangaka: [
@@ -71,41 +67,6 @@ function SidebarInner() {
   }
 
   const currentLinks = menuItems[role] || []
-
-  const handleRoleChange = (newRole: typeof roles[number]) => {
-    setRole(newRole)
-    setShowRoleSelector(false)
-
-    // Redirect to the landing page of the new role
-    switch (newRole) {
-      case 'Admin':
-        router.push('/dashboard/admin')
-        break
-      case 'Mangaka':
-        router.push('/dashboard/mangaka')
-        break
-      case 'Assistant':
-        router.push('/dashboard/assistant')
-        break
-      case 'TantouEditor':
-        router.push('/dashboard/tantou-editor')
-        break
-      case 'EditorialBoard':
-        router.push('/dashboard/manga-list')
-        break
-      case 'EditorInChief':
-        router.push('/dashboard/editor-in-chief')
-        break
-      default:
-        router.push('/dashboard')
-        break
-    }
-  }
-
-  const handleLogout = () => {
-    router.push('/login')
-  }
-
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full justify-between bg-card text-foreground p-5 border-r border-border">

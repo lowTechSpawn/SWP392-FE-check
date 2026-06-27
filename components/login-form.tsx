@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -18,7 +19,9 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
+  FieldSeparator,
   FieldError,
+  FieldDescription,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { AlertCircle } from "lucide-react"
@@ -64,7 +67,7 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           {error && (
-            <div className="flex items-start gap-2 p-3.5 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-xs mb-4 animate-in fade-in duration-200">
+            <div className="flex items-start gap-2 p-3.5 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl text-xs mb-4 animate-in fade-in duration-200">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>{error}</div>
             </div>
