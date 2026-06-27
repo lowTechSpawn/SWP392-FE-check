@@ -493,8 +493,8 @@ export default function AdminPage() {
   // Security Gate: Ensure user role is Admin to access
   if (role !== 'Admin') {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-card border border-border rounded-2xl max-w-md mx-auto text-center space-y-5 shadow-lg my-12">
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+      <div className="flex flex-col items-center justify-center p-12 bg-card border border-border rounded-xl max-w-md mx-auto text-center space-y-5 shadow-lg my-12">
+        <div className="w-16 h-16 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
           <Shield className="w-10 h-10 animate-pulse" />
         </div>
         <h2 className="text-xl font-bold text-foreground">Không có quyền truy cập</h2>
@@ -523,10 +523,10 @@ export default function AdminPage() {
 
         {/* Tab Buttons (Only for Admin) */}
         {role === 'Admin' && (
-          <div className="flex items-center gap-2 bg-card border border-border p-1 rounded-xl shrink-0 w-fit">
+          <div className="flex items-center gap-2 bg-card border border-border p-1 rounded-lg shrink-0 w-fit">
             <button
               onClick={() => setActiveTab('list')}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'list'
+              className={`px-4 py-2 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'list'
                 ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
@@ -535,7 +535,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('create')}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'create'
+              className={`px-4 py-2 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'create'
                 ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
@@ -544,7 +544,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('system')}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'system'
+              className={`px-4 py-2 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'system'
                 ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
                 }`}
@@ -567,7 +567,7 @@ export default function AdminPage() {
                 placeholder="Tìm kiếm theo tên, tài khoản hoặc email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 transition-colors"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
@@ -577,7 +577,7 @@ export default function AdminPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
               >
                 <option value="all">Tất cả Vai trò</option>
                 <option value="Admin">Admin</option>
@@ -595,7 +595,7 @@ export default function AdminPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
               >
                 <option value="all">Tất cả Trạng thái</option>
                 <option value="Active">Hoạt động</option>
@@ -604,7 +604,7 @@ export default function AdminPage() {
           </Card>
 
           {/* Main User Table Card */}
-          <Card className="border-border rounded-2xl overflow-hidden bg-card shadow-sm">
+          <Card className="border-border rounded-xl overflow-hidden bg-card shadow-sm">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-muted/30 border-b border-border">
@@ -728,7 +728,7 @@ export default function AdminPage() {
                                   onClick={() => handleViewUser(user)}
                                   variant="outline"
                                   size="icon"
-                                  className="w-8 h-8 rounded-xl border border-border hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                                  className="w-8 h-8 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
                                   title="Xem chi tiết"
                                 >
                                   <Info className="w-3.5 h-3.5" />
@@ -739,7 +739,7 @@ export default function AdminPage() {
                                   onClick={() => handleOpenEditModal(user)}
                                   variant="outline"
                                   size="icon"
-                                  className="w-8 h-8 rounded-xl border border-border hover:bg-primary/10 hover:text-primary cursor-pointer"
+                                  className="w-8 h-8 rounded-lg border border-border hover:bg-primary/10 hover:text-primary cursor-pointer"
                                   title="Chỉnh sửa tài khoản"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
@@ -751,7 +751,7 @@ export default function AdminPage() {
                                     onClick={() => handleToggleStatus(user.id, user.status || 'Active')}
                                     variant="outline"
                                     size="icon"
-                                    className="w-8 h-8 rounded-xl border border-rose-500/20 hover:bg-rose-500/10 text-rose-500/80 hover:text-rose-600 cursor-pointer"
+                                    className="w-8 h-8 rounded-lg border border-rose-500/20 hover:bg-rose-500/10 text-rose-500/80 hover:text-rose-600 cursor-pointer"
                                     title="Khóa tài khoản"
                                   >
                                     <UserX className="w-3.5 h-3.5" />
@@ -772,7 +772,7 @@ export default function AdminPage() {
           </Card>
         </div>
       ) : activeTab === 'create' ? (
-        <Card className="max-w-2xl mx-auto p-6 bg-card border border-border rounded-2xl shadow-lg animate-in fade-in duration-200">
+        <Card className="max-w-2xl mx-auto p-6 bg-card border border-border rounded-xl shadow-lg animate-in fade-in duration-200">
           <div className="flex items-center gap-2 border-b border-border pb-4 mb-4">
             <UserPlus className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">Tạo tài khoản người dùng mới</h2>
@@ -790,7 +790,7 @@ export default function AdminPage() {
                   placeholder="Ví dụ: Takeshi Obata"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
                   required
                 />
               </div>
@@ -805,7 +805,7 @@ export default function AdminPage() {
                   placeholder="Ví dụ: obata_mangaka"
                   value={formUsername}
                   onChange={(e) => setFormUsername(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
                   required
                 />
               </div>
@@ -821,7 +821,7 @@ export default function AdminPage() {
                 placeholder="Ví dụ: obata@mangaflow.com"
                 value={formEmail}
                 onChange={(e) => setFormEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
                 required
               />
             </div>
@@ -838,7 +838,7 @@ export default function AdminPage() {
                     setFormRoleId(e.target.value)
                     setFormEditorId('')
                   }}
-                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer focus:border-primary/50"
+                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer focus:border-primary/50"
                 >
                   <option value="" disabled>-- Chọn Vai Trò --</option>
                   {rolesList.map(r => (
@@ -856,7 +856,7 @@ export default function AdminPage() {
                   <select
                     value={formEditorId}
                     onChange={(e) => setFormEditorId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer focus:border-primary/50"
+                    className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer focus:border-primary/50"
                     required
                   >
                     <option value="">-- Chọn Tantou Editor --</option>
@@ -879,7 +879,7 @@ export default function AdminPage() {
                   placeholder="••••••••"
                   value={formPassword}
                   onChange={(e) => setFormPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground focus:border-primary/50"
+                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground focus:border-primary/50"
                   required
                 />
               </div>
@@ -894,7 +894,7 @@ export default function AdminPage() {
                   placeholder="••••••••"
                   value={formConfirmPassword}
                   onChange={(e) => setFormConfirmPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground focus:border-primary/50"
+                  className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground focus:border-primary/50"
                   required
                 />
               </div>
@@ -903,7 +903,7 @@ export default function AdminPage() {
             {/* Create Button */}
             <Button
               type="submit"
-              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl mt-4 cursor-pointer transition-all"
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg mt-4 cursor-pointer transition-all"
             >
               Tạo tài khoản mới
             </Button>
@@ -914,10 +914,10 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Roles Management Card */}
-            <Card className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col space-y-4">
+            <Card className="p-6 bg-card border border-border rounded-xl shadow-sm flex flex-col space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
+                  <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
                     <Shield className="w-5 h-5" />
                   </div>
                   <div>
@@ -931,7 +931,7 @@ export default function AdminPage() {
                     setFormRoleName('');
                     setIsRoleModalOpen(true);
                   }}
-                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" /> Thêm vai trò
                 </Button>
@@ -945,12 +945,12 @@ export default function AdminPage() {
                   placeholder="Tìm kiếm vai trò..."
                   value={roleSearch}
                   onChange={(e) => setRoleSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-lg text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
                 />
               </div>
 
               {/* Roles Table */}
-              <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
+              <div className="border border-border/80 rounded-lg overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
                 <Table>
                   <TableHeader className="bg-muted/30 border-b border-border">
                     <TableRow>
@@ -989,14 +989,14 @@ export default function AdminPage() {
                                     setFormRoleName(r.roleName);
                                     setIsRoleModalOpen(true);
                                   }}
-                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
+                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-md text-slate-400 hover:text-foreground transition-all cursor-pointer"
                                   title="Chỉnh sửa"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteRole(r.roleId, r.roleName)}
-                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
+                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-md text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
                                   title="Xóa"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1012,10 +1012,10 @@ export default function AdminPage() {
             </Card>
 
             {/* Genres Management Card */}
-            <Card className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col space-y-4">
+            <Card className="p-6 bg-card border border-border rounded-xl shadow-sm flex flex-col space-y-4">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
+                  <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-500">
                     <Layers className="w-5 h-5" />
                   </div>
                   <div>
@@ -1029,7 +1029,7 @@ export default function AdminPage() {
                     setFormGenreTitle('');
                     setIsGenreModalOpen(true);
                   }}
-                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" /> Thêm thể loại
                 </Button>
@@ -1043,12 +1043,12 @@ export default function AdminPage() {
                   placeholder="Tìm kiếm thể loại..."
                   value={genreSearch}
                   onChange={(e) => setGenreSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-lg text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
                 />
               </div>
 
               {/* Genres Table */}
-              <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
+              <div className="border border-border/80 rounded-lg overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
                 <Table>
                   <TableHeader className="bg-muted/30 border-b border-border">
                     <TableRow>
@@ -1095,14 +1095,14 @@ export default function AdminPage() {
                                     setFormGenreTitle(g.title);
                                     setIsGenreModalOpen(true);
                                   }}
-                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
+                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-md text-slate-400 hover:text-foreground transition-all cursor-pointer"
                                   title="Chỉnh sửa"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteGenre(g.genreId, g.title)}
-                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
+                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-md text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
                                   title="Xóa"
                                   disabled={g.deletedAt !== null}
                                 >
@@ -1124,14 +1124,14 @@ export default function AdminPage() {
 
       {/* Editor Assignment Dialog Modal */}
       <Dialog open={assigningMangaka !== null} onOpenChange={(open) => !open && setAssigningMangaka(null)}>
-        <DialogContent className="bg-card border border-border rounded-2xl max-w-2xl p-6">
+        <DialogContent className="bg-card border border-border rounded-xl max-w-2xl p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground">
               Gán Tantou Editor Phụ Trách
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleConfirmAssignment} className="space-y-4 pt-3">
-            <div className="bg-muted/40 p-3.5 rounded-xl border border-border/50 text-xs space-y-1.5">
+            <div className="bg-muted/40 p-3.5 rounded-lg border border-border/50 text-xs space-y-1.5">
               <p className="text-muted-foreground">Mangaka được chọn:</p>
               <p className="font-bold text-foreground text-sm">{assigningMangaka?.name} ({assigningMangaka?.email})</p>
             </div>
@@ -1144,7 +1144,7 @@ export default function AdminPage() {
                 value={selectedEditorId}
                 onChange={(e) => setSelectedEditorId(e.target.value)}
                 disabled={isReassigningEditor || isLoadingAssignmentHistory}
-                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
               >
                 <option value="" disabled>-- Chọn Tantou Editor mới --</option>
                 {editors.map(ed => (
@@ -1153,7 +1153,7 @@ export default function AdminPage() {
               </select>
             </div>
 
-            <div className="rounded-xl border border-border bg-muted/20 p-3.5 space-y-3">
+            <div className="rounded-lg border border-border bg-muted/20 p-3.5 space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Lịch sử gán Editor
@@ -1178,7 +1178,7 @@ export default function AdminPage() {
                     return (
                       <div
                         key={item.assignmentId}
-                        className="rounded-lg border border-border/70 bg-background px-3 py-2 text-xs"
+                        className="rounded-md border border-border/70 bg-background px-3 py-2 text-xs"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -1204,7 +1204,7 @@ export default function AdminPage() {
               )}
             </div>
 
-            <Button type="submit" disabled={isReassigningEditor || isLoadingAssignmentHistory || !selectedEditorId || !activeAssignmentId} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl mt-2 cursor-pointer transition-all">
+            <Button type="submit" disabled={isReassigningEditor || isLoadingAssignmentHistory || !selectedEditorId || !activeAssignmentId} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg mt-2 cursor-pointer transition-all">
               {isReassigningEditor ? 'Đang đổi Editor...' : 'Xác nhận đổi Editor'}
             </Button>
           </form>
@@ -1213,7 +1213,7 @@ export default function AdminPage() {
 
       {/* Role Add/Edit Dialog Modal */}
       <Dialog open={isRoleModalOpen} onOpenChange={(open) => !open && setIsRoleModalOpen(false)}>
-        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+        <DialogContent className="bg-card border border-border rounded-xl max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
               <Shield className="w-5 h-5 text-amber-500" />
@@ -1231,7 +1231,7 @@ export default function AdminPage() {
                 placeholder="Ví dụ: Moderator, Translator..."
                 value={formRoleName}
                 onChange={(e) => setFormRoleName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
                 required
               />
             </div>
@@ -1241,13 +1241,13 @@ export default function AdminPage() {
                 type="button"
                 onClick={() => setIsRoleModalOpen(false)}
                 variant="outline"
-                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 text-xs font-bold rounded-lg cursor-pointer"
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-lg cursor-pointer"
               >
                 {editingRole ? 'Lưu thay đổi' : 'Thêm mới'}
               </Button>
@@ -1258,7 +1258,7 @@ export default function AdminPage() {
 
       {/* Genre Add/Edit Dialog Modal */}
       <Dialog open={isGenreModalOpen} onOpenChange={(open) => !open && setIsGenreModalOpen(false)}>
-        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+        <DialogContent className="bg-card border border-border rounded-xl max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
               <Layers className="w-5 h-5 text-indigo-500" />
@@ -1276,7 +1276,7 @@ export default function AdminPage() {
                 placeholder="Ví dụ: Comedy, Isekai..."
                 value={formGenreTitle}
                 onChange={(e) => setFormGenreTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
                 required
               />
             </div>
@@ -1286,13 +1286,13 @@ export default function AdminPage() {
                 type="button"
                 onClick={() => setIsGenreModalOpen(false)}
                 variant="outline"
-                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 text-xs font-bold rounded-lg cursor-pointer"
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-lg cursor-pointer"
               >
                 {editingGenre ? 'Lưu thay đổi' : 'Thêm mới'}
               </Button>
@@ -1303,7 +1303,7 @@ export default function AdminPage() {
 
       {/* View User Details Dialog Modal */}
       <Dialog open={viewingUser !== null} onOpenChange={(open) => !open && setViewingUser(null)}>
-        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+        <DialogContent className="bg-card border border-border rounded-xl max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <Info className="w-5 h-5 text-primary" />
@@ -1389,7 +1389,7 @@ export default function AdminPage() {
               <div className="flex justify-end pt-4 border-t border-border">
                 <Button
                   onClick={() => setViewingUser(null)}
-                  className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+                  className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-lg cursor-pointer"
                 >
                   Đóng
                 </Button>
@@ -1401,7 +1401,7 @@ export default function AdminPage() {
 
       {/* Edit User Details Dialog Modal */}
       <Dialog open={editingUser !== null} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+        <DialogContent className="bg-card border border-border rounded-xl max-w-md p-6">
           <DialogHeader>
             <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
               <Edit3 className="w-5 h-5 text-primary" />
@@ -1420,7 +1420,7 @@ export default function AdminPage() {
                 placeholder="Nhập họ và tên..."
                 value={editFormName}
                 onChange={(e) => setEditFormName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground"
                 required
               />
             </div>
@@ -1435,7 +1435,7 @@ export default function AdminPage() {
                 placeholder="Nhập tên tài khoản..."
                 value={editFormUsername}
                 onChange={(e) => setEditFormUsername(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground font-mono"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground font-mono"
                 required
               />
             </div>
@@ -1450,7 +1450,7 @@ export default function AdminPage() {
                 placeholder="Nhập email..."
                 value={editFormEmail}
                 onChange={(e) => setEditFormEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground"
                 required
               />
             </div>
@@ -1463,7 +1463,7 @@ export default function AdminPage() {
               <select
                 value={editFormRoleId}
                 onChange={(e) => setEditFormRoleId(e.target.value)}
-                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
                 required
               >
                 <option value="">-- Chọn vai trò --</option>
@@ -1483,7 +1483,7 @@ export default function AdminPage() {
                 placeholder="Để trống nếu không muốn đổi mật khẩu"
                 value={editFormPassword}
                 onChange={(e) => setEditFormPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground"
               />
             </div>
 
@@ -1497,7 +1497,7 @@ export default function AdminPage() {
                 placeholder="Xác nhận mật khẩu mới..."
                 value={editFormConfirmPassword}
                 onChange={(e) => setEditFormConfirmPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground"
               />
             </div>
 
@@ -1507,14 +1507,14 @@ export default function AdminPage() {
                 type="button"
                 onClick={() => setEditingUser(null)}
                 variant="outline"
-                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 text-xs font-bold rounded-lg cursor-pointer"
                 disabled={updatingUser}
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
-                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-lg cursor-pointer"
                 disabled={updatingUser}
               >
                 {updatingUser ? 'Đang cập nhật...' : 'Cập nhật tài khoản'}

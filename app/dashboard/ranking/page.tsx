@@ -284,11 +284,11 @@ export default function RankingPage() {
         {isAuthorized ? (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-all">
+              <Button className="w-full sm:w-auto inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-md cursor-pointer transition-all">
                 <Plus className="w-4 h-4" /> Enter Vote Data
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border border-border rounded-2xl max-w-md p-6">
+            <DialogContent className="bg-card border border-border rounded-xl max-w-md p-6">
               <DialogHeader>
                 <DialogTitle className="text-lg font-bold text-foreground">
                   Import Reader Vote Data
@@ -304,7 +304,7 @@ export default function RankingPage() {
                       setFormSeriesId(e.target.value)
                       setFormChapterId('')
                     }}
-                    className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
                     required
                   >
                     <option value="">-- Choose a Series --</option>
@@ -320,7 +320,7 @@ export default function RankingPage() {
                   <select
                     value={formChapterId}
                     onChange={(e) => setFormChapterId(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
                     disabled={!formSeriesId}
                     required
                   >
@@ -337,7 +337,7 @@ export default function RankingPage() {
                   <select
                     value={formPeriod}
                     onChange={(e) => setFormPeriod(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground cursor-pointer"
                     required
                   >
                     {periods.map(p => (
@@ -355,7 +355,7 @@ export default function RankingPage() {
                       min="0"
                       value={formReaderCount}
                       onChange={(e) => setFormReaderCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                      className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground"
                       required
                     />
                   </div>
@@ -367,21 +367,21 @@ export default function RankingPage() {
                       min="0"
                       value={formVoteCount}
                       onChange={(e) => setFormVoteCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground"
+                      className="w-full px-3 py-2.5 bg-muted/65 border border-border rounded-lg text-sm focus:outline-none text-foreground"
                       required
                     />
                   </div>
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl mt-2 cursor-pointer transition-colors">
+                <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg mt-2 cursor-pointer transition-colors">
                   Submit Vote Record
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
         ) : (
-          <div className="text-[11px] bg-muted/50 border border-border p-2 rounded-xl text-muted-foreground max-w-xs text-center">
+          <div className="text-[11px] bg-muted/50 border border-border p-2 rounded-lg text-muted-foreground max-w-xs text-center">
             💡 <strong>Read-Only Mode:</strong> Only the Editorial Board is authorized to import ranking vote data.
           </div>
         )}
@@ -389,7 +389,7 @@ export default function RankingPage() {
 
       {/* Pending Confirmation */}
       {pendingVotes.length > 0 && (
-        <Card className="border-amber-500/25 bg-amber-500/5 rounded-2xl p-5 space-y-4">
+        <Card className="border-amber-500/25 bg-amber-500/5 rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500 font-bold text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Pending Confirmation ({pendingVotes.length})</span>
@@ -399,7 +399,7 @@ export default function RankingPage() {
             {pendingVotes.map(vote => (
               <div
                 key={vote.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#0d1527]/60 border border-border/60 rounded-xl"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#0d1527]/60 border border-border/60 rounded-lg"
               >
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -420,7 +420,7 @@ export default function RankingPage() {
                   {isAuthorized ? (
                     <Button
                       onClick={() => handleConfirmVote(vote.id, vote.seriesTitle)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shrink-0 cursor-pointer transition-colors"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-md shrink-0 cursor-pointer transition-colors"
                     >
                       <Check className="w-3.5 h-3.5 mr-1" /> Confirm
                     </Button>
@@ -435,14 +435,14 @@ export default function RankingPage() {
       )}
 
       {/* Period Selector tabs */}
-      <div className="flex items-center gap-2 bg-card border border-border p-1 rounded-xl w-fit">
+      <div className="flex items-center gap-2 bg-card border border-border p-1 rounded-lg w-fit">
         {periods.map(p => {
           const isActive = selectedPeriod === p
           return (
             <button
               key={p}
               onClick={() => setSelectedPeriod(p)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
@@ -455,7 +455,7 @@ export default function RankingPage() {
       </div>
 
       {/* Main Ranking Table Card */}
-      <Card className="border-border rounded-2xl overflow-hidden bg-card shadow-sm">
+      <Card className="border-border rounded-xl overflow-hidden bg-card shadow-sm">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/30 border-b border-border">
@@ -502,7 +502,7 @@ export default function RankingPage() {
                             <Medal className="w-5 h-5 text-amber-700" />
                           </div>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-slate-400 text-xs font-bold">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-muted text-slate-400 text-xs font-bold">
                             {row.rank}
                           </span>
                         )}
@@ -553,7 +553,7 @@ export default function RankingPage() {
       </Card>
 
       {/* Rules Footnote */}
-      <div className="flex items-start gap-2.5 p-4 bg-muted/30 border border-border/40 rounded-2xl text-[11px] text-muted-foreground leading-relaxed">
+      <div className="flex items-start gap-2.5 p-4 bg-muted/30 border border-border/40 rounded-xl text-[11px] text-muted-foreground leading-relaxed">
         <Info className="w-4 h-4 text-muted-foreground/60 shrink-0 mt-0.5" />
         <div>
           <span className="font-bold text-foreground">Rules enforced:</span> Entry authority, uniqueness, validation, formula, tie-break, auto-recalculate, bottom 20% flag

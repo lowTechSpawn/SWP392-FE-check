@@ -149,7 +149,7 @@ export default function ManuscriptsPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBackToList}
-                className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl transition-all cursor-pointer"
+                className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all cursor-pointer"
                 title="Back to List"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -163,7 +163,7 @@ export default function ManuscriptsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs bg-muted px-3 py-1.5 rounded-xl border border-border/80 text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs bg-muted px-3 py-1.5 rounded-lg border border-border/80 text-muted-foreground">
               <Clock className="w-3.5 h-3.5" />
               <span>Progress: <strong>{activeManuscript.progress}%</strong></span>
             </div>
@@ -175,9 +175,9 @@ export default function ManuscriptsPage() {
             <div className="xl:col-span-2 space-y-4">
               <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Manuscript File Attachment</h2>
 
-              <Card className="border-border bg-card p-6 rounded-2xl space-y-4 shadow-sm">
+              <Card className="border-border bg-card p-6 rounded-xl space-y-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                     <FileArchive className="w-6 h-6" />
                   </div>
                   <div>
@@ -191,7 +191,7 @@ export default function ManuscriptsPage() {
                 </div>
 
                 {activeManuscript.fileUrl ? (
-                  <div className="p-4 bg-muted/30 border border-border/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="p-4 bg-muted/30 border border-border/80 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-foreground truncate">
                         {activeManuscript.fileUrl.split('/').pop() || 'manuscript_file'}
@@ -205,20 +205,20 @@ export default function ManuscriptsPage() {
                       download
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-extrabold rounded-xl transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
+                      className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-extrabold rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
                     >
                       <Download className="w-4 h-4" /> Tải về Bản thảo
                     </a>
                   </div>
                 ) : (
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs text-amber-600 font-medium">
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-lg text-xs text-amber-600 font-medium">
                     Không tìm thấy liên kết file cho phiên bản này.
                   </div>
                 )}
               </Card>
 
               {/* Annotations panel */}
-              <Card className="border-border bg-card p-5 rounded-2xl space-y-4 shadow-sm">
+              <Card className="border-border bg-card p-5 rounded-xl space-y-4 shadow-sm">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h3 className="text-sm font-bold text-foreground">
                     Annotations (version-bound)
@@ -233,7 +233,7 @@ export default function ManuscriptsPage() {
                     <p className="text-xs text-muted-foreground italic py-2">No annotations for this version</p>
                   ) : (
                     annotations.map(ann => (
-                      <div key={ann.id} className="p-3 bg-muted/40 border border-border/50 rounded-xl space-y-1">
+                      <div key={ann.id} className="p-3 bg-muted/40 border border-border/50 rounded-lg space-y-1">
                         <p className="text-xs text-foreground font-medium">{ann.text}</p>
                         <p className="text-[9px] text-muted-foreground">{formatDateShort(ann.createdAt)}</p>
                       </div>
@@ -248,10 +248,10 @@ export default function ManuscriptsPage() {
                     placeholder="Add annotation..."
                     value={newAnnotationText}
                     onChange={(e) => setNewAnnotationText(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-muted/65 border border-border rounded-xl text-xs focus:outline-none text-foreground"
+                    className="flex-1 px-3 py-2 bg-muted/65 border border-border rounded-lg text-xs focus:outline-none text-foreground"
                     required
                   />
-                  <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl px-4 cursor-pointer transition-colors">
+                  <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-lg px-4 cursor-pointer transition-colors">
                     Add
                   </Button>
                 </form>
@@ -262,7 +262,7 @@ export default function ManuscriptsPage() {
             <div className="space-y-6">
               <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Evaluation Decisions</h2>
 
-              <Card className="border-border bg-card p-5 rounded-2xl space-y-5 shadow-sm">
+              <Card className="border-border bg-card p-5 rounded-xl space-y-5 shadow-sm">
                 <div className="space-y-2">
                   <h3 className="text-sm font-bold text-foreground">Review Decision</h3>
                   <p className="text-xs text-muted-foreground">
@@ -272,7 +272,7 @@ export default function ManuscriptsPage() {
 
                 {/* Warning Banner */}
                 {activeManuscript.progress < 100 && (
-                  <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-500 rounded-xl text-xs leading-relaxed font-bold">
+                  <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-500 rounded-lg text-xs leading-relaxed font-bold">
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>Alert: Cannot approve — chapter completion is {activeManuscript.progress}%, must be 100%</span>
                   </div>
@@ -286,7 +286,7 @@ export default function ManuscriptsPage() {
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value)}
                     rows={4}
-                    className="w-full p-3 bg-muted/50 border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground resize-none"
+                    className="w-full p-3 bg-muted/50 border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground resize-none"
                   />
                 </div>
 
@@ -296,27 +296,27 @@ export default function ManuscriptsPage() {
                     <Button
                       onClick={() => handleDecision('APPROVED')}
                       disabled={activeManuscript.progress < 100}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5"
                     >
                       <CheckCircle2 className="w-4 h-4" /> Approve (Lock)
                     </Button>
                     <Button
                       onClick={() => handleDecision('REVISION REQUIRED')}
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-1.5"
                     >
                       <AlertTriangle className="w-4 h-4" /> Request Revision
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="p-3 bg-muted border border-border/80 rounded-xl text-[10px] text-muted-foreground text-center font-medium leading-relaxed">
+                    <div className="p-3 bg-muted border border-border/80 rounded-lg text-[10px] text-muted-foreground text-center font-medium leading-relaxed">
                       🔒 <strong>View-only mode:</strong> Only the assigned Tantou Editor (Nakamura Takeshi) can approve or request revisions.
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 opacity-50">
-                      <Button disabled className="w-full bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl">
+                      <Button disabled className="w-full bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-lg">
                         Approve (Lock)
                       </Button>
-                      <Button disabled className="w-full bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl">
+                      <Button disabled className="w-full bg-amber-600 text-white text-xs font-bold py-2.5 rounded-lg">
                         Request Revision
                       </Button>
                     </div>
@@ -340,7 +340,7 @@ export default function ManuscriptsPage() {
                 Evaluate chapter storyboards, ink version cycles, and issue revision calls
               </p>
             </div>
-            <div className="text-xs bg-card border border-border px-3.5 py-2 rounded-xl text-muted-foreground font-semibold max-w-xs shrink-0 self-start md:self-center">
+            <div className="text-xs bg-card border border-border px-3.5 py-2 rounded-lg text-muted-foreground font-semibold max-w-xs shrink-0 self-start md:self-center">
               Logged in as: <strong className="text-primary">{role}</strong>
             </div>
           </div>
@@ -385,7 +385,7 @@ export default function ManuscriptsPage() {
               return (
                 <Card
                   key={m.id}
-                  className={`border border-border bg-card rounded-2xl overflow-hidden hover:border-primary/20 transition-all ${isSpecialaistoryCard ? 'border-amber-500/15' : ''
+                  className={`border border-border bg-card rounded-xl overflow-hidden hover:border-primary/20 transition-all ${isSpecialaistoryCard ? 'border-amber-500/15' : ''
                     }`}
                 >
                   <div className="p-6 space-y-4">
@@ -414,7 +414,7 @@ export default function ManuscriptsPage() {
                         {m.status === 'SUBMITTED' && (
                           <Button
                             onClick={() => handleOpenReview(m.id)}
-                            className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-4 py-1.5 h-8 rounded-xl cursor-pointer transition-colors"
+                            className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-4 py-1.5 h-8 rounded-lg cursor-pointer transition-colors"
                           >
                             <FileCheck className="w-3.5 h-3.5 mr-1" /> Review
                           </Button>
@@ -430,7 +430,7 @@ export default function ManuscriptsPage() {
                           {m.history.map((h, hIdx) => (
                             <div
                               key={hIdx}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-muted/40 border border-border/30 p-3 rounded-xl hover:bg-muted/65 transition-all"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-muted/40 border border-border/30 p-3 rounded-lg hover:bg-muted/65 transition-all"
                             >
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-bold text-foreground text-xs">{h.version}</span>
@@ -458,7 +458,7 @@ export default function ManuscriptsPage() {
 
                         {/* Editor feedback box */}
                         {latestVer.feedback && (
-                          <div className="bg-muted/45 p-4 rounded-xl border border-border/50 space-y-1 text-xs">
+                          <div className="bg-muted/45 p-4 rounded-lg border border-border/50 space-y-1 text-xs">
                             <p className="text-[10px] font-extrabold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">Editor Feedback:</p>
                             <p className="text-muted-foreground leading-relaxed italic">
                               "{latestVer.feedback}"
@@ -472,7 +472,7 @@ export default function ManuscriptsPage() {
                         {m.history.map((h, hIdx) => (
                           <div
                             key={hIdx}
-                            className="flex flex-wrap items-center gap-3 bg-muted/20 border border-border/20 p-2.5 rounded-xl"
+                            className="flex flex-wrap items-center gap-3 bg-muted/20 border border-border/20 p-2.5 rounded-lg"
                           >
                             <span className="font-bold text-foreground">{h.version}</span>
                             <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border ${getBadgeColor(h.status)}`}>

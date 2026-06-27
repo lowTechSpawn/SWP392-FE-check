@@ -144,7 +144,7 @@ function SidebarInner() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold transition-all group ${isActive
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all group ${isActive
                     ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/10'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
@@ -179,7 +179,7 @@ function SidebarInner() {
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>

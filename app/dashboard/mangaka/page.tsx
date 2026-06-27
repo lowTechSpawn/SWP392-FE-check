@@ -99,7 +99,7 @@ export default function MangakaDashboardPage() {
     <div className="space-y-8">
 
       {/* Welcome header */}
-      <div className="relative overflow-hidden border-primary/15 rounded-3xl p-7">
+      <div className="relative overflow-hidden border-primary/15 rounded-2xl p-7">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
@@ -110,7 +110,7 @@ export default function MangakaDashboardPage() {
               Quản lý các đề xuất tác phẩm mới và theo dõi trạng thái duyệt của bạn.
             </p>
             {assignedEditor && (
-              <div className="mt-2.5 inline-flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-xl text-xs font-medium text-muted-foreground">
+              <div className="mt-2.5 inline-flex items-center gap-2 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-lg text-xs font-medium text-muted-foreground">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Editor phụ trách: <strong className="text-foreground">{assignedEditor.name}</strong> {assignedEditor.email ? `(${assignedEditor.email})` : ''}</span>
               </div>
@@ -118,14 +118,14 @@ export default function MangakaDashboardPage() {
           </div>
 
           {isBlocked ? (
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs font-semibold text-amber-600 shrink-0">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/25 rounded-lg text-xs font-semibold text-amber-600 shrink-0">
               <AlertTriangle className="w-4 h-4" />
               Đang có đề xuất chờ duyệt — tạm khóa tạo đề xuất mới
             </div>
           ) : (
             <Link
               href="/dashboard/series/new"
-              className="inline-flex items-center gap-2 shrink-0 bg-primary text-primary-foreground font-bold text-sm px-5 py-3 rounded-xl shadow-sm shadow-primary/15 hover:bg-primary/90 transition-all"
+              className="inline-flex items-center gap-2 shrink-0 bg-primary text-primary-foreground font-bold text-sm px-5 py-3 rounded-lg shadow-sm shadow-primary/15 hover:bg-primary/90 transition-all"
             >
               <Plus className="w-4 h-4" />
               Đề xuất mới
@@ -142,8 +142,8 @@ export default function MangakaDashboardPage() {
           { label: 'Đã duyệt', value: counts.approved, icon: CheckCircle2, color: 'text-emerald-600' },
           { label: 'Bị từ chối', value: counts.rejected, icon: XCircle, color: 'text-red-500', },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card border border-border rounded-2xl p-5 space-y-3">
-            <div className={`w-9 h-9 ${color} rounded-xl flex items-center justify-center`}>
+          <div key={label} className="bg-card border border-border rounded-xl p-5 space-y-3">
+            <div className={`w-9 h-9 ${color} rounded-lg flex items-center justify-center`}>
               <Icon className="w-6.5 h-6.5" />
             </div>
             <div>
@@ -157,7 +157,7 @@ export default function MangakaDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Recent Proposals */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl overflow-hidden">
+        <div className="lg:col-span-2 bg-card border border-border rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />

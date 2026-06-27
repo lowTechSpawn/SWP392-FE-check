@@ -1,6 +1,27 @@
 import { seriesService } from "@/services/seriesService";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
 
+const SOURCE_ZIP_CACHE_KEY = 'proposal_source_zip_file_asset_ids';
+
+const readSourceZipCache = (): Record<string, string> => {
+  if (typeof window === 'undefined') return {};
+  try {
+    return JSON.parse(localStorage.getItem(SOURCE_ZIP_CACHE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const getCachedSourceZipFileAssetId = (proposalId: string): string | null => {
+  return readSourceZipCache()[proposalId] || null;
+};
+
+const cacheSourceZipFileAssetId = (proposalId: string, fileAssetId?: string | null) => {
+  if (typeof window === 'undefined' || !proposalId || !fileAssetId) return;
+  const cache = readSourceZipCache();
+  cache[proposalId] = fileAssetId;
+  localStorage.setItem(SOURCE_ZIP_CACHE_KEY, JSON.stringify(cache));
+};
 export const mapSeriesToProposal = (s: any): Proposal => {
   let status: ProposalStatus = 'Draft';
   const rawStatus = s.status || '';
@@ -31,8 +52,11 @@ export const mapSeriesToProposal = (s: any): Proposal => {
     status = 'Draft';
   }
 
+  const proposalId = s.id;
+  const sourceZipFileAssetId = s.sourceZipFileAssetId || getCachedSourceZipFileAssetId(proposalId);
+
   return {
-    id: s.id,
+    id: proposalId,
     title: s.title,
     genre: s.genre ? s.genre.join(', ') : '',
     publicationType: s.type as any,
@@ -44,7 +68,7 @@ export const mapSeriesToProposal = (s: any): Proposal => {
     submittedAt: s.submittedAt || s.createdAt || new Date().toISOString(),
     coverImageUrl: s.coverImageUrl,
     rawStatus: rawStatus,
-    sourceZipFileAssetId: s.sourceZipFileAssetId || null,
+    sourceZipFileAssetId,
     author: s.author || 'Tác giả',
     tantouEditorName: s.tantouEditorName || undefined,
   };
@@ -113,7 +137,9 @@ export const proposalService = {
       sourceZipFileAssetId: data.sourceZipFileAssetId,
       status: 'Draft'
     });
-    return mapSeriesToProposal(res);
+    const mapped = mapSeriesToProposal(res);
+    cacheSourceZipFileAssetId(mapped.id, data.sourceZipFileAssetId);
+    return { ...mapped, sourceZipFileAssetId: data.sourceZipFileAssetId || mapped.sourceZipFileAssetId };
   },
 
   /**
@@ -133,7 +159,9 @@ export const proposalService = {
       sourceZipFileAssetId: data.sourceZipFileAssetId,
       status: 'PendingReview'
     });
-    return mapSeriesToProposal(res);
+    const mapped = mapSeriesToProposal(res);
+    cacheSourceZipFileAssetId(mapped.id, data.sourceZipFileAssetId);
+    return { ...mapped, sourceZipFileAssetId: data.sourceZipFileAssetId || mapped.sourceZipFileAssetId };
   },
 
   /**
@@ -158,7 +186,9 @@ export const proposalService = {
       sourceZipFileAssetId: updatedData.sourceZipFileAssetId,
       status: submit ? 'PendingReview' : 'Draft'
     });
-    return mapSeriesToProposal(res);
+    const mapped = mapSeriesToProposal(res);
+    cacheSourceZipFileAssetId(mapped.id, updatedData.sourceZipFileAssetId);
+    return { ...mapped, sourceZipFileAssetId: updatedData.sourceZipFileAssetId || mapped.sourceZipFileAssetId };
   },
 
   /**

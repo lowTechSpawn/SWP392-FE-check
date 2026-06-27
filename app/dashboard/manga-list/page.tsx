@@ -101,12 +101,12 @@ export default function MangaListPage() {
             placeholder="Search by title, author..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60"
+            className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60"
           />
         </div>
 
         {/* Filter Dropdown */}
-        <div className="relative shrink-0 flex items-center gap-2 bg-card border border-border rounded-xl px-3.5 py-2.5 text-sm">
+        <div className="relative shrink-0 flex items-center gap-2 bg-card border border-border rounded-lg px-3.5 py-2.5 text-sm">
           <Filter className="w-4 h-4 text-muted-foreground" />
           <select
             value={filterType}
@@ -127,7 +127,7 @@ export default function MangaListPage() {
           {filteredManga.map((manga) => (
             <div
               key={manga.id}
-              className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/25 hover:shadow-lg transition-all flex flex-col justify-between group"
+              className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/25 hover:shadow-lg transition-all flex flex-col justify-between group"
             >
               {/* Cover Card Mockup */}
               <div className="h-40 p-5 flex flex-col justify-between text-white relative overflow-hidden bg-slate-900">
@@ -146,10 +146,10 @@ export default function MangaListPage() {
 
                 {/* Top badges */}
                 <div className="flex justify-between items-start z-10">
-                  <span className="bg-black/35 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase">
+                  <span className="bg-black/35 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase">
                     {manga.type}
                   </span>
-                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold z-10 ${manga.status === 'Active'
+                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold z-10 ${manga.status === 'Active'
                       ? 'bg-emerald-500/90 text-white'
                       : 'bg-amber-500/90 text-white'
                     }`}>
@@ -178,7 +178,7 @@ export default function MangaListPage() {
                     {manga.genre.map((g) => (
                       <span
                         key={g}
-                        className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-md"
+                        className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded"
                       >
                         {g}
                       </span>
@@ -195,7 +195,7 @@ export default function MangaListPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-3">
+        <div className="bg-card border border-border rounded-xl p-12 text-center space-y-3">
           <BookOpen className="w-12 h-12 text-muted-foreground/40 mx-auto" />
           <h3 className="font-bold text-lg text-foreground">No manga found</h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">

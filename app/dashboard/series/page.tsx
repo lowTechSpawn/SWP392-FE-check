@@ -16,11 +16,13 @@ import {
   BookOpen,
   Filter,
   CalendarDays,
+  FileArchive,
 } from 'lucide-react'
 import { proposalService } from '@/services/proposalService'
 import type { Proposal, ProposalStatus } from '@/types/proposal'
 import { useRole } from '@/context/RoleContext'
 import { toast } from 'sonner'
+import { API_BASE_URL } from '@/lib/constants'
 
 const { getProposalsByMangaka, deleteDraft, hasPendingProposal } = proposalService
 
@@ -94,9 +96,12 @@ function ProposalCard({
   const config = STATUS_CONFIG[proposal.status]
   const StatusIcon = config.icon
   const isDraft = proposal.status === 'Draft'
+  const sourceArchiveUrl = proposal.sourceZipFileAssetId
+    ? `${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`
+    : ''
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/25 hover:shadow-md transition-all group flex flex-col">
+    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/25 hover:shadow-md transition-all group flex flex-col">
       {proposal.coverImageUrl ? (
         <div className="h-40 w-full relative overflow-hidden border-b border-border bg-slate-900/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -146,13 +151,13 @@ function ProposalCard({
           {proposal.genre.split(', ').slice(0, 3).map((g) => (
             <span
               key={g}
-              className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-md"
+              className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded"
             >
               {g}
             </span>
           ))}
           {proposal.genre.split(', ').length > 3 && (
-            <span className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded-md">
+            <span className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded">
               +{proposal.genre.split(', ').length - 3}
             </span>
           )}
@@ -179,7 +184,17 @@ function ProposalCard({
               {proposal.publicationType}
             </span>
             <span className="text-muted-foreground/30">•</span>
-            {proposal.sampleFileUrl ? (
+            {sourceArchiveUrl ? (
+              <a
+                href={sourceArchiveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline font-bold"
+              >
+                <FileArchive className="w-3 h-3" /> Source File
+              </a>
+            ) : proposal.sampleFileUrl ? (
               <a
                 href={proposal.sampleFileUrl}
                 target="_blank"
@@ -201,13 +216,13 @@ function ProposalCard({
           <div className="flex gap-2">
             <button
               onClick={() => onDelete(proposal.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 border border-border rounded-xl transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 border border-border rounded-lg transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" /> Delete Draft
             </button>
             <Link
               href={`/dashboard/series/new?edit=${proposal.id}`}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/15 rounded-xl transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/15 rounded-lg transition-colors"
             >
               <FileEdit className="w-3.5 h-3.5" /> Edit Draft
             </Link>
@@ -301,14 +316,14 @@ export default function MyProposalsPage() {
         {/* New Proposal button */}
         <div className="shrink-0">
           {isBlocked ? (
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs font-semibold text-amber-600">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/25 rounded-lg text-xs font-semibold text-amber-600">
               <AlertTriangle className="w-4 h-4" />
               <span>Proposal in review — blocked</span>
             </div>
           ) : (
             <Link
               href="/dashboard/series/new"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm shadow-primary/10 hover:bg-primary/90 transition-all"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-lg shadow-sm shadow-primary/10 hover:bg-primary/90 transition-all"
             >
               <Plus className="w-4 h-4" />
               New Proposal
@@ -327,7 +342,7 @@ export default function MyProposalsPage() {
         ].map(({ label, value, icon: Icon, color }) => (
           <div
             key={label}
-            className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3"
+            className="bg-card border border-border rounded-xl p-4 flex items-center gap-3"
           >
             <div className={`${color} shrink-0`}>
               <Icon className="w-5 h-5" />
@@ -342,7 +357,7 @@ export default function MyProposalsPage() {
 
       {/* warning banner */}
       {isBlocked && (
-        <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-sm">
+        <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/25 rounded-lg text-sm">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-amber-600">You have an active proposal in review</p>
@@ -363,7 +378,7 @@ export default function MyProposalsPage() {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === s
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${statusFilter === s
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
@@ -382,7 +397,7 @@ export default function MyProposalsPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-2xl p-16 text-center space-y-4">
+        <div className="bg-card border border-border rounded-xl p-16 text-center space-y-4">
           <PencilLine className="w-12 h-12 text-muted-foreground/30 mx-auto" />
           <div>
             <h3 className="font-bold text-lg text-foreground">
@@ -397,7 +412,7 @@ export default function MyProposalsPage() {
           {statusFilter === 'All' && !isBlocked && (
             <Link
               href="/dashboard/series/new"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm hover:bg-primary/90 transition-all"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-sm px-5 py-2.5 rounded-lg shadow-sm hover:bg-primary/90 transition-all"
             >
               <Plus className="w-4 h-4" /> Create Your First Proposal
               <ChevronRight className="w-4 h-4" />
@@ -409,9 +424,9 @@ export default function MyProposalsPage() {
       {/* Delete confirm modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
                 <Trash2 className="w-5 h-5 text-destructive" />
               </div>
               <div>
@@ -424,13 +439,13 @@ export default function MyProposalsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 py-2.5 text-sm font-semibold border border-border rounded-xl hover:bg-muted transition-colors"
+                className="flex-1 py-2.5 text-sm font-semibold border border-border rounded-lg hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 py-2.5 text-sm font-bold bg-destructive text-destructive-foreground rounded-xl hover:bg-destructive/90 transition-colors"
+                className="flex-1 py-2.5 text-sm font-bold bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors"
               >
                 Delete
               </button>

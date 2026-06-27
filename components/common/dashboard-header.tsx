@@ -114,9 +114,7 @@ export function DashboardHeader() {
   }
 
   const handleLogout = async () => {
-    try {
-      await authService.logout()
-    } catch { }
+    await authService.logout()
     router.push('/login')
   }
 
@@ -143,7 +141,7 @@ export function DashboardHeader() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              "p-2.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none",
+              "p-2.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none",
               isOpen && "bg-muted text-foreground border-border/40"
             )}
             aria-label="Mở thông báo"
@@ -158,7 +156,7 @@ export function DashboardHeader() {
 
           {/* Dropdown Popup */}
           {isOpen && (
-            <div className="absolute right-0 mt-2.5 w-80 sm:w-96 bg-card border border-border rounded-2xl shadow-2xl p-1 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 mt-2.5 w-80 sm:w-96 bg-card border border-border rounded-xl shadow-2xl p-1 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
               {/* Header */}
               <div className="flex items-center justify-between p-3.5 border-b border-border/60">
                 <div className="flex items-center gap-2">
@@ -174,14 +172,14 @@ export function DashboardHeader() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={markAllRead}
-                      className="p-1.5 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors flex items-center gap-1"
+                      className="p-1.5 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-md transition-colors flex items-center gap-1"
                       title="Đánh dấu tất cả đã đọc"
                     >
                       <CheckCheck className="w-3.5 h-3.5" /> Đọc tất cả
                     </button>
                     <button
                       onClick={clearAll}
-                      className="p-1.5 text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg transition-colors flex items-center gap-1"
+                      className="p-1.5 text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md transition-colors flex items-center gap-1"
                       title="Xóa tất cả"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Xóa sạch
@@ -230,7 +228,7 @@ export function DashboardHeader() {
                   ))
                 ) : (
                   <div className="p-8 text-center space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted/65 flex items-center justify-center mx-auto text-muted-foreground/40">
+                    <div className="w-10 h-10 rounded-lg bg-muted/65 flex items-center justify-center mx-auto text-muted-foreground/40">
                       <Bell className="w-5 h-5" />
                     </div>
                     <div>
@@ -248,17 +246,17 @@ export function DashboardHeader() {
         <div className="relative flex items-center" ref={profileDropdownRef}>
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2 p-1 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none"
+            className="flex items-center gap-2 p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-all relative border border-transparent focus:outline-none"
             aria-label="Menu hồ sơ người dùng"
           >
             {userInfo?.avatarUrl ? (
               <img
                 src={userInfo.avatarUrl}
                 alt={userInfo.name}
-                className="w-8 h-8 rounded-lg object-cover border border-border/60"
+                className="w-8 h-8 rounded-md object-cover border border-border/60"
               />
             ) : (
-              <div className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="bg-primary/10 text-primary w-8 h-8 rounded-md flex items-center justify-center font-bold text-xs shrink-0">
                 {userInfo?.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
@@ -266,7 +264,7 @@ export function DashboardHeader() {
           </button>
 
           {isProfileOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-2xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               {/* User info details */}
               <div className="px-3 py-2 border-b border-border/60">
                 <p className="text-xs font-bold text-foreground truncate">{userInfo?.name || 'Đang tải...'}</p>
@@ -288,14 +286,14 @@ export function DashboardHeader() {
                     setIsProfileOpen(false)
                     router.push('/dashboard/profile')
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all cursor-pointer"
                 >
                   <User className="w-4 h-4" />
                   Hồ sơ cá nhân
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-lg transition-all cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Đăng xuất

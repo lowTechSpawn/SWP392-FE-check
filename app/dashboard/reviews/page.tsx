@@ -373,7 +373,7 @@ export default function ReviewProposalsPage() {
         <p className="text-muted-foreground text-sm max-w-md">
           Only members of the <strong>Editorial Board</strong> or the <strong>Editor-in-Chief</strong> can review series proposals.
         </p>
-        <p className="text-xs text-muted-foreground bg-muted p-3 rounded-lg border border-border">
+        <p className="text-xs text-muted-foreground bg-muted p-3 rounded-md border border-border">
           💡 <strong>Tip:</strong> Use the role switcher in the bottom left of the sidebar to change your active role to <strong>Editorial Board</strong> or <strong>Editor-in-Chief</strong>.
         </p>
         <Link
@@ -396,7 +396,7 @@ export default function ReviewProposalsPage() {
         <div className="space-y-4">
           <button
             onClick={() => setSelectedProposalId(null)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-border hover:bg-muted rounded-xl text-xs font-bold text-muted-foreground"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-border hover:bg-muted rounded-lg text-xs font-bold text-muted-foreground"
           >
             <ArrowLeft className="w-4 h-4" /> Back to List
           </button>
@@ -435,6 +435,12 @@ export default function ReviewProposalsPage() {
           url: undefined as string | undefined,
         }))
 
+    const proposalGenres = Array.isArray(proposal.genre)
+      ? proposal.genre
+      : typeof proposal.genre === 'string'
+        ? proposal.genre.split(/\s*,\s*/).filter(Boolean)
+        : []
+
     return (
       <div className="space-y-6 animate-in fade-in duration-200">
         {/* Back header */}
@@ -445,7 +451,7 @@ export default function ReviewProposalsPage() {
               setShowRejectInput(false)
               setRejectReasonText('')
             }}
-            className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl transition-all cursor-pointer"
+            className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all cursor-pointer"
             title="Back to List"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -477,12 +483,12 @@ export default function ReviewProposalsPage() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Left: Metadata & Cover */}
             <div className="space-y-6">
-              <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+              <div className="bg-card border border-border rounded-xl p-5 space-y-4 shadow-sm">
                 <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                   Cover Artwork & Metadata
                 </h3>
                 {proposal.coverImageUrl ? (
-                  <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border shadow-sm">
+                  <div className="aspect-[3/4] rounded-lg overflow-hidden border border-border shadow-sm">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={proposal.coverImageUrl}
@@ -491,8 +497,8 @@ export default function ReviewProposalsPage() {
                     />
                   </div>
                 ) : (
-                  <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${proposal.coverColor || 'from-primary to-primary/60'} p-6 flex flex-col justify-between text-white shadow-sm`}>
-                    <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-xs uppercase">
+                  <div className={`aspect-[3/4] rounded-lg bg-gradient-to-br ${proposal.coverColor || 'from-primary to-primary/60'} p-6 flex flex-col justify-between text-white shadow-sm`}>
+                    <div className="w-8 h-8 rounded-md bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-xs uppercase">
                       MF
                     </div>
                     <span className="font-black text-base tracking-tight leading-snug drop-shadow-sm">
@@ -504,43 +510,44 @@ export default function ReviewProposalsPage() {
                   </div>
                 )}
 
-                <div className="space-y-3 pt-2 text-xs divide-y divide-border/40">
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-muted-foreground font-semibold">Mangaka</span>
-                    <span className="font-bold text-foreground">{proposal.author || `Mangaka ID: ${proposal.mangakaId}`}</span>
+                <div className="grid grid-cols-1 gap-3 pt-1 text-xs">
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Mangaka</span>
+                    <span className="font-extrabold text-foreground text-sm block truncate">{proposal.author || `Mangaka ID: ${proposal.mangakaId}`}</span>
                   </div>
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-muted-foreground font-semibold">Publication Type</span>
-                    <span className="font-bold text-foreground uppercase">{proposal.publicationType || proposal.type}</span>
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Publication Type</span>
+                    <span className="font-bold text-foreground capitalize block">{proposal.publicationType || proposal.type || 'Weekly'}</span>
                   </div>
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-muted-foreground font-semibold">Genres</span>
-                    <span className="font-bold text-foreground">{proposal.genre}</span>
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Genre</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {proposalGenres.length > 0 ? (
+                        proposalGenres.map((g: string) => (
+                          <span key={g} className="bg-muted border border-border/80 px-1.5 py-0.5 rounded text-[9px] font-bold text-muted-foreground">
+                            {g}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground">N/A</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex justify-between py-1.5">
+                </div>
+
+                <div className="space-y-2 pt-2 text-xs border-t border-border/40">
+                  <div className="flex justify-between py-1">
                     <span className="text-muted-foreground font-semibold">Date Submitted</span>
                     <span className="font-bold text-foreground">
                       {proposal.submittedAt ? formatDateShort(proposal.submittedAt) : (proposal.status === 'Draft' ? 'Draft' : 'N/A')}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1.5">
+                  <div className="flex justify-between py-1">
                     <span className="text-muted-foreground font-semibold">Review Deadline</span>
                     <span className={`font-bold ${isOverdue ? 'text-destructive' : 'text-foreground'}`}>
                       {deadlineStr}
                     </span>
                   </div>
-                  {proposal.sourceZipFileAssetId && (
-                    <div className="py-2.5">
-                      <a
-                        href={`${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all border border-primary/20"
-                      >
-                        <FileArchive className="w-4 h-4" /> Download Source ZIP (.zip)
-                      </a>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -548,7 +555,7 @@ export default function ReviewProposalsPage() {
             {/* Right: Synopsis, Preview & Actions */}
             <div className="xl:col-span-2 space-y-6">
               {/* Synopsis */}
-              <div className="bg-card border border-border p-6 rounded-2xl space-y-4 shadow-sm">
+              <div className="bg-card border border-border p-6 rounded-xl space-y-4 shadow-sm">
                 <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                   Proposal Synopsis
                 </h3>
@@ -558,22 +565,25 @@ export default function ReviewProposalsPage() {
               </div>
 
               {/* ZIP File Attachment */}
-              {(proposal.sourceZipFileAssetId || proposal.sampleFileUrl) && (
+              {(proposal.sourceZipPublicUrl || proposal.sourceZipFile || proposal.sourceZipFileAssetId || proposal.sampleFileUrl) && (
                 (() => {
-                  const zipDownloadUrl = proposal.sourceZipFileAssetId
-                    ? `${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`
-                    : proposal.sampleFileUrl?.startsWith('http')
-                      ? proposal.sampleFileUrl
-                      : `${API_BASE_URL}/api/files/${proposal.sampleFileUrl}`;
+                  const zipDownloadUrl = proposal.sourceZipPublicUrl
+                    || proposal.sourceZipFile?.url
+                    || (proposal.sourceZipFileAssetId
+                      ? `${API_BASE_URL}/api/files/${proposal.sourceZipFileAssetId}`
+                      : proposal.sampleFileUrl?.startsWith('http')
+                        ? proposal.sampleFileUrl
+                        : `${API_BASE_URL}/api/files/${proposal.sampleFileUrl}`);
 
-                  const zipFileName = proposal.sourceZipFileAssetId
-                    ? `source_manuscript_${proposal.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.zip`
-                    : `sample_pages_${proposal.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.zip`;
+                  const zipFileName = proposal.sourceZipFile?.fileName
+                    || (proposal.sourceZipFileAssetId || proposal.sourceZipPublicUrl
+                      ? `source_manuscript_${proposal.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.zip`
+                      : `sample_pages_${proposal.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}.zip`);
 
                   return (
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-6 space-y-4">
+                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm p-6 space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/10 text-primary">
+                        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
                           <FileArchive className="w-6 h-6" />
                         </div>
                         <div>
@@ -586,7 +596,7 @@ export default function ReviewProposalsPage() {
                         </div>
                       </div>
 
-                      <div className="p-4 bg-muted/30 border border-border/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="p-4 bg-muted/30 border border-border/80 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold text-foreground truncate">
                             {zipFileName}
@@ -600,7 +610,7 @@ export default function ReviewProposalsPage() {
                           download={zipFileName}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-extrabold rounded-xl transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
+                          className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-extrabold rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
                         >
                           <Download className="w-4 h-4" /> Download ZIP
                         </a>
@@ -611,7 +621,7 @@ export default function ReviewProposalsPage() {
               )}
 
               {/* Evaluation Panel */}
-              <div className="bg-card border border-border p-6 rounded-2xl space-y-6 shadow-sm">
+              <div className="bg-card border border-border p-6 rounded-xl space-y-6 shadow-sm">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-primary" />
@@ -628,7 +638,7 @@ export default function ReviewProposalsPage() {
                 </div>
 
                 {!boardDecision ? (
-                  <div className="p-6 bg-muted/20 border border-border/60 rounded-2xl text-center space-y-2">
+                  <div className="p-6 bg-muted/20 border border-border/60 rounded-xl text-center space-y-2">
                     <Clock className="w-8 h-8 text-muted-foreground/40 mx-auto animate-pulse" />
                     <p className="text-xs font-bold text-muted-foreground">
                       Awaiting Board Submission
@@ -642,7 +652,7 @@ export default function ReviewProposalsPage() {
                     {/* Quorum and Vote Counts */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Quorum Progress */}
-                      <div className="bg-muted/30 border border-border/80 rounded-xl p-4 space-y-2">
+                      <div className="bg-muted/30 border border-border/80 rounded-lg p-4 space-y-2">
                         <div className="flex justify-between items-center text-xs font-bold text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Users className="w-3.5 h-3.5" /> Quorum Progress
@@ -665,7 +675,7 @@ export default function ReviewProposalsPage() {
                       </div>
 
                       {/* Approve Count */}
-                      <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex flex-col justify-between">
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-4 flex flex-col justify-between">
                         <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                           <ThumbsUp className="w-3.5 h-3.5" /> Approve Votes
                         </span>
@@ -678,7 +688,7 @@ export default function ReviewProposalsPage() {
                       </div>
 
                       {/* Reject Count */}
-                      <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4 flex flex-col justify-between">
+                      <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-4 flex flex-col justify-between">
                         <span className="text-xs font-bold text-red-600 flex items-center gap-1">
                           <ThumbsDown className="w-3.5 h-3.5" /> Reject Votes
                         </span>
@@ -692,7 +702,7 @@ export default function ReviewProposalsPage() {
                     </div>
 
                     {/* Deadline and Info */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3.5 bg-muted/20 border border-border/60 rounded-xl gap-2 text-xs font-semibold text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3.5 bg-muted/20 border border-border/60 rounded-lg gap-2 text-xs font-semibold text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Timer className="w-4 h-4 text-primary shrink-0" />
                         <span>
@@ -732,7 +742,7 @@ export default function ReviewProposalsPage() {
 
                       if (hasConflict) {
                         return (
-                          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 items-start">
+                          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex gap-3 items-start">
                             <Shield className="w-5 h-5 text-amber-650 shrink-0 mt-0.5" />
                             <div className="space-y-1">
                               <h4 className="text-xs font-bold text-amber-800 dark:text-amber-300">
@@ -748,7 +758,7 @@ export default function ReviewProposalsPage() {
 
                       if (boardDecision.status !== 'Open') {
                         return (
-                          <div className="p-4 bg-muted/30 border border-border/80 rounded-xl text-center">
+                          <div className="p-4 bg-muted/30 border border-border/80 rounded-lg text-center">
                             <p className="text-xs font-bold text-muted-foreground">
                               Voting is Closed
                             </p>
@@ -761,7 +771,7 @@ export default function ReviewProposalsPage() {
 
                       if (alreadyVoted) {
                         return (
-                          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex gap-2.5 items-center">
+                          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex gap-2.5 items-center">
                             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                             <div>
                               <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
@@ -782,7 +792,7 @@ export default function ReviewProposalsPage() {
                           </h4>
 
                           {showRejectInput ? (
-                            <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20 space-y-3 animate-in slide-in-from-top-2">
+                            <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 space-y-3 animate-in slide-in-from-top-2">
                               <label className="text-xs font-extrabold text-destructive flex items-center gap-2">
                                 <AlertTriangle className="w-4 h-4" /> Rejection Comment
                               </label>
@@ -790,7 +800,7 @@ export default function ReviewProposalsPage() {
                                 value={rejectReasonText}
                                 onChange={(e) => setRejectReasonText(e.target.value)}
                                 placeholder="Explain why you are voting to reject this proposal... (At least 50 characters required)"
-                                className="w-full p-3 bg-card border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
+                                className="w-full p-3 bg-card border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
                                 rows={4}
                               />
                               <div className="flex justify-end gap-2">
@@ -799,7 +809,7 @@ export default function ReviewProposalsPage() {
                                     setShowRejectInput(false);
                                     setRejectReasonText('');
                                   }}
-                                  className="px-3 py-1.5 border border-border rounded-lg text-xs font-bold hover:bg-muted text-muted-foreground"
+                                  className="px-3 py-1.5 border border-border rounded-md text-xs font-bold hover:bg-muted text-muted-foreground"
                                 >
                                   Cancel
                                 </button>
@@ -815,14 +825,14 @@ export default function ReviewProposalsPage() {
                                     setRejectReasonText('')
                                   }}
                                   disabled={votingLoading}
-                                  className="px-3 py-1.5 bg-destructive hover:bg-destructive/95 text-destructive-foreground rounded-lg text-xs font-bold disabled:opacity-50"
+                                  className="px-3 py-1.5 bg-destructive hover:bg-destructive/95 text-destructive-foreground rounded-md text-xs font-bold disabled:opacity-50"
                                 >
                                   {votingLoading ? 'Submitting...' : 'Confirm Reject Vote'}
                                 </button>
                               </div>
                             </div>
                           ) : showApproveCommentModal ? (
-                            <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3 animate-in slide-in-from-top-2">
+                            <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 space-y-3 animate-in slide-in-from-top-2">
                               <label className="text-xs font-extrabold text-emerald-600 flex items-center gap-2">
                                 <MessageSquare className="w-4 h-4" /> Optional Approve Comment
                               </label>
@@ -830,7 +840,7 @@ export default function ReviewProposalsPage() {
                                 value={customApproveComment}
                                 onChange={(e) => setCustomApproveComment(e.target.value)}
                                 placeholder="Add an optional comment/feedback for approval..."
-                                className="w-full p-3 bg-card border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
+                                className="w-full p-3 bg-card border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
                                 rows={3}
                               />
                               <div className="flex justify-end gap-2">
@@ -839,7 +849,7 @@ export default function ReviewProposalsPage() {
                                     setShowApproveCommentModal(false);
                                     setCustomApproveComment('');
                                   }}
-                                  className="px-3 py-1.5 border border-border rounded-lg text-xs font-bold hover:bg-muted text-muted-foreground"
+                                  className="px-3 py-1.5 border border-border rounded-md text-xs font-bold hover:bg-muted text-muted-foreground"
                                 >
                                   Cancel
                                 </button>
@@ -851,7 +861,7 @@ export default function ReviewProposalsPage() {
                                     setCustomApproveComment('')
                                   }}
                                   disabled={votingLoading}
-                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-750 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-750 text-white rounded-md text-xs font-bold disabled:opacity-50"
                                 >
                                   {votingLoading ? 'Submitting...' : 'Submit Approve Vote'}
                                 </button>
@@ -862,14 +872,14 @@ export default function ReviewProposalsPage() {
                               <button
                                 onClick={() => setShowApproveCommentModal(true)}
                                 disabled={votingLoading}
-                                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider disabled:opacity-50"
+                                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider disabled:opacity-50"
                               >
                                 <ThumbsUp className="w-4 h-4" /> Vote Approve
                               </button>
                               <button
                                 onClick={() => setShowRejectInput(true)}
                                 disabled={votingLoading}
-                                className="flex-1 py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-black text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider disabled:opacity-50"
+                                className="flex-1 py-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-black text-xs rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider disabled:opacity-50"
                               >
                                 <ThumbsDown className="w-4 h-4" /> Vote Reject
                               </button>
@@ -900,7 +910,7 @@ export default function ReviewProposalsPage() {
                                 </span>
                               </div>
                               {v.comment && (
-                                <p className="text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-lg border border-border/40 leading-relaxed font-medium">
+                                <p className="text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-md border border-border/40 leading-relaxed font-medium">
                                   {v.comment}
                                 </p>
                               )}
@@ -922,13 +932,13 @@ export default function ReviewProposalsPage() {
                         <div className="flex flex-col sm:flex-row gap-2">
                           <button
                             onClick={() => setShowExtendModal(true)}
-                            className="flex-1 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                            className="flex-1 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
                           >
                             Extend Deadline
                           </button>
                           <button
                             onClick={() => setShowOverrideModal(true)}
-                            className="flex-1 py-2 bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 text-destructive font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+                            className="flex-1 py-2 bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 text-destructive font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
                           >
                             Override & Finalize
                           </button>
@@ -990,7 +1000,7 @@ export default function ReviewProposalsPage() {
                 {/* Prev Button */}
                 <button
                   onClick={handlePrev}
-                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-2xl transition-all border border-white/10 cursor-pointer hidden md:flex"
+                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl transition-all border border-white/10 cursor-pointer hidden md:flex"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
@@ -1004,14 +1014,14 @@ export default function ReviewProposalsPage() {
                   <img
                     src={imgUrl}
                     alt={`Page ${lightboxActiveIndex + 1}`}
-                    className="max-w-full max-h-[75vh] object-contain rounded-xl border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
+                    className="max-w-full max-h-[75vh] object-contain rounded-lg border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
                   />
                 </div>
 
                 {/* Next Button */}
                 <button
                   onClick={handleNext}
-                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-2xl transition-all border border-white/10 cursor-pointer hidden md:flex"
+                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl transition-all border border-white/10 cursor-pointer hidden md:flex"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
@@ -1030,7 +1040,7 @@ export default function ReviewProposalsPage() {
         {/* Editor-in-Chief Modals */}
         {showExtendModal && boardDecision && (
           <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-black text-foreground flex items-center gap-2">
                 <Crown className="w-5 h-5 text-amber-500" /> Extend Voting Deadline
               </h3>
@@ -1045,7 +1055,7 @@ export default function ReviewProposalsPage() {
                     type="datetime-local"
                     value={newDeadline}
                     onChange={(e) => setNewDeadline(e.target.value)}
-                    className="w-full p-2.5 bg-muted border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
+                    className="w-full p-2.5 bg-muted border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
                   />
                 </div>
 
@@ -1055,7 +1065,7 @@ export default function ReviewProposalsPage() {
                     value={extendReason}
                     onChange={(e) => setExtendReason(e.target.value)}
                     placeholder="Provide a clear reason for the voting extension..."
-                    className="w-full p-2.5 bg-muted border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 h-24 resize-none font-medium"
+                    className="w-full p-2.5 bg-muted border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 h-24 resize-none font-medium"
                   />
                 </div>
               </div>
@@ -1067,14 +1077,14 @@ export default function ReviewProposalsPage() {
                     setNewDeadline('');
                     setExtendReason('');
                   }}
-                  className="px-4 py-2 border border-border hover:bg-muted text-xs font-bold rounded-xl text-muted-foreground"
+                  className="px-4 py-2 border border-border hover:bg-muted text-xs font-bold rounded-lg text-muted-foreground"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleExtendDeadline}
                   disabled={votingLoading || !newDeadline || !extendReason.trim()}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg disabled:opacity-50"
                 >
                   {votingLoading ? 'Processing...' : 'Extend Deadline'}
                 </button>
@@ -1085,7 +1095,7 @@ export default function ReviewProposalsPage() {
 
         {showOverrideModal && boardDecision && (
           <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
               <h3 className="text-lg font-black text-foreground flex items-center gap-2">
                 <Crown className="w-5 h-5 text-destructive" /> Special Override Decision
               </h3>
@@ -1099,7 +1109,7 @@ export default function ReviewProposalsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setOverrideChoice('Approved')}
-                      className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${overrideChoice === 'Approved'
+                      className={`flex-1 py-2.5 rounded-lg border text-xs font-bold transition-all ${overrideChoice === 'Approved'
                         ? 'bg-emerald-600 border-emerald-600 text-white'
                         : 'border-border hover:bg-muted text-foreground'
                         }`}
@@ -1108,7 +1118,7 @@ export default function ReviewProposalsPage() {
                     </button>
                     <button
                       onClick={() => setOverrideChoice('Rejected')}
-                      className={`flex-1 py-2.5 rounded-xl border text-xs font-bold transition-all ${overrideChoice === 'Rejected'
+                      className={`flex-1 py-2.5 rounded-lg border text-xs font-bold transition-all ${overrideChoice === 'Rejected'
                         ? 'bg-destructive border-destructive text-white'
                         : 'border-border hover:bg-muted text-foreground'
                         }`}
@@ -1124,7 +1134,7 @@ export default function ReviewProposalsPage() {
                     value={overrideReason}
                     onChange={(e) => setOverrideReason(e.target.value)}
                     placeholder="Provide a justification for the override decision..."
-                    className="w-full p-2.5 bg-muted border border-border rounded-xl text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 h-24 resize-none font-medium"
+                    className="w-full p-2.5 bg-muted border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20 h-24 resize-none font-medium"
                   />
                 </div>
               </div>
@@ -1136,14 +1146,14 @@ export default function ReviewProposalsPage() {
                     setOverrideChoice('');
                     setOverrideReason('');
                   }}
-                  className="px-4 py-2 border border-border hover:bg-muted text-xs font-bold rounded-xl text-muted-foreground"
+                  className="px-4 py-2 border border-border hover:bg-muted text-xs font-bold rounded-lg text-muted-foreground"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleOverrideFinalize}
                   disabled={votingLoading || !overrideChoice || !overrideReason.trim()}
-                  className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                  className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-white text-xs font-bold rounded-lg disabled:opacity-50"
                 >
                   {votingLoading ? 'Processing...' : 'Submit Override'}
                 </button>
@@ -1199,9 +1209,9 @@ export default function ReviewProposalsPage() {
         ].map(({ label, value, icon: Icon, color }) => (
           <div
             key={label}
-            className="bg-card border border-border rounded-2xl p-4 flex flex-col justify-between space-y-3"
+            className="bg-card border border-border rounded-xl p-4 flex flex-col justify-between space-y-3"
           >
-            <div className={`w-9 h-9 ${color} rounded-xl flex items-center justify-center shrink-0`}>
+            <div className={`w-9 h-9 ${color} rounded-lg flex items-center justify-center shrink-0`}>
               <Icon className="w-6.5 h-6.5" />
             </div>
             <div>
@@ -1221,7 +1231,7 @@ export default function ReviewProposalsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${filter === f
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
@@ -1243,7 +1253,7 @@ export default function ReviewProposalsPage() {
             return (
               <div
                 key={proposal.id}
-                className="bg-card border border-border rounded-3xl overflow-hidden hover:border-primary/25 hover:shadow-lg transition-all flex flex-col"
+                className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/25 hover:shadow-lg transition-all flex flex-col"
               >
                 {/* Visual Header */}
                 <div
@@ -1294,18 +1304,18 @@ export default function ReviewProposalsPage() {
                     {proposal.genre.split(', ').map((g: string) => (
                       <span
                         key={g}
-                        className="bg-muted text-muted-foreground text-xs font-semibold px-2.5 py-0.5 rounded-lg"
+                        className="bg-muted text-muted-foreground text-xs font-semibold px-2.5 py-0.5 rounded-md"
                       >
                         {g}
                       </span>
                     ))}
-                    <span className="bg-primary/5 text-primary text-xs font-semibold px-2.5 py-0.5 rounded-lg border border-primary/10">
+                    <span className="bg-primary/5 text-primary text-xs font-semibold px-2.5 py-0.5 rounded-md border border-primary/10">
                       {proposal.publicationType}
                     </span>
                   </div>
 
                   {/* Synopsis section */}
-                  <div className="space-y-1.5 bg-muted/30 p-4 rounded-2xl border border-border/40">
+                  <div className="space-y-1.5 bg-muted/30 p-4 rounded-xl border border-border/40">
                     <p className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                       Synopsis
                     </p>
@@ -1324,7 +1334,7 @@ export default function ReviewProposalsPage() {
                     {proposal.status !== 'Rejected' && (
                       <button
                         onClick={() => setSelectedProposalId(proposal.id)}
-                        className="flex items-center gap-1.5 px-4.5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl shadow-sm transition-all"
+                        className="flex items-center gap-1.5 px-4.5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg shadow-sm transition-all"
                       >
                         <Eye className="w-3.5 h-3.5" /> Review Proposal
                       </button>
@@ -1336,7 +1346,7 @@ export default function ReviewProposalsPage() {
           })}
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-2xl p-16 text-center space-y-4">
+        <div className="bg-card border border-border rounded-xl p-16 text-center space-y-4">
           <Clock className="w-12 h-12 text-muted-foreground/30 mx-auto" />
           <div>
             <h3 className="font-bold text-lg text-foreground">

@@ -908,7 +908,7 @@ const openEditTask = (task: Task) => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-bold shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${toast.type === 'success'
+        <div className={`fixed top-5 right-5 z-[9999] flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm font-bold shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${toast.type === 'success'
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400'
             : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-800 dark:text-red-400'
           }`}>
@@ -918,7 +918,7 @@ const openEditTask = (task: Task) => {
       )}
 
       {/* Page Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 rounded-3xl p-6 sm:p-7">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 rounded-2xl p-6 sm:p-7">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
@@ -945,7 +945,7 @@ const openEditTask = (task: Task) => {
       {role === 'Mangaka' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           {/* Series Selection Bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card border border-border rounded-2xl p-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-3">
               <BookOpen className="w-5 h-5 text-primary shrink-0" />
               <div>
@@ -981,14 +981,14 @@ const openEditTask = (task: Task) => {
                 setErrors({})
                 setIsChapterModalOpen(true)
               }}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm shadow-primary/15 hover:bg-primary/90 transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm shadow-primary/15 hover:bg-primary/90 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Create Chapter
             </button>
             <button
               type="button"
               onClick={openEditChapter}
-              className="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-secondary/80 transition-all cursor-pointer"
+              className="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm hover:bg-secondary/80 transition-all cursor-pointer"
             >
               <FileEdit className="w-4 h-4" /> Edit Chapter
             </button>
@@ -998,7 +998,7 @@ const openEditTask = (task: Task) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Chapters List Column */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col">
+            <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-muted/20">
                 <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                   <FileText className="w-4 h-4 text-primary" /> Chapter List
@@ -1053,7 +1053,7 @@ const openEditTask = (task: Task) => {
                             Deadline: {chap.deadline}
                           </p>
                         </div>
-                        <span className={`px-2 py-0.5 text-[9px] font-bold border rounded-md ${getChapterStatusClass(chap.status)}`}>
+                        <span className={`px-2 py-0.5 text-[9px] font-bold border rounded ${getChapterStatusClass(chap.status)}`}>
                           {chap.status}
                         </span>
                       </div>
@@ -1068,7 +1068,7 @@ const openEditTask = (task: Task) => {
               {selectedChapter ? (
                 <>
                   {/* Chapter Status Card */}
-                  <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+                  <div className="bg-card border border-border rounded-xl p-5 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
                       <div className="space-y-1">
                         <h2 className="text-lg font-bold text-foreground">
@@ -1086,7 +1086,7 @@ const openEditTask = (task: Task) => {
                     </div>
 
                     {/* Deadline Warning banner */}
-                    <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 rounded-xl text-xs">
+                    <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 rounded-lg text-xs">
                       <Clock className="w-4 h-4 shrink-0" />
                       <span>
                         <strong>Chapter Deadline:</strong> {selectedChapter.deadline} (Submission target to Editorial Board).
@@ -1132,7 +1132,7 @@ const openEditTask = (task: Task) => {
                                 showToast('Chapter status updated to In Progress')
                               })
                             }}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-bold transition-colors cursor-pointer"
                           >
                             Set In Progress
                           </button>
@@ -1142,7 +1142,7 @@ const openEditTask = (task: Task) => {
                           <button
                             type="button"
                             onClick={() => setIsSubmitManuscriptOpen(true)}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold transition-colors cursor-pointer"
                           >
                             Gửi bản thảo
                           </button>
@@ -1155,7 +1155,7 @@ const openEditTask = (task: Task) => {
                                 showToast('Chapter successfully Published!')
                               })
                             }}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-bold transition-colors cursor-pointer"
                           >
                             Mark as Published
                           </button>
@@ -1165,7 +1165,7 @@ const openEditTask = (task: Task) => {
                   </div>
 
                   {/* Tasks List */}
-                  <div className="bg-card border border-border rounded-2xl overflow-hidden">
+                  <div className="bg-card border border-border rounded-xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-muted/20">
                       <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                         <ClipboardList className="w-4 h-4 text-primary" /> Tasks Assigned to Assistants
@@ -1210,7 +1210,7 @@ const openEditTask = (task: Task) => {
                                 <span>Assigned to: <strong>{task.assistantName}</strong></span>
                               </div>
                               {task.feedback && (
-                                <p className="text-xs text-amber-600 bg-amber-500/5 border border-amber-500/10 p-2 rounded-lg mt-2 font-medium">
+                                <p className="text-xs text-amber-600 bg-amber-500/5 border border-amber-500/10 p-2 rounded-md mt-2 font-medium">
                                   <strong>Feedback:</strong> {task.feedback}
                                 </p>
                               )}
@@ -1222,7 +1222,7 @@ const openEditTask = (task: Task) => {
                                 <button
                                   type="button"
                                   onClick={() => openEditTask(task)}
-                                  className="inline-flex items-center gap-1.5 border border-border hover:bg-muted text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 border border-border hover:bg-muted text-xs font-bold px-3 py-2 rounded-lg transition-colors cursor-pointer"
                                 >
                                   ✏️ Sửa
                                 </button>
@@ -1240,28 +1240,28 @@ const openEditTask = (task: Task) => {
                                       } catch (e) { /* ignore */ }
                                     }
                                   }}
-                                  className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold px-3 py-2 rounded-lg transition-colors cursor-pointer"
                                 >
                                   <Eye className="w-3.5 h-3.5" /> Review Submission
                                 </button>
                               )}
                               {task.status === 'Approved' && (
-                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/20">
                                   <Check className="w-3.5 h-3.5" /> Task Finished
                                 </span>
                               )}
                               {task.status === 'Pending' && (
-                                <span className="text-xs text-muted-foreground bg-muted p-2 rounded-xl italic">
+                                <span className="text-xs text-muted-foreground bg-muted p-2 rounded-lg italic">
                                   Awaiting assistant accept
                                 </span>
                               )}
                               {task.status === 'In-Progress' && (
-                                <span className="text-xs text-blue-600 bg-blue-500/10 border border-blue-500/20 p-2 rounded-xl font-semibold">
+                                <span className="text-xs text-blue-600 bg-blue-500/10 border border-blue-500/20 p-2 rounded-lg font-semibold">
                                   Assistant is working
                                 </span>
                               )}
                               {task.status === 'Rejected' && (
-                                <span className="text-xs text-red-600 bg-red-500/10 border border-red-500/20 p-2 rounded-xl font-semibold">
+                                <span className="text-xs text-red-600 bg-red-500/10 border border-red-500/20 p-2 rounded-lg font-semibold">
                                   Needs revision
                                 </span>
                               )}
@@ -1273,7 +1273,7 @@ const openEditTask = (task: Task) => {
                   </div>
                 </>
               ) : (
-                <div className="bg-card border border-border rounded-2xl p-16 text-center space-y-3">
+                <div className="bg-card border border-border rounded-xl p-16 text-center space-y-3">
                   <ClipboardList className="w-12 h-12 text-muted-foreground/30 mx-auto" />
                   <h3 className="font-bold text-lg text-foreground">Select a chapter</h3>
                   <p className="text-sm text-muted-foreground max-w-sm mx-auto">
@@ -1293,7 +1293,7 @@ const openEditTask = (task: Task) => {
       {role === 'Assistant' && (
         <div className="space-y-6 animate-in fade-in duration-300">
           {/* Assistant Switcher Bar (For Demo Testing Purpose) */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card border border-border rounded-2xl p-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-primary shrink-0" />
               <div>
@@ -1314,7 +1314,7 @@ const openEditTask = (task: Task) => {
           </div>
 
           {/* My Tasks Board */}
-          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-muted/20">
               <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                 <ClipboardList className="w-4 h-4 text-primary" /> Nhiệm vụ được giao của tôi
@@ -1361,7 +1361,7 @@ const openEditTask = (task: Task) => {
                       </h4>
 
                       {task.feedback && (
-                        <div className="text-xs p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-400">
+                        <div className="text-xs p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-400">
                           <strong>Phản hồi từ Mangaka:</strong> {task.feedback}
                         </div>
                       )}
@@ -1374,7 +1374,7 @@ const openEditTask = (task: Task) => {
                           setActiveTaskToView(task)
                           setIsViewDetailModalOpen(true)
                         }}
-                        className="inline-flex items-center gap-1.5 bg-muted hover:bg-muted/80 text-foreground text-xs font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer border border-border"
+                        className="inline-flex items-center gap-1.5 bg-muted hover:bg-muted/80 text-foreground text-xs font-bold px-3 py-2.5 rounded-lg transition-all cursor-pointer border border-border"
                       >
                         <Eye className="w-3.5 h-3.5" /> Xem chi tiết
                       </button>
@@ -1382,7 +1382,7 @@ const openEditTask = (task: Task) => {
                       {task.status === 'Pending' && (
                         <button
                           onClick={() => handleStartTask(task.id)}
-                          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors cursor-pointer"
                         >
                           <Play className="w-3.5 h-3.5" /> Nhận việc & Bắt đầu
                         </button>
@@ -1394,20 +1394,20 @@ const openEditTask = (task: Task) => {
                             setActiveTaskToSubmit(task)
                             setIsSubmitWorkModalOpen(true)
                           }}
-                          className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold px-4 py-2.5 rounded-lg transition-colors cursor-pointer"
                         >
                           <ImageIcon className="w-3.5 h-3.5" /> Nộp sản phẩm hoàn thành
                         </button>
                       )}
 
                       {task.status === 'Submitted' && (
-                        <span className="text-xs text-indigo-600 bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-xl font-bold inline-flex items-center gap-1">
+                        <span className="text-xs text-indigo-600 bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-lg font-bold inline-flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" /> Đang chờ Mangaka duyệt
                         </span>
                       )}
 
                       {task.status === 'Approved' && (
-                        <span className="text-xs text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl font-bold inline-flex items-center gap-1">
+                        <span className="text-xs text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-lg font-bold inline-flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Nhiệm vụ đã hoàn thành & đã duyệt
                         </span>
                       )}
@@ -1425,14 +1425,14 @@ const openEditTask = (task: Task) => {
       {/* ========================================================================= */}
       {(role === 'TantouEditor' || role === 'EditorialBoard') && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
             <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
               <Eye className="w-4 h-4 text-primary" /> Tổng quan Chương & Phát hành (Chế độ giám sát của Editor)
             </h3>
             <p className="text-xs text-muted-foreground">
               Bạn đang đăng nhập với vai trò {role}. Dưới đây là tiến độ hiện tại của các tác phẩm đang phát hành và mốc thời gian của từng chương.
             </p>
-            <div className="border border-border rounded-xl divide-y divide-border overflow-hidden">
+            <div className="border border-border rounded-lg divide-y divide-border overflow-hidden">
               {allChapters.map(c => {
                 const tasksList = allTasks.filter(t => t.chapterId === c.id)
                 const appPages = tasksList.filter(t => t.status === 'Approved').length
@@ -1444,7 +1444,7 @@ const openEditTask = (task: Task) => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-foreground">Chương {c.number}: {c.title}</span>
-                        <span className={`px-2 py-0.5 text-[9px] font-bold border rounded-md ${getChapterStatusClass(c.status)}`}>
+                        <span className={`px-2 py-0.5 text-[9px] font-bold border rounded ${getChapterStatusClass(c.status)}`}>
                           {getChapterStatusLabel(c.status)}
                         </span>
                       </div>
@@ -1473,7 +1473,7 @@ const openEditTask = (task: Task) => {
       {/* Edit Chapter Modal */}
       {isEditChapterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
                 <FileEdit className="w-5 h-5 text-primary" /> Sửa Chapter
@@ -1481,7 +1481,7 @@ const openEditTask = (task: Task) => {
               <button
                 type="button"
                 onClick={() => setIsEditChapterOpen(false)}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1493,7 +1493,7 @@ const openEditTask = (task: Task) => {
                 type="text"
                 value={editChapterTitle}
                 onChange={(e) => setEditChapterTitle(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                 placeholder="Nhập tiêu đề mới"
               />
             </div>
@@ -1504,7 +1504,7 @@ const openEditTask = (task: Task) => {
                 type="number"
                 value={editChapterPages}
                 onChange={(e) => setEditChapterPages(Number(e.target.value))}
-                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
             <div className="space-y-1.5">
@@ -1513,7 +1513,7 @@ const openEditTask = (task: Task) => {
                 type="date"
                 value={editChapterPubDate}
                 onChange={(e) => setEditChapterPubDate(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
             <div className="space-y-1.5">
@@ -1522,21 +1522,21 @@ const openEditTask = (task: Task) => {
                 type="date"
                 value={editChapterDeadline}
                 onChange={(e) => setEditChapterDeadline(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsEditChapterOpen(false)}
-                className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm font-bold text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 type="button"
                 onClick={handleSaveEditChapter}
-                className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all cursor-pointer"
+                className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all cursor-pointer"
               >
                 Lưu thay đổi
               </button>
@@ -1547,7 +1547,7 @@ const openEditTask = (task: Task) => {
       {/* A. Create Chapter Modal (Mangaka) */}
       {isChapterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-3xl p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+          <div className="bg-card border border-border rounded-xl w-full max-w-3xl p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <div className="flex items-center gap-4">
                 <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
@@ -1556,21 +1556,21 @@ const openEditTask = (task: Task) => {
                 <button
                   type="button"
                   onClick={handleFillSample}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg hover:bg-primary/20 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-md hover:bg-primary/20 transition-all cursor-pointer"
                 >
                   <PencilLine className="w-3.5 h-3.5" /> Điền Dữ Liệu Mẫu
                 </button>
               </div>
               <button
                 onClick={() => setIsChapterModalOpen(false)}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Hướng dẫn quy trình */}
-            <div className="p-4 border border-cyan-500/20 bg-cyan-500/5 rounded-xl">
+            <div className="p-4 border border-cyan-500/20 bg-cyan-500/5 rounded-lg">
               <div className="flex items-start gap-3">
                 <Info className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
                 <div className="text-xs text-muted-foreground space-y-1">
@@ -1598,7 +1598,7 @@ const openEditTask = (task: Task) => {
                     Tác phẩm (Series) <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.seriesId ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                    className={`w-full px-3 py-2 bg-muted/50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.seriesId ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
                       }`}
                     value={newChapterSeriesId}
                     onChange={(e) => {
@@ -1630,7 +1630,7 @@ const openEditTask = (task: Task) => {
                       type="number"
                       placeholder="VD: 12"
                       min={1}
-                      className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.chapterNo ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                      className={`w-full px-3 py-2 bg-muted/50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.chapterNo ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
                         }`}
                       value={newChapterNo}
                       onChange={(e) => {
@@ -1654,7 +1654,7 @@ const openEditTask = (task: Task) => {
                       type="number"
                       placeholder="VD: 24"
                       min={1}
-                      className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                      className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                       value={newChapterPages}
                       onChange={(e) => setNewChapterPages(parseInt(e.target.value) || 0)}
                     />
@@ -1669,7 +1669,7 @@ const openEditTask = (task: Task) => {
                   <input
                     type="text"
                     placeholder="VD: Sự Thức Tỉnh Của Rồng Thần"
-                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.title ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                    className={`w-full px-3 py-2 bg-muted/50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.title ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
                       }`}
                     value={newChapterTitle}
                     onChange={(e) => {
@@ -1691,7 +1691,7 @@ const openEditTask = (task: Task) => {
                   </label>
                   <input
                     type="date"
-                    className={`w-full px-3 py-2 bg-muted/50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.publicationDate ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
+                    className={`w-full px-3 py-2 bg-muted/50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground ${errors.publicationDate ? 'border-red-500 ring-2 ring-red-500/10' : 'border-border focus:border-primary'
                       }`}
                     value={newChapterPubDate}
                     onChange={(e) => {
@@ -1706,7 +1706,7 @@ const openEditTask = (task: Task) => {
                   {errors.publicationDate && <p className="text-xs text-red-500 mt-1">{errors.publicationDate}</p>}
 
                   {newChapterPubDate && !errors.publicationDate && (
-                    <div className="mt-2.5 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs flex items-center gap-2">
+                    <div className="mt-2.5 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs flex items-center gap-2">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span className="text-amber-700 dark:text-amber-400">
                         Hạn chót nộp bản thảo hoàn chỉnh cho Editor:{' '}
@@ -1735,7 +1735,7 @@ const openEditTask = (task: Task) => {
                 </p>
                 <textarea
                   placeholder="VD: Ryuu giải phóng sức mạnh rồng thần để đối đầu với hội đồng hắc ám..."
-                  className="w-full h-24 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
+                  className="w-full h-24 px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                   value={newChapterSynopsis}
                   onChange={(e) => setNewChapterSynopsis(e.target.value)}
                 />
@@ -1751,10 +1751,10 @@ const openEditTask = (task: Task) => {
                 <p className="text-xs text-muted-foreground">
                   Bản phác thảo layout phân khung (storyboard/nemu) giúp Editor và Trợ lý hiểu cấu trúc chương.
                 </p>
-                <div className="p-5 border-2 border-dashed border-violet-500/20 hover:border-violet-500/40 bg-violet-500/5 rounded-2xl text-center transition-colors">
+                <div className="p-5 border-2 border-dashed border-violet-500/20 hover:border-violet-500/40 bg-violet-500/5 rounded-xl text-center transition-colors">
                   <ScrollText className="w-8 h-8 mx-auto mb-2 text-violet-400 opacity-60" />
                   <p className="text-xs text-muted-foreground">Kéo thả hoặc</p>
-                  <label className="mt-2 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all cursor-pointer">
+                  <label className="mt-2 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all cursor-pointer">
                     Chọn File (Browse)
                     <input
                       type="file"
@@ -1768,7 +1768,7 @@ const openEditTask = (task: Task) => {
                 {newChapterStoryboardFiles.length > 0 && (
                   <div className="space-y-2 mt-3">
                     {newChapterStoryboardFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/60 rounded-xl border border-border">
+                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/60 rounded-lg border border-border">
                         <div className="flex items-center gap-3">
                           <span className="text-base">📄</span>
                           <div>
@@ -1801,13 +1801,13 @@ const openEditTask = (task: Task) => {
                 <p className="text-xs text-muted-foreground">
                   Đính kèm phác thảo thô (pencil) hoặc bản vẽ nét (ink) để bắt đầu phân chia công việc vẽ.
                 </p>
-                <div className={`p-5 border-2 border-dashed rounded-2xl text-center transition-colors ${errors.manuscriptFiles
+                <div className={`p-5 border-2 border-dashed rounded-xl text-center transition-colors ${errors.manuscriptFiles
                     ? 'border-red-500 bg-red-500/5'
                     : 'border-primary/20 hover:border-primary/40 bg-primary/5'
                   }`}>
                   <Upload className={`w-8 h-8 mx-auto mb-2 ${errors.manuscriptFiles ? 'text-red-400' : 'text-primary'} opacity-65`} />
                   <p className="text-xs text-muted-foreground">Kéo thả bản thảo vào đây hoặc</p>
-                  <label className="mt-2 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all cursor-pointer">
+                  <label className="mt-2 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all cursor-pointer">
                     Chọn File (Browse)
                     <input
                       type="file"
@@ -1826,7 +1826,7 @@ const openEditTask = (task: Task) => {
                 {newChapterManuscriptFiles.length > 0 && (
                   <div className="space-y-2 mt-3">
                     {newChapterManuscriptFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/60 rounded-xl border border-border">
+                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/60 rounded-lg border border-border">
                         <div className="flex items-center gap-3">
                           <span className="text-base">{file.type === 'zip' ? '🗜️' : '🖼️'}</span>
                           <div>
@@ -1861,7 +1861,7 @@ const openEditTask = (task: Task) => {
                 </p>
                 <textarea
                   placeholder="VD: Trang 12-13 dùng double-spread cảnh chiến đấu lớn, tránh cắt giữa khi đóng gáy..."
-                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
+                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                   value={newChapterNotes}
                   onChange={(e) => setNewChapterNotes(e.target.value)}
                 />
@@ -1872,13 +1872,13 @@ const openEditTask = (task: Task) => {
                 <button
                   type="button"
                   onClick={() => setIsChapterModalOpen(false)}
-                  className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-lg transition-all cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs rounded-xl shadow-md shadow-primary/10 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs rounded-lg shadow-md shadow-primary/10 transition-all cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <PlusCircle className="w-4 h-4" /> Đăng Ký Chapter Lên Hệ Thống
                 </button>
@@ -1891,14 +1891,14 @@ const openEditTask = (task: Task) => {
       {/* B. Create / Assign Task Modal (Mangaka) */}
       {isTaskModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+          <div className="bg-card border border-border rounded-xl w-full max-w-lg p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
                 <Plus className="w-5 h-5 text-primary" /> Phân công nhiệm vụ vẽ
               </h3>
               <button
                 onClick={() => setIsTaskModalOpen(false)}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1913,13 +1913,13 @@ const openEditTask = (task: Task) => {
                   placeholder="Nhập loại task (VD: Line Art, Coloring...)"
                   value={newTaskType}
                   onChange={(e) => setNewTaskType(e.target.value)}
-                  className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground font-semibold"
+                  className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground font-semibold"
                 />
 
                 {/* Suggestions List */}
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Gợi ý loại task (Click để chọn nhanh):</span>
-                  <div className="grid grid-cols-1 gap-2 max-h-36 overflow-y-auto p-1 bg-muted/20 border border-border/50 rounded-xl">
+                  <div className="grid grid-cols-1 gap-2 max-h-36 overflow-y-auto p-1 bg-muted/20 border border-border/50 rounded-lg">
                     {TASK_TYPE_SUGGESTIONS.map((suggestion) => {
                       const isSelected = newTaskType.toLowerCase() === suggestion.name.toLowerCase();
                       return (
@@ -1931,7 +1931,7 @@ const openEditTask = (task: Task) => {
                             const pagesText = `${newTaskPageStart}-${newTaskPageEnd}`;
                             setNewTaskDesc(suggestion.template.replace('{pages}', pagesText));
                           }}
-                          className={`text-left p-2.5 rounded-xl border text-xs transition-all flex flex-col gap-1 cursor-pointer ${isSelected
+                          className={`text-left p-2.5 rounded-lg border text-xs transition-all flex flex-col gap-1 cursor-pointer ${isSelected
                               ? 'bg-primary/10 border-primary text-foreground'
                               : 'bg-muted/40 border-border/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground'
                             }`}
@@ -1958,7 +1958,7 @@ const openEditTask = (task: Task) => {
                     max={selectedChapter?.totalPages || 100}
                     value={newTaskPageStart}
                     onChange={(e) => setNewTaskPageStart(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     required
                   />
                 </div>
@@ -1970,7 +1970,7 @@ const openEditTask = (task: Task) => {
                     max={selectedChapter?.totalPages || 100}
                     value={newTaskPageEnd}
                     onChange={(e) => setNewTaskPageEnd(Math.max(newTaskPageStart, parseInt(e.target.value) || newTaskPageStart))}
-                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                     required
                   />
                 </div>
@@ -1986,7 +1986,7 @@ const openEditTask = (task: Task) => {
                     type="date"
                     value={newTaskDueDate}
                     onChange={(e) => setNewTaskDueDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                   />
                 </div>
 
@@ -1995,7 +1995,7 @@ const openEditTask = (task: Task) => {
                   <select
                     value={newTaskAssistantId}
                     onChange={(e) => setNewTaskAssistantId(e.target.value)}
-                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                   >
                     <option value="Unassigned">Để trống (Chưa phân công)</option>
                     {assistants.map((a) => (
@@ -2014,7 +2014,7 @@ const openEditTask = (task: Task) => {
                   placeholder="Mô tả chi tiết: Vẽ nền chùa cổ, hướng ánh sáng từ bên phải, biểu cảm nhân vật lo lắng..."
                   value={newTaskDesc}
                   onChange={(e) => setNewTaskDesc(e.target.value)}
-                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
+                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                   required
                 />
               </div>
@@ -2024,9 +2024,9 @@ const openEditTask = (task: Task) => {
                 <label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
                   <Upload className="w-3.5 h-3.5 text-primary" /> Tài liệu đính kèm (Reference Files)
                 </label>
-                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
+                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-lg text-center transition-colors">
                   <p className="text-xs text-muted-foreground">Đính kèm các file tài liệu hướng dẫn vẽ</p>
-                  <label className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                  <label className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer">
                     <Upload className="w-3.5 h-3.5" /> Chọn File
                     <input
                       type="file"
@@ -2039,7 +2039,7 @@ const openEditTask = (task: Task) => {
                 {newTaskAttachments.length > 0 && (
                   <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
                     {newTaskAttachments.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-xl border border-border text-xs">
+                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-lg border border-border text-xs">
                         <span className="truncate max-w-[280px] font-medium text-foreground">📄 {file.name} ({file.size})</span>
                         <button
                           type="button"
@@ -2058,13 +2058,13 @@ const openEditTask = (task: Task) => {
                 <button
                   type="button"
                   onClick={() => setIsTaskModalOpen(false)}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-lg transition-all cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
+                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer"
                 >
                   Giao nhiệm vụ
                 </button>
@@ -2077,42 +2077,42 @@ const openEditTask = (task: Task) => {
       {/* C. Review Assistant Submission Modal (Mangaka) */}
       {isEditTaskOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsEditTaskOpen(false)}>
-          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold">Sửa Task</h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground">Trang bắt đầu</label>
-                <input type="number" value={editTaskPageStart} onChange={(e) => setEditTaskPageStart(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+                <input type="number" value={editTaskPageStart} onChange={(e) => setEditTaskPageStart(Number(e.target.value))} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground">Trang kết thúc</label>
-                <input type="number" value={editTaskPageEnd} onChange={(e) => setEditTaskPageEnd(Number(e.target.value))} className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+                <input type="number" value={editTaskPageEnd} onChange={(e) => setEditTaskPageEnd(Number(e.target.value))} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" />
               </div>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">Mô tả</label>
-              <textarea value={editTaskDescription} onChange={(e) => setEditTaskDescription(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+              <textarea value={editTaskDescription} onChange={(e) => setEditTaskDescription(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">Hạn nộp</label>
-              <input type="date" value={editTaskDueDate} onChange={(e) => setEditTaskDueDate(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+              <input type="date" value={editTaskDueDate} onChange={(e) => setEditTaskDueDate(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <button type="button" onClick={() => setIsEditTaskOpen(false)} className="px-4 py-2 rounded-xl border border-border text-sm font-bold hover:bg-muted">Hủy</button>
-              <button type="button" onClick={handleSaveEditTask} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90">Lưu</button>
+              <button type="button" onClick={() => setIsEditTaskOpen(false)} className="px-4 py-2 rounded-lg border border-border text-sm font-bold hover:bg-muted">Hủy</button>
+              <button type="button" onClick={handleSaveEditTask} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90">Lưu</button>
             </div>
           </div>
         </div>
       )}
       {isSubmitManuscriptOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsSubmitManuscriptOpen(false)}>
-          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold">Gửi bản thảo (Manuscript)</h3>
             <p className="text-xs text-muted-foreground">Mỗi lần gửi sẽ tạo một version mới.</p>
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">File bản thảo</label>
-             <label className="flex items-center gap-3 w-full px-3 py-2 rounded-xl border border-border bg-background text-sm cursor-pointer hover:bg-muted transition-colors">
-                <span className="shrink-0 px-3 py-1 rounded-lg bg-primary/10 text-primary font-bold text-xs">Chọn file</span>
+             <label className="flex items-center gap-3 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm cursor-pointer hover:bg-muted transition-colors">
+                <span className="shrink-0 px-3 py-1 rounded-md bg-primary/10 text-primary font-bold text-xs">Chọn file</span>
                 <span className="text-muted-foreground truncate">
                   {submitManuscriptFile ? submitManuscriptFile.name : 'Chưa chọn tệp nào'}
                 </span>
@@ -2125,11 +2125,11 @@ const openEditTask = (task: Task) => {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">Ghi chú</label>
-              <textarea value={submitManuscriptNotes} onChange={(e) => setSubmitManuscriptNotes(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+              <textarea value={submitManuscriptNotes} onChange={(e) => setSubmitManuscriptNotes(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <button type="button" onClick={() => setIsSubmitManuscriptOpen(false)} className="px-4 py-2 rounded-xl border border-border text-sm font-bold hover:bg-muted">Hủy</button>
-              <button type="button" disabled={submitManuscriptUploading} onClick={handleSubmitManuscript} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-50">
+              <button type="button" onClick={() => setIsSubmitManuscriptOpen(false)} className="px-4 py-2 rounded-lg border border-border text-sm font-bold hover:bg-muted">Hủy</button>
+              <button type="button" disabled={submitManuscriptUploading} onClick={handleSubmitManuscript} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-50">
                 {submitManuscriptUploading ? 'Đang gửi...' : 'Gửi'}
               </button>
             </div>
@@ -2138,7 +2138,7 @@ const openEditTask = (task: Task) => {
       )}
       {isReviewModalOpen && activeTaskToReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-2xl p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+          <div className="bg-card border border-border rounded-xl w-full max-w-2xl p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
                 <Eye className="w-5 h-5 text-primary" /> Duyệt bài làm của Trợ lý
@@ -2149,7 +2149,7 @@ const openEditTask = (task: Task) => {
                   setActiveTaskToReview(null)
                   setReviewFeedback('')
                 }}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2159,7 +2159,7 @@ const openEditTask = (task: Task) => {
               {/* Left Side: Mock Image Preview */}
               <div className="space-y-3">
                 <label className="text-xs font-bold text-muted-foreground">Xem trước sản phẩm đã nộp</label>
-                <div className="relative border border-border rounded-xl overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group shadow-inner">
+                <div className="relative border border-border rounded-lg overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group shadow-inner">
                   {activeTaskToReview.submittedWorkUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -2178,7 +2178,7 @@ const openEditTask = (task: Task) => {
                     <label className="text-xs font-bold text-muted-foreground">Tệp đã nộp ({activeTaskToReview.submittedFiles.length})</label>
                     <div className="space-y-1 max-h-36 overflow-y-auto">
                       {activeTaskToReview.submittedFiles.map((file, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-xs">
+                        <div key={idx} className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10 text-xs">
                           <span className="font-medium text-emerald-800 dark:text-emerald-400 truncate max-w-[200px]">🖼️ {file.name}</span>
                           <span className="text-muted-foreground text-[10px] bg-muted px-1.5 py-0.5 rounded shrink-0">{file.size}</span>
                         </div>
@@ -2186,11 +2186,11 @@ const openEditTask = (task: Task) => {
                     </div>
                   </div>
                 ) : activeTaskToReview.submittedWorkUrl ? (
-                  <a href={activeTaskToReview.submittedWorkUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary hover:underline bg-muted/40 p-2.5 rounded-xl border border-border">
+                  <a href={activeTaskToReview.submittedWorkUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary hover:underline bg-muted/40 p-2.5 rounded-lg border border-border">
                     📎 Mở file bài nộp trong tab mới
                   </a>
                 ) : (
-                  <div className="text-xs text-muted-foreground italic bg-muted/40 p-2.5 rounded-xl border border-border">
+                  <div className="text-xs text-muted-foreground italic bg-muted/40 p-2.5 rounded-lg border border-border">
                     Không có file đính kèm nào được nộp
                   </div>
                 )}
@@ -2216,7 +2216,7 @@ const openEditTask = (task: Task) => {
                     Người nộp: <strong>{activeTaskToReview.assistantName}</strong>
                   </p>
 
-                  <div className="p-3 bg-muted/50 rounded-xl text-xs leading-relaxed text-foreground border border-border">
+                  <div className="p-3 bg-muted/50 rounded-lg text-xs leading-relaxed text-foreground border border-border">
                     <p className="font-bold text-muted-foreground mb-1 text-[10px] uppercase">Ghi chú của Trợ lý:</p>
                     <p className="italic whitespace-pre-line">{activeTaskToReview.submitDescription || 'Đã hoàn thành công việc, gửi Mangaka duyệt.'}</p>
                   </div>
@@ -2228,20 +2228,20 @@ const openEditTask = (task: Task) => {
                     placeholder="Nhập phản hồi... Các điểm tốt cần giữ, chi tiết cụ thể cần chỉnh sửa..."
                     value={reviewFeedback}
                     onChange={(e) => setReviewFeedback(e.target.value)}
-                    className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
+                    className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                   />
                 </div>
 
                 <div className="flex items-center gap-2.5 justify-end pt-2 border-t border-border">
                   <button
                     onClick={() => handleRejectTask(activeTaskToReview)}
-                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center shadow-sm"
+                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs transition-colors cursor-pointer text-center shadow-sm"
                   >
                     Yêu cầu sửa lại
                   </button>
                   <button
                     onClick={() => handleApproveTask(activeTaskToReview)}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center shadow-sm"
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition-colors cursor-pointer text-center shadow-sm"
                   >
                     Phê duyệt & Hoàn thành
                   </button>
@@ -2255,7 +2255,7 @@ const openEditTask = (task: Task) => {
       {/* D. Submit Task Deliverable Modal (Assistant) */}
       {isSubmitWorkModalOpen && activeTaskToSubmit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+          <div className="bg-card border border-border rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-primary" /> Nộp sản phẩm vẽ
@@ -2268,14 +2268,14 @@ const openEditTask = (task: Task) => {
                   setSubmitComment('')
                   setSubmittedFiles([])
                 }}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmitWork} className="space-y-4">
-              <div className="space-y-1.5 bg-muted/40 p-3.5 rounded-xl border border-border/50 text-xs">
+              <div className="space-y-1.5 bg-muted/40 p-3.5 rounded-lg border border-border/50 text-xs">
                 <p className="font-extrabold uppercase tracking-wider text-muted-foreground text-[9px]">
                   Manga: {getMangaTitleForTask(activeTaskToSubmit)}
                 </p>
@@ -2288,12 +2288,12 @@ const openEditTask = (task: Task) => {
                 <label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
                   <Upload className="w-3.5 h-3.5 text-primary" /> Tải lên tệp bản vẽ (Upload Work Files)
                 </label>
-                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
+                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-lg text-center transition-colors">
                   <p className="text-xs text-muted-foreground">Kéo thả file vẽ hoặc click để chọn</p>
                   <button
                     type="button"
                     onClick={handleAssistantMockUpload}
-                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                   >
                     <Upload className="w-3.5 h-3.5" /> Đính kèm tệp bản vẽ
                   </button>
@@ -2301,7 +2301,7 @@ const openEditTask = (task: Task) => {
                 {submittedFiles.length > 0 && (
                   <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
                     {submittedFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-xl border border-border text-xs">
+                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-lg border border-border text-xs">
                         <span className="truncate max-w-[280px] font-medium text-foreground">🖼️ {file.name} ({file.size})</span>
                         <button
                           type="button"
@@ -2322,7 +2322,7 @@ const openEditTask = (task: Task) => {
                   type="file"
                   required
                   onChange={(e) => setSubmitWorkFile(e.target.files?.[0] || null)}
-                  className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                  className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                 />
               </div>
 
@@ -2332,7 +2332,7 @@ const openEditTask = (task: Task) => {
                   placeholder="Mô tả nội dung chỉnh sửa của bạn: VD: Hoàn thành line art trang 1-3, tô bóng trang 4, chỉnh lại đổ bóng nhân vật..."
                   value={submitComment}
                   onChange={(e) => setSubmitComment(e.target.value)}
-                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
+                  className="w-full h-20 px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-foreground"
                 />
               </div>
 
@@ -2346,14 +2346,14 @@ const openEditTask = (task: Task) => {
                     setSubmitComment('')
                     setSubmittedFiles([])
                   }}
-                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-lg transition-all cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                  type="submit"
                   disabled={submitWorkUploading}
-                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitWorkUploading ? 'Đang nộp...' : 'Nộp sản phẩm'}
                 </button>
@@ -2366,7 +2366,7 @@ const openEditTask = (task: Task) => {
       {/* E. View Task Details Modal (Read-only for Assistant/General) */}
       {isViewDetailModalOpen && activeTaskToView && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+          <div className="bg-card border border-border rounded-xl w-full max-w-lg p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
                 <Info className="w-5 h-5 text-primary" /> Thông tin chi tiết Nhiệm vụ
@@ -2376,7 +2376,7 @@ const openEditTask = (task: Task) => {
                   setIsViewDetailModalOpen(false)
                   setActiveTaskToView(null)
                 }}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2384,7 +2384,7 @@ const openEditTask = (task: Task) => {
 
             <div className="space-y-4 text-sm">
               {/* Manga & Chapter Info */}
-              <div className="p-3.5 bg-muted/40 border border-border rounded-xl space-y-1">
+              <div className="p-3.5 bg-muted/40 border border-border rounded-lg space-y-1">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bộ Manga</p>
                 <p className="font-bold text-foreground text-base">{getMangaTitleForTask(activeTaskToView)}</p>
                 <p className="text-xs text-muted-foreground font-semibold">{getChapterInfoForTask(activeTaskToView)}</p>
@@ -2394,13 +2394,13 @@ const openEditTask = (task: Task) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground">Loại nhiệm vụ</p>
-                  <p className="font-semibold text-foreground bg-primary/5 border border-primary/10 px-2.5 py-1.5 rounded-lg inline-block">
+                  <p className="font-semibold text-foreground bg-primary/5 border border-primary/10 px-2.5 py-1.5 rounded-md inline-block">
                     {activeTaskToView.type}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground">Phạm vi trang</p>
-                  <p className="font-semibold text-foreground bg-muted px-2.5 py-1.5 rounded-lg inline-block">
+                  <p className="font-semibold text-foreground bg-muted px-2.5 py-1.5 rounded-md inline-block">
                     Trang {activeTaskToView.pages}
                   </p>
                 </div>
@@ -2409,13 +2409,13 @@ const openEditTask = (task: Task) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground">Hạn nộp (Due Date)</p>
-                  <p className="font-semibold text-amber-600 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1.5 rounded-lg inline-block">
+                  <p className="font-semibold text-amber-600 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1.5 rounded-md inline-block">
                     {activeTaskToView.dueDate || 'Không giới hạn'}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground">Trạng thái phân công</p>
-                  <p className={`font-semibold px-2.5 py-1.5 rounded-lg inline-block text-xs ${getTaskStatusClass(activeTaskToView.status)}`}>
+                  <p className={`font-semibold px-2.5 py-1.5 rounded-md inline-block text-xs ${getTaskStatusClass(activeTaskToView.status)}`}>
                     {getTaskStatusLabel(activeTaskToView.status)}
                   </p>
                 </div>
@@ -2424,7 +2424,7 @@ const openEditTask = (task: Task) => {
               {/* Instructions */}
               <div className="space-y-1">
                 <p className="text-xs font-bold text-muted-foreground">Mô tả & Hướng dẫn chi tiết</p>
-                <div className="p-3 bg-muted/30 border border-border rounded-xl text-foreground whitespace-pre-line text-xs leading-relaxed">
+                <div className="p-3 bg-muted/30 border border-border rounded-lg text-foreground whitespace-pre-line text-xs leading-relaxed">
                   {activeTaskToView.description}
                 </div>
               </div>
@@ -2435,7 +2435,7 @@ const openEditTask = (task: Task) => {
                 {activeTaskToView.attachments && activeTaskToView.attachments.length > 0 ? (
                   <div className="space-y-1.5">
                     {activeTaskToView.attachments.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2.5 bg-muted/60 rounded-xl border border-border text-xs">
+                      <div key={idx} className="flex items-center justify-between p-2.5 bg-muted/60 rounded-lg border border-border text-xs">
                         <span className="font-medium text-foreground truncate max-w-[340px]">📄 {file.name}</span>
                         <span className="text-muted-foreground shrink-0 text-[10px] bg-muted px-1.5 py-0.5 rounded">{file.size}</span>
                       </div>
@@ -2450,7 +2450,7 @@ const openEditTask = (task: Task) => {
               {activeTaskToView.submitDescription && (
                 <div className="space-y-2 border-t border-border pt-3">
                   <p className="text-xs font-bold text-muted-foreground">Ghi chú sản phẩm nộp của Trợ lý</p>
-                  <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-foreground text-xs leading-relaxed">
+                  <div className="p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg text-foreground text-xs leading-relaxed">
                     {activeTaskToView.submitDescription}
                   </div>
                 </div>
@@ -2460,7 +2460,7 @@ const openEditTask = (task: Task) => {
                 <div className="space-y-1.5">
                   <p className="text-xs font-bold text-muted-foreground">Tệp sản phẩm đã nộp</p>
                   {activeTaskToView.submittedFiles.map((file, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-xs">
+                    <div key={idx} className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10 text-xs">
                       <span className="font-medium text-emerald-800 dark:text-emerald-400 truncate max-w-[340px]">🖼️ {file.name}</span>
                       <span className="text-muted-foreground text-[10px] bg-muted px-1.5 py-0.5 rounded">{file.size}</span>
                     </div>
@@ -2476,7 +2476,7 @@ const openEditTask = (task: Task) => {
                   setIsViewDetailModalOpen(false)
                   setActiveTaskToView(null)
                 }}
-                className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
+                className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-lg transition-all cursor-pointer"
               >
                 Đóng chi tiết
               </button>

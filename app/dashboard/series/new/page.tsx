@@ -197,7 +197,7 @@ export default function NewProposalPage() {
 
       {/* Success overlay */}
       {successMessage && (
-        <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-sm animate-in fade-in duration-200">
+        <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-sm animate-in fade-in duration-200">
           <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <div>
             {successMessage === 'submitted' ? (
@@ -218,9 +218,9 @@ export default function NewProposalPage() {
       )}
 
       {/* Form card */}
-      <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
+      <div className="bg-card border border-border rounded-xl p-6 sm:p-8 shadow-sm">
         {/* BR info callout */}
-        <div className="mb-6 p-3 bg-primary/5 border border-primary/15 rounded-xl text-xs text-muted-foreground space-y-1">
+        <div className="mb-6 p-3 bg-primary/5 border border-primary/15 rounded-lg text-xs text-muted-foreground space-y-1">
           <p className="font-bold text-primary text-[11px] uppercase tracking-wide">Quy tắc nộp đề xuất</p>
           <ul className="list-disc list-inside space-y-0.5">
             <li>Tiêu đề truyện: bắt buộc, tối đa 100 ký tự</li>

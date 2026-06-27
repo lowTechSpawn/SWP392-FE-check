@@ -212,10 +212,10 @@ export default function ProfilePage() {
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         {/* Left Side: Summary Card */}
-        <div className="md:col-span-1 bg-card border border-border/60 rounded-3xl p-6 flex flex-col items-center text-center shadow-xl space-y-4">
+        <div className="md:col-span-1 bg-card border border-border/60 rounded-2xl p-6 flex flex-col items-center text-center shadow-xl space-y-4">
           <div className="relative group">
             {/* Avatar Preview */}
-            <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-border shadow-inner bg-background">
+            <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-border shadow-inner bg-background">
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -285,11 +285,11 @@ export default function ProfilePage() {
         {/* Right Side: Forms and Tabs */}
         <div className="md:col-span-2 space-y-6">
           {/* Tab Navigation */}
-          <div className="flex p-1 bg-muted rounded-2xl border border-border/40 max-w-sm">
+          <div className="flex p-1 bg-muted rounded-xl border border-border/40 max-w-sm">
             <button
               onClick={() => setActiveTab('info')}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer",
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
                 activeTab === 'info' 
                   ? "bg-card text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground hover:bg-card/30"
@@ -301,7 +301,7 @@ export default function ProfilePage() {
             <button
               onClick={() => setActiveTab('password')}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer",
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
                 activeTab === 'password' 
                   ? "bg-card text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground hover:bg-card/30"
@@ -313,7 +313,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Tab Contents */}
-          <div className="bg-card border border-border/60 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div className="bg-card border border-border/60 rounded-2xl p-6 sm:p-8 shadow-xl">
             {activeTab === 'info' ? (
               <form onSubmit={handleUpdateProfile} className="space-y-6">
                 <div className="space-y-1">
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Nhập tên hiển thị mới"
                       required
-                      className="rounded-xl h-10"
+                      className="rounded-lg h-10"
                     />
                   </div>
 
@@ -351,7 +351,7 @@ export default function ProfilePage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Nhập địa chỉ email"
                       required
-                      className="rounded-xl h-10"
+                      className="rounded-lg h-10"
                     />
                   </div>
 
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                       <Shield className="w-4 h-4 text-muted-foreground" />
                       Tên đăng nhập (Username)
                     </Label>
-                    <div className="h-10 w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground select-none cursor-not-allowed">
+                    <div className="h-10 w-full rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground select-none cursor-not-allowed">
                       {user?.name?.toLowerCase().replace(/\s+/g, '_') || 'user_profile'}
                     </div>
                   </div>
@@ -371,7 +371,7 @@ export default function ProfilePage() {
                   <Button
                     type="submit"
                     disabled={updatingProfile}
-                    className="h-10 px-6 font-bold rounded-xl"
+                    className="h-10 px-6 font-bold rounded-lg"
                   >
                     {updatingProfile ? (
                       <>
@@ -392,7 +392,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Warning Alert */}
-                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex gap-3 text-amber-600 dark:text-amber-500 text-xs">
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 text-amber-600 dark:text-amber-500 text-xs">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold">Lưu ý quan trọng: </span>
@@ -411,7 +411,7 @@ export default function ProfilePage() {
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Nhập mật khẩu hiện tại"
                       required
-                      className="rounded-xl h-10"
+                      className="rounded-lg h-10"
                     />
                   </div>
 
@@ -425,7 +425,7 @@ export default function ProfilePage() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Tối thiểu 6 ký tự"
                       required
-                      className="rounded-xl h-10"
+                      className="rounded-lg h-10"
                     />
                   </div>
 
@@ -439,7 +439,7 @@ export default function ProfilePage() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Nhập lại mật khẩu mới"
                       required
-                      className="rounded-xl h-10"
+                      className="rounded-lg h-10"
                     />
                   </div>
                 </div>
@@ -448,7 +448,7 @@ export default function ProfilePage() {
                   <Button
                     type="submit"
                     disabled={changingPassword}
-                    className="h-10 px-6 font-bold rounded-xl"
+                    className="h-10 px-6 font-bold rounded-lg"
                   >
                     {changingPassword ? (
                       <>

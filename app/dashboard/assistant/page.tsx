@@ -227,7 +227,7 @@ export default function AssistantDashboardPage() {
         <p className="text-muted-foreground text-sm max-w-md">
           Chỉ người dùng có vai trò <strong>Trợ lý</strong> mới được quyền truy cập bảng điều khiển này.
         </p>
-        <p className="text-xs text-muted-foreground bg-muted p-3 rounded-lg border border-border">
+        <p className="text-xs text-muted-foreground bg-muted p-3 rounded-md border border-border">
           💡 <strong>Mẹo:</strong> Sử dụng bộ chuyển đổi vai trò ở thanh bên trái để đổi vai trò của bạn thành <strong>Assistant</strong>.
         </p>
         <Link
@@ -338,7 +338,7 @@ export default function AssistantDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Top Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 rounded-3xl p-6 sm:p-8">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 rounded-2xl p-6 sm:p-8">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -354,14 +354,14 @@ export default function AssistantDashboardPage() {
           </div>
 
           {/* Interactive Simulation Switcher */}
-          <div className="bg-card border border-border p-3.5 rounded-2xl shadow-sm space-y-2 shrink-0">
+          <div className="bg-card border border-border p-3.5 rounded-xl shadow-sm space-y-2 shrink-0">
             <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">Mô phỏng tài khoản Trợ lý</p>
             <div className="flex flex-wrap gap-1.5">
               {assistants.map(ast => (
                 <button
                   key={ast.id}
                   onClick={() => setSelectedAssistantId(ast.id)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${selectedAssistantId === ast.id
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${selectedAssistantId === ast.id
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
@@ -376,9 +376,9 @@ export default function AssistantDashboardPage() {
 
       {/* Active Profile Info */}
       {activeAssistant && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-card border border-border rounded-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-card border border-border rounded-xl">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/15 text-primary w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="bg-primary/15 text-primary w-11 h-11 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">
               {activeAssistant.name.split(' ').map(n => n[0]).join('')}
             </div>
             <div>
@@ -401,8 +401,8 @@ export default function AssistantDashboardPage() {
           { label: 'Đang thực hiện', value: stats.working, icon: Play, color: 'text-blue-500', bg: 'bg-blue-500/10' },
           { label: 'Đã nộp / Hoàn thành', value: stats.completed, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className="bg-card border border-border rounded-2xl p-5 space-y-3 shadow-sm hover:border-primary/10 transition-colors">
-            <div className={`w-9 h-9 ${bg} ${color} rounded-xl flex items-center justify-center`}>
+          <div key={label} className="bg-card border border-border rounded-xl p-5 space-y-3 shadow-sm hover:border-primary/10 transition-colors">
+            <div className={`w-9 h-9 ${bg} ${color} rounded-lg flex items-center justify-center`}>
               <Icon className="w-5 h-5" />
             </div>
             <div>
@@ -427,7 +427,7 @@ export default function AssistantDashboardPage() {
 
           <div className="space-y-4">
             {tasks.filter(t => t.status !== 'Approved' && t.status !== 'Submitted').length === 0 ? (
-              <div className="bg-card border border-border rounded-2xl p-10 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-10 text-center space-y-3">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500/50 mx-auto" />
                 <h3 className="font-bold text-sm text-foreground">Không có nhiệm vụ hoạt động nào</h3>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -441,7 +441,7 @@ export default function AssistantDashboardPage() {
                 return (
                   <div
                     key={task.id}
-                    className={`bg-card border rounded-2xl p-5 transition-all space-y-4 ${task.status === 'Rejected'
+                    className={`bg-card border rounded-xl p-5 transition-all space-y-4 ${task.status === 'Rejected'
                       ? 'border-red-500/30 bg-gradient-to-br from-card to-red-500/5'
                       : 'border-border hover:border-primary/20'
                       }`}
@@ -466,7 +466,7 @@ export default function AssistantDashboardPage() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs text-muted-foreground leading-relaxed bg-muted/30 p-3 rounded-xl border border-border/40">
+                    <p className="text-xs text-muted-foreground leading-relaxed bg-muted/30 p-3 rounded-lg border border-border/40">
                       {task.description}
                     </p>
                     {task.referenceFiles && task.referenceFiles.length > 0 && (
@@ -481,7 +481,7 @@ export default function AssistantDashboardPage() {
                     )}
                     {/* Rejections & Feedback Box */}
                     {task.status === 'Rejected' && task.feedback && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-600 dark:text-red-400 space-y-1">
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-600 dark:text-red-400 space-y-1">
                         <p className="font-bold flex items-center gap-1.5">
                           <AlertTriangle className="w-3.5 h-3.5" /> Phản hồi yêu cầu sửa đổi
                         </p>
@@ -499,14 +499,14 @@ export default function AssistantDashboardPage() {
                         {!isWorking ? (
                           <button
                             onClick={() => handleStartTask(task.id)}
-                            className="flex items-center gap-1 px-4.5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl shadow-sm transition-all"
+                            className="flex items-center gap-1 px-4.5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg shadow-sm transition-all"
                           >
                             <Play className="w-3.5 h-3.5" /> Bắt đầu vẽ
                           </button>
                         ) : (
                           <button
                             onClick={() => handleOpenSubmit(task.id)}
-                            className="flex items-center gap-1 px-4.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+                            className="flex items-center gap-1 px-4.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all"
                           >
                             <Send className="w-3.5 h-3.5" /> Nộp sản phẩm
                           </button>
@@ -529,13 +529,13 @@ export default function AssistantDashboardPage() {
 
           <div className="space-y-4">
             {completedTasks.length === 0 ? (
-              <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-2">
+              <div className="bg-card border border-border rounded-xl p-8 text-center space-y-2">
                 <Clock className="w-8 h-8 text-muted-foreground/20 mx-auto" />
                 <p className="text-xs text-muted-foreground">Chưa có nhiệm vụ hoàn thành nào</p>
               </div>
             ) : (
               completedTasks.map((task) => (
-                <div key={task.id} className="bg-card border border-border/60 rounded-2xl p-4.5 space-y-3.5 hover:border-primary/10 transition-colors">
+                <div key={task.id} className="bg-card border border-border/60 rounded-xl p-4.5 space-y-3.5 hover:border-primary/10 transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h4 className="font-bold text-xs text-foreground">{task.type} (Trang {task.pages})</h4>
@@ -546,7 +546,7 @@ export default function AssistantDashboardPage() {
 
                   {/* Submitted mockup file preview */}
                   {task.submittedWorkUrl && (
-                    <div className="relative h-20 rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center group">
+                    <div className="relative h-20 rounded-md overflow-hidden border border-border bg-muted flex items-center justify-center group">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={task.submittedWorkUrl}
@@ -558,7 +558,7 @@ export default function AssistantDashboardPage() {
                           href={task.submittedWorkUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1.5 bg-card rounded-lg text-foreground text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-1"
+                          className="p-1.5 bg-card rounded-md text-foreground text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-1"
                         >
                           <FileImage className="w-3.5 h-3.5" /> Xem toàn bộ
                         </a>
@@ -568,7 +568,7 @@ export default function AssistantDashboardPage() {
 
                   {/* Feedback summary */}
                   {task.status === 'Approved' && task.feedback && (
-                    <div className="bg-emerald-500/8 border border-emerald-500/15 rounded-xl p-2.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+                    <div className="bg-emerald-500/8 border border-emerald-500/15 rounded-lg p-2.5 text-[11px] text-emerald-600 dark:text-emerald-400">
                       <span className="font-bold">Phản hồi của Tác giả: </span>
                       <span className="italic">"{task.feedback}"</span>
                     </div>
@@ -590,7 +590,7 @@ export default function AssistantDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSubmittingTaskId(null)} />
 
-          <div className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 overflow-hidden">
+          <div className="relative w-full max-w-md bg-card border border-border rounded-xl shadow-2xl p-6 overflow-hidden">
             <h3 className="text-base font-extrabold text-foreground flex items-center gap-2">
               <Send className="w-5 h-5 text-indigo-500" /> Nộp sản phẩm hoàn thành
             </h3>
@@ -606,7 +606,7 @@ export default function AssistantDashboardPage() {
                   placeholder="Ví dụ: Đã vẽ xong bối cảnh nền và screentone. Thêm chi tiết đổ nát ở trang 5."
                   value={submitDescription}
                   onChange={(e) => setSubmitDescription(e.target.value)}
-                  className="w-full p-2.5 bg-muted/50 border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-24 resize-none"
+                  className="w-full p-2.5 bg-muted/50 border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-24 resize-none"
                 />
               </div>
 
@@ -616,7 +616,7 @@ export default function AssistantDashboardPage() {
                   type="file"
                   required
                   onChange={(e) => setSubmitFile(e.target.files?.[0] || null)}
-                  className="w-full p-2.5 bg-muted/50 border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full p-2.5 bg-muted/50 border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
 
@@ -627,14 +627,14 @@ export default function AssistantDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setSubmittingTaskId(null)}
-                  className="px-4 py-2 border border-border text-foreground hover:bg-muted text-xs font-semibold rounded-xl transition-all"
+                  className="px-4 py-2 border border-border text-foreground hover:bg-muted text-xs font-semibold rounded-lg transition-all"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? 'Đang nộp...' : 'Nộp bài'}
                 </button>

@@ -309,7 +309,7 @@ function TantouEditorWorkspace() {
         <p className="text-muted-foreground text-sm max-w-md">
           Only users with the <strong>Tantou Editor</strong> role are authorized to view this dashboard.
         </p>
-        <p className="text-xs text-muted-foreground bg-muted p-3 rounded-lg border border-border">
+        <p className="text-xs text-muted-foreground bg-muted p-3 rounded-md border border-border">
           💡 <strong>Tip:</strong> Use the role switcher in the bottom left of the sidebar to change your active role to <strong>Tantou Editor</strong>.
         </p>
         <Link
@@ -414,7 +414,7 @@ function TantouEditorWorkspace() {
             Welcome back, <span className="text-primary">{currentUserName}</span>
           </h1>
         </div>
-        <div className="flex items-center gap-2 bg-card border border-border px-3.5 py-1.5 rounded-xl text-xs font-bold text-muted-foreground shadow-sm">
+        <div className="flex items-center gap-2 bg-card border border-border px-3.5 py-1.5 rounded-lg text-xs font-bold text-muted-foreground shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
           Active: {assignedMangakas.length} assigned Mangakas
         </div>
@@ -431,7 +431,7 @@ function TantouEditorWorkspace() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               href="/dashboard/tantou-editor?tab=series"
-              className="bg-card border border-border hover:border-primary/20 p-6 rounded-2xl flex items-center gap-4 transition-all shadow-sm group cursor-pointer"
+              className="bg-card border border-border hover:border-primary/20 p-6 rounded-xl flex items-center gap-4 transition-all shadow-sm group cursor-pointer"
             >
               <div className="text-primary group-hover:scale-105 transition-transform">
                 <BookOpen className="w-6 h-6" />
@@ -446,7 +446,7 @@ function TantouEditorWorkspace() {
 
             <Link
               href="/dashboard/tantou-editor?tab=manuscripts"
-              className="bg-card border border-border hover:border-primary/20 p-6 rounded-2xl flex items-center gap-4 transition-all shadow-sm group cursor-pointer"
+              className="bg-card border border-border hover:border-primary/20 p-6 rounded-xl flex items-center gap-4 transition-all shadow-sm group cursor-pointer"
             >
               <div className="text-amber-600 group-hover:scale-105 transition-transform">
                 <FileCheck className="w-6 h-6" />
@@ -465,7 +465,7 @@ function TantouEditorWorkspace() {
           {/* Double Column content: Recent Proposals and Series Overview */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Left side: Recent Proposals */}
-            <div className="xl:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="xl:col-span-2 bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
               <div className="flex justify-between items-center pb-2 border-b border-border/40">
                 <h3 className="font-extrabold text-sm text-foreground flex items-center gap-2">
                   <FileText className="w-4 h-4 text-primary" />
@@ -529,7 +529,7 @@ function TantouEditorWorkspace() {
             {/* Right side column: Assigned Mangakas & Series Overview */}
             <div className="space-y-6">
               {/* Assigned Mangakas List Card */}
-              <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
+              <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
                 <div className="flex justify-between items-center pb-2 border-b border-border/40">
                   <h3 className="font-extrabold text-sm text-foreground flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-emerald-500" />
@@ -566,7 +566,7 @@ function TantouEditorWorkspace() {
               </div>
 
               {/* Series Overview */}
-              <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
+              <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
                 <div className="flex justify-between items-center pb-2 border-b border-border/40">
                   <h3 className="font-extrabold text-sm text-foreground flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-primary" />
@@ -602,7 +602,7 @@ function TantouEditorWorkspace() {
                         </div>
                         <div className="flex items-center gap-2.5 shrink-0">
                           {series.rating && (
-                            <span className="text-[10px] font-bold text-sky-500 bg-sky-500/5 px-2 py-0.5 rounded-lg border border-sky-500/10">
+                            <span className="text-[10px] font-bold text-sky-500 bg-sky-500/5 px-2 py-0.5 rounded-md border border-sky-500/10">
                               {series.rating}% Score
                             </span>
                           )}
@@ -635,7 +635,7 @@ function TantouEditorWorkspace() {
           </div>
 
           {/* Search and Filters row */}
-          <div className="flex flex-col gap-4 bg-card border border-border p-5 rounded-2xl shadow-sm">
+          <div className="flex flex-col gap-4 bg-card border border-border p-5 rounded-xl shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Search bar */}
               <div className="relative">
@@ -645,7 +645,7 @@ function TantouEditorWorkspace() {
                   placeholder="Search series..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-muted/40 border border-border rounded-xl text-xs focus:outline-none focus:border-primary/40 text-foreground"
+                  className="w-full pl-9 pr-4 py-2 bg-muted/40 border border-border rounded-lg text-xs focus:outline-none focus:border-primary/40 text-foreground"
                 />
               </div>
 
@@ -654,7 +654,7 @@ function TantouEditorWorkspace() {
                 <select
                   value={selectedGenre}
                   onChange={(e) => setSelectedGenre(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none appearance-none cursor-pointer font-semibold"
+                  className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-lg text-xs text-foreground focus:outline-none appearance-none cursor-pointer font-semibold"
                 >
                   <option>All Genres</option>
                   <option>Shōnen</option>
@@ -671,7 +671,7 @@ function TantouEditorWorkspace() {
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none appearance-none cursor-pointer font-semibold"
+                  className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-lg text-xs text-foreground focus:outline-none appearance-none cursor-pointer font-semibold"
                 >
                   <option>All Types</option>
                   <option>Weekly</option>
@@ -699,7 +699,7 @@ function TantouEditorWorkspace() {
                   <button
                     key={status}
                     onClick={() => setSelectedStatus(status)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wide transition-all cursor-pointer ${isActive
+                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide transition-all cursor-pointer ${isActive
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
@@ -750,7 +750,7 @@ function TantouEditorWorkspace() {
                 return (
                   <div
                     key={series.id}
-                    className="bg-card border border-border hover:border-primary/20 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group"
+                    className="bg-card border border-border hover:border-primary/20 rounded-xl p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition-all group"
                   >
                     <div>
                       {/* Top Accent Row */}
@@ -910,7 +910,7 @@ function TantouEditorWorkspace() {
                           setShowRejectInput(false);
                           setRejectReasonText('');
                         }}
-                        className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl transition-all cursor-pointer"
+                        className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all cursor-pointer"
                         title="Back to List"
                       >
                         <ArrowLeft className="w-4 h-4" />
@@ -943,63 +943,60 @@ function TantouEditorWorkspace() {
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                       {/* Left: Combined Cover, Metadata & Evaluation Panel */}
                       <div className="space-y-6">
-                        <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+                        <div className="bg-card border border-border rounded-xl p-5 space-y-4 shadow-sm">
                           <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                             Cover Artwork, Metadata & Evaluation
                           </h3>
 
-                          {/* Image & Metadata Row */}
-                          <div className="flex gap-4">
-                            {/* Image Container */}
-                            <div className="w-24 sm:w-28 aspect-[3/4] rounded-xl overflow-hidden border border-border shadow-sm shrink-0">
-                              {proposal.coverImageUrl ? (
-                                <img
-                                  src={proposal.coverImageUrl}
-                                  alt={proposal.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className={`w-full h-full bg-gradient-to-br ${proposal.coverColor || 'from-primary to-primary/60'} p-3 flex flex-col justify-between text-white`}>
-                                  <div className="w-6 h-6 rounded bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-[9px] uppercase">
-                                    MF
-                                  </div>
-                                  <span className="font-black text-xs tracking-tight leading-snug drop-shadow-sm line-clamp-3">
-                                    {proposal.title}
-                                  </span>
-                                  <span className="text-[8px] font-medium opacity-80 truncate">
-                                    By {proposal.author}
-                                  </span>
-                                </div>
-                              )}
+                          {/* Cover Artwork */}
+                          {proposal.coverImageUrl ? (
+                            <div className="aspect-[3/4] rounded-lg overflow-hidden border border-border shadow-sm">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={proposal.coverImageUrl}
+                                alt={proposal.title}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
+                          ) : (
+                            <div className={`aspect-[3/4] rounded-lg bg-gradient-to-br ${proposal.coverColor || 'from-primary to-primary/60'} p-6 flex flex-col justify-between text-white shadow-sm`}>
+                              <div className="w-8 h-8 rounded-md bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-xs uppercase">
+                                MF
+                              </div>
+                              <span className="font-black text-base tracking-tight leading-snug drop-shadow-sm">
+                                {proposal.title}
+                              </span>
+                              <span className="text-[10px] font-medium opacity-80">
+                                By {proposal.author}
+                              </span>
+                            </div>
+                          )}
 
-                            {/* Metadata */}
-                            <div className="flex-1 min-w-0 space-y-2 text-xs">
-                              <div>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Mangaka</span>
-                                <span className="font-extrabold text-foreground text-sm block truncate">{proposal.author}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Publication Type</span>
-                                <span className="font-bold text-foreground capitalize block">{proposal.type || 'Weekly'}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Genre</span>
-                                <div className="flex flex-wrap gap-1 mt-0.5">
-                                  {proposal.genre && proposal.genre.length > 0 ? (
-                                    proposal.genre.map((g: string) => (
-                                      <span key={g} className="bg-muted px-1.5 py-0.5 rounded text-[9px] font-bold text-muted-foreground">
-                                        {g}
-                                      </span>
-                                    ))
-                                  ) : (
-                                    <span className="text-muted-foreground">N/A</span>
-                                  )}
-                                </div>
+                          {/* Metadata */}
+                          <div className="grid grid-cols-1 gap-3 pt-1 text-xs">
+                            <div>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Mangaka</span>
+                              <span className="font-extrabold text-foreground text-sm block truncate">{proposal.author}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Publication Type</span>
+                              <span className="font-bold text-foreground capitalize block">{proposal.type || 'Weekly'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase block tracking-wider">Genre</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {proposal.genre && proposal.genre.length > 0 ? (
+                                  proposal.genre.map((g: string) => (
+                                    <span key={g} className="bg-muted px-1.5 py-0.5 rounded text-[9px] font-bold text-muted-foreground">
+                                      {g}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-muted-foreground">N/A</span>
+                                )}
                               </div>
                             </div>
                           </div>
-
                           {/* Extra Metadata Details */}
                           <div className="space-y-2 pt-2 text-xs border-t border-border/40">
                             <div className="flex justify-between py-1">
@@ -1022,7 +1019,7 @@ function TantouEditorWorkspace() {
                               <h4 className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">
                                 Direct Editor Evaluation
                               </h4>
-                              <span className="text-[9px] font-extrabold px-2 py-0.5 bg-primary/10 text-primary rounded-lg border border-primary/20">
+                              <span className="text-[9px] font-extrabold px-2 py-0.5 bg-primary/10 text-primary rounded-md border border-primary/20">
                                 ACTION REQUIRED
                               </span>
                             </div>
@@ -1030,7 +1027,7 @@ function TantouEditorWorkspace() {
                             {/* Show evaluation panel for proposals pending Tantou action: UnderReview from BE */}
                             {['UnderReview', 'Under Review', 'Proposed', 'PendingReview', 'Pending Review'].includes(proposal.status) ? (
                               <div className="space-y-4">
-                                <div className="p-3 bg-muted/30 border border-border/80 rounded-xl space-y-1.5">
+                                <div className="p-3 bg-muted/30 border border-border/80 rounded-lg space-y-1.5">
                                   <h4 className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
                                     <Clock className="w-3.5 h-3.5 text-amber-500" /> Pending Your Evaluation
                                   </h4>
@@ -1041,7 +1038,7 @@ function TantouEditorWorkspace() {
                                 </div>
 
                                 {showRejectInput ? (
-                                  <div className="p-3.5 rounded-xl bg-destructive/5 border border-destructive/20 space-y-3 animate-in slide-in-from-top-2">
+                                  <div className="p-3.5 rounded-lg bg-destructive/5 border border-destructive/20 space-y-3 animate-in slide-in-from-top-2">
                                     <label className="text-xs font-extrabold text-destructive flex items-center gap-2">
                                       <AlertTriangle className="w-4 h-4" /> Rejection Reason
                                     </label>
@@ -1049,7 +1046,7 @@ function TantouEditorWorkspace() {
                                       value={rejectReasonText}
                                       onChange={(e) => setRejectReasonText(e.target.value)}
                                       placeholder="Explain why this proposal is being rejected... (This will be sent to the Mangaka)"
-                                      className="w-full p-2.5 bg-card border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
+                                      className="w-full p-2.5 bg-card border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
                                       rows={4}
                                     />
                                     <div className="flex justify-end gap-2">
@@ -1058,13 +1055,13 @@ function TantouEditorWorkspace() {
                                           setShowRejectInput(false);
                                           setRejectReasonText('');
                                         }}
-                                        className="px-2.5 py-1.5 border border-border rounded-lg text-xs font-bold hover:bg-muted text-muted-foreground"
+                                        className="px-2.5 py-1.5 border border-border rounded-md text-xs font-bold hover:bg-muted text-muted-foreground"
                                       >
                                         Cancel
                                       </button>
                                       <button
                                         onClick={handleRejectSubmit}
-                                        className="px-2.5 py-1.5 bg-destructive hover:bg-destructive/95 text-destructive-foreground rounded-lg text-xs font-bold"
+                                        className="px-2.5 py-1.5 bg-destructive hover:bg-destructive/95 text-destructive-foreground rounded-md text-xs font-bold"
                                       >
                                         Confirm Rejection
                                       </button>
@@ -1074,13 +1071,13 @@ function TantouEditorWorkspace() {
                                   <div className="flex flex-col sm:flex-row gap-2 pt-1">
                                     <button
                                       onClick={() => handleUpdateStatus('BoardVoting')}
-                                      className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+                                      className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
                                     >
                                       <CheckCircle2 className="w-3.5 h-3.5" /> Approve & Send to Board
                                     </button>
                                     <button
                                       onClick={() => setShowRejectInput(true)}
-                                      className="flex-1 py-2.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-black text-[10px] rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+                                      className="flex-1 py-2.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-black text-[10px] rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
                                     >
                                       <X className="w-3.5 h-3.5" /> Reject Proposal
                                     </button>
@@ -1089,7 +1086,7 @@ function TantouEditorWorkspace() {
                               </div>
                             ) : (
                               <div className="space-y-3">
-                                <div className="p-4 bg-muted/40 border border-border rounded-xl flex items-center gap-3">
+                                <div className="p-4 bg-muted/40 border border-border rounded-lg flex items-center gap-3">
                                   {proposal.status === 'Board Voting' || proposal.status === 'BoardVoting' ? (
                                     <>
                                       <Clock className="w-7 h-7 text-amber-500 shrink-0" />
@@ -1127,7 +1124,7 @@ function TantouEditorWorkspace() {
                                   <div className="pt-1">
                                     <button
                                       onClick={() => handleUpdateStatus('Active')}
-                                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+                                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
                                     >
                                       <CheckCircle2 className="w-4 h-4" /> Activate Series
                                     </button>
@@ -1135,7 +1132,7 @@ function TantouEditorWorkspace() {
                                 )}
 
                                 {proposal.status === 'Rejected' && proposal.rejectReason && (
-                                  <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 space-y-1 text-[11px]">
+                                  <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20 space-y-1 text-[11px]">
                                     <p className="text-[9px] font-extrabold text-destructive uppercase tracking-wider">
                                       Editor Rejection Feedback:
                                     </p>
@@ -1153,7 +1150,7 @@ function TantouEditorWorkspace() {
                       {/* Right: Synopsis & Actions */}
                       <div className="xl:col-span-2 space-y-6">
                         {/* Synopsis Card */}
-                        <div className="bg-card border border-border p-6 rounded-2xl space-y-4 shadow-sm">
+                        <div className="bg-card border border-border p-6 rounded-xl space-y-4 shadow-sm">
                           <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                             Proposal Synopsis
                           </h3>
@@ -1183,9 +1180,9 @@ function TantouEditorWorkspace() {
                             const isLegacy = !proposal.sourceZipPublicUrl && !proposal.sourceZipFile && !proposal.sourceZipFileAssetId && !!proposal.sampleFileUrl;
 
                             return (
-                              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-6 space-y-4">
+                              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm p-6 space-y-4">
                                 <div className="flex items-center gap-3">
-                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isLegacy ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
+                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isLegacy ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
                                     {isLegacy ? <FileText className="w-6 h-6" /> : <FileArchive className="w-6 h-6" />}
                                   </div>
                                   <div>
@@ -1198,7 +1195,7 @@ function TantouEditorWorkspace() {
                                   </div>
                                 </div>
 
-                                <div className="p-4 bg-muted/30 border border-border/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="p-4 bg-muted/30 border border-border/80 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                   <div className="min-w-0 flex-1">
                                     <p className="text-xs font-bold text-foreground truncate">
                                       {zipFileName}
@@ -1212,7 +1209,7 @@ function TantouEditorWorkspace() {
                                     download={zipFileName}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-extrabold rounded-xl transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
+                                    className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-extrabold rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
                                   >
                                     <Download className="w-4 h-4" /> Download ZIP
                                   </a>
@@ -1221,8 +1218,8 @@ function TantouEditorWorkspace() {
                             );
                           })()
                         ) : (
-                          <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3 shadow-sm min-h-[160px]">
-                            <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground/40">
+                          <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center text-center space-y-3 shadow-sm min-h-[160px]">
+                            <div className="w-12 h-12 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground/40">
                               <FileArchive className="w-6 h-6" />
                             </div>
                             <div className="space-y-1">
@@ -1255,7 +1252,7 @@ function TantouEditorWorkspace() {
                 </div>
 
                 {/* Filters & Search Row */}
-                <div className="flex flex-col gap-4 bg-card border border-border p-5 rounded-2xl shadow-sm">
+                <div className="flex flex-col gap-4 bg-card border border-border p-5 rounded-xl shadow-sm">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Search bar */}
                     <div className="relative">
@@ -1265,7 +1262,7 @@ function TantouEditorWorkspace() {
                         placeholder="Search proposals by title or author..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-muted/40 border border-border rounded-xl text-xs focus:outline-none focus:border-primary/40 text-foreground"
+                        className="w-full pl-9 pr-4 py-2 bg-muted/40 border border-border rounded-lg text-xs focus:outline-none focus:border-primary/40 text-foreground"
                       />
                     </div>
 
@@ -1274,7 +1271,7 @@ function TantouEditorWorkspace() {
                       <select
                         value={proposalFilter}
                         onChange={(e) => setProposalFilter(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-xl text-xs text-foreground focus:outline-none appearance-none cursor-pointer font-bold"
+                        className="w-full px-3.5 py-2.5 bg-muted/40 border border-border rounded-lg text-xs text-foreground focus:outline-none appearance-none cursor-pointer font-bold"
                       >
                         <option value="All">All Statuses</option>
                         <option value="Under Review">Under Review (Awaiting Your Decision)</option>
@@ -1304,7 +1301,7 @@ function TantouEditorWorkspace() {
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-card border border-border rounded-2xl p-16 text-center space-y-4">
+                      <div className="bg-card border border-border rounded-xl p-16 text-center space-y-4">
                         <Clock className="w-12 h-12 text-muted-foreground/30 mx-auto" />
                         <div>
                           <h3 className="font-bold text-lg text-foreground">No proposals found</h3>
@@ -1334,7 +1331,7 @@ function TantouEditorWorkspace() {
                         return (
                           <div
                             key={proposal.id}
-                            className={`bg-card border border-border border-l-4 p-5 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center rounded-2xl hover:shadow-md transition-all ${isOverdue ? 'border-l-destructive' : 'border-l-primary'
+                            className={`bg-card border border-border border-l-4 p-5 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center rounded-xl hover:shadow-md transition-all ${isOverdue ? 'border-l-destructive' : 'border-l-primary'
                               }`}
                           >
                             {/* Info */}
@@ -1394,7 +1391,7 @@ function TantouEditorWorkspace() {
                               {!isRejected && (
                                 <button
                                   onClick={() => setSelectedProposalId(proposal.id)}
-                                  className={`w-full md:w-auto px-4 py-2.5 text-xs font-black rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${isApprovedOrActive
+                                  className={`w-full md:w-auto px-4 py-2.5 text-xs font-black rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${isApprovedOrActive
                                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                     : 'bg-primary hover:bg-primary/95 text-primary-foreground'
                                     }`}
@@ -1426,7 +1423,7 @@ function TantouEditorWorkspace() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleBackToManuscripts}
-                    className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl transition-all cursor-pointer"
+                    className="p-2 border border-border hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all cursor-pointer"
                     title="Back to List"
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -1440,7 +1437,7 @@ function TantouEditorWorkspace() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs bg-muted/40 px-3 py-1.5 rounded-xl border border-border/60 text-muted-foreground font-bold">
+                <div className="flex items-center gap-2 text-xs bg-muted/40 px-3 py-1.5 rounded-lg border border-border/60 text-muted-foreground font-bold">
                   <Clock className="w-3.5 h-3.5 text-primary" />
                   <span>
                     Completion: <strong>{activeManuscript.progress}%</strong>
@@ -1456,9 +1453,9 @@ function TantouEditorWorkspace() {
                     Manuscript File Attachment
                   </h3>
 
-                  <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-6 space-y-4">
+                  <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm p-6 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                         <FileArchive className="w-6 h-6" />
                       </div>
                       <div>
@@ -1472,7 +1469,7 @@ function TantouEditorWorkspace() {
                     </div>
 
                     {activeManuscript.fileUrl ? (
-                      <div className="p-4 bg-muted/30 border border-border/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="p-4 bg-muted/30 border border-border/80 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold text-foreground truncate">
                             {activeManuscript.fileUrl.split('/').pop() || 'manuscript_file'}
@@ -1486,20 +1483,20 @@ function TantouEditorWorkspace() {
                           download
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-extrabold rounded-xl transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
+                          className="flex items-center gap-1.5 py-2 px-4 bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-extrabold rounded-lg transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
                         >
                           <Download className="w-4 h-4" /> Tải về Bản thảo
                         </a>
                       </div>
                     ) : (
-                      <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs text-amber-600 font-medium">
+                      <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-lg text-xs text-amber-600 font-medium">
                         Không tìm thấy liên kết file cho phiên bản này.
                       </div>
                     )}
                   </div>
 
                   {/* Annotations */}
-                  <div className="bg-card border border-border p-5 rounded-2xl space-y-4 shadow-sm">
+                  <div className="bg-card border border-border p-5 rounded-xl space-y-4 shadow-sm">
                     <div className="flex items-center justify-between border-b border-border/40 pb-3">
                       <h4 className="text-xs font-extrabold uppercase tracking-wide text-foreground">
                         Annotations
@@ -1518,7 +1515,7 @@ function TantouEditorWorkspace() {
                         annotations.map((ann) => (
                           <div
                             key={ann.id}
-                            className="p-3 bg-muted/30 border border-border/30 rounded-xl space-y-1 text-xs"
+                            className="p-3 bg-muted/30 border border-border/30 rounded-lg space-y-1 text-xs"
                           >
                             <p className="text-foreground font-semibold">{ann.text}</p>
                             <p className="text-[9px] text-muted-foreground/60">
@@ -1536,12 +1533,12 @@ function TantouEditorWorkspace() {
                         placeholder="Type storyboard annotations..."
                         value={newAnnotationText}
                         onChange={(e) => setNewAnnotationText(e.target.value)}
-                        className="flex-1 px-3 py-2 bg-muted/40 border border-border rounded-xl text-xs focus:outline-none focus:border-primary/40 text-foreground"
+                        className="flex-1 px-3 py-2 bg-muted/40 border border-border rounded-lg text-xs focus:outline-none focus:border-primary/40 text-foreground"
                         required
                       />
                       <button
                         type="submit"
-                        className="bg-primary text-primary-foreground font-extrabold text-xs rounded-xl px-4 hover:bg-primary/95 transition-colors cursor-pointer"
+                        className="bg-primary text-primary-foreground font-extrabold text-xs rounded-lg px-4 hover:bg-primary/95 transition-colors cursor-pointer"
                       >
                         Add
                       </button>
@@ -1554,7 +1551,7 @@ function TantouEditorWorkspace() {
                   <h3 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                     Evaluation Panel
                   </h3>
-                  <div className="bg-card border border-border p-5 rounded-2xl space-y-5 shadow-sm">
+                  <div className="bg-card border border-border p-5 rounded-xl space-y-5 shadow-sm">
                     <div>
                       <h4 className="font-extrabold text-sm text-foreground">
                         Submit Review Outcome
@@ -1566,7 +1563,7 @@ function TantouEditorWorkspace() {
 
                     {/* BR-84 Warning banner if progress < 100% */}
                     {activeManuscript.progress < 100 && (
-                      <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-600 rounded-xl text-xs font-bold leading-normal">
+                      <div className="flex items-start gap-2.5 p-3.5 bg-amber-500/10 border border-amber-500/25 text-amber-600 rounded-lg text-xs font-bold leading-normal">
                         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                         <span>
                           Warning: Chapter drawing progress is only {activeManuscript.progress}%. Approval is disabled until it reaches 100%.
@@ -1584,7 +1581,7 @@ function TantouEditorWorkspace() {
                         value={feedbackText}
                         onChange={(e) => setFeedbackText(e.target.value)}
                         rows={4}
-                        className="w-full p-3 bg-muted/30 border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
+                        className="w-full p-3 bg-muted/30 border border-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary/20 text-foreground resize-none"
                       />
                     </div>
 
@@ -1593,12 +1590,12 @@ function TantouEditorWorkspace() {
                       {activeManuscript.status === 'APPROVED' ? (
                         <button
                           onClick={() => handlePublishManuscript(activeManuscript)}
-                          className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                          className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs py-2.5 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
                         >
                           <FileCheck className="w-4 h-4" /> Publish Manuscript
                         </button>
                       ) : activeManuscript.status === 'PUBLISHED' ? (
-                        <div className="w-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bold text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+                        <div className="w-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bold text-xs py-2.5 rounded-lg flex items-center justify-center gap-1.5">
                           <CheckCircle2 className="w-4 h-4" /> Published
                         </div>
                       ) : (
@@ -1606,13 +1603,13 @@ function TantouEditorWorkspace() {
                           <button
                             onClick={() => handleDecision('APPROVED')}
                             disabled={activeManuscript.progress < 100}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-1.5 shadow-sm"
                           >
                             <CheckCircle2 className="w-4 h-4" /> Approve & Lock
                           </button>
                           <button
                             onClick={() => handleDecision('REVISION REQUIRED')}
-                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-sm"
                           >
                             <AlertTriangle className="w-4 h-4" /> Request Revision
                           </button>
@@ -1646,7 +1643,7 @@ function TantouEditorWorkspace() {
                     return (
                       <div
                         key={m.id}
-                        className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-6 space-y-4 hover:border-primary/20 transition-all"
+                        className="bg-card border border-border rounded-xl overflow-hidden shadow-sm p-6 space-y-4 hover:border-primary/20 transition-all"
                       >
                         {/* Header details */}
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -1681,7 +1678,7 @@ function TantouEditorWorkspace() {
                             {m.status === 'SUBMITTED' && (
                               <button
                                 onClick={() => handleOpenReview(m.id)}
-                                className="bg-primary hover:bg-primary/95 text-primary-foreground font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-xl cursor-pointer transition-colors shadow-sm"
+                                className="bg-primary hover:bg-primary/95 text-primary-foreground font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-lg cursor-pointer transition-colors shadow-sm"
                               >
                                 Review
                               </button>
@@ -1689,13 +1686,13 @@ function TantouEditorWorkspace() {
                             {m.status === 'APPROVED' && (
                               <button
                                 onClick={() => handlePublishManuscript(m)}
-                                className="bg-primary hover:bg-primary/95 text-primary-foreground font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-xl cursor-pointer transition-colors shadow-sm"
+                                className="bg-primary hover:bg-primary/95 text-primary-foreground font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-lg cursor-pointer transition-colors shadow-sm"
                               >
                                 Publish
                               </button>
                             )}
                             {m.status === 'PUBLISHED' && (
-                              <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-xl">
+                              <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-black text-[10px] uppercase tracking-wide px-3.5 py-1.5 rounded-lg">
                                 Published
                               </span>
                             )}
@@ -1707,7 +1704,7 @@ function TantouEditorWorkspace() {
                           {m.history?.map((h, hIdx) => (
                             <div
                               key={hIdx}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-muted/30 border border-border/30 p-3 rounded-xl"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-muted/30 border border-border/30 p-3 rounded-lg"
                             >
                               <div className="flex items-center gap-2.5 flex-wrap">
                                 <span className="font-black text-foreground">{h.version}</span>
@@ -1743,7 +1740,7 @@ function TantouEditorWorkspace() {
 
                           {/* Latest Editor Feedback */}
                           {latestVer.feedback && (
-                            <div className="bg-muted/40 p-4 rounded-xl border border-border/40 text-xs">
+                            <div className="bg-muted/40 p-4 rounded-lg border border-border/40 text-xs">
                               <p className="text-[9px] font-extrabold text-primary uppercase tracking-wider">
                                 Editor Feedback:
                               </p>
@@ -1821,7 +1818,7 @@ function TantouEditorWorkspace() {
                 {/* Prev Button */}
                 <button
                   onClick={handlePrev}
-                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-2xl transition-all border border-white/10 cursor-pointer hidden md:flex"
+                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl transition-all border border-white/10 cursor-pointer hidden md:flex"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
@@ -1835,14 +1832,14 @@ function TantouEditorWorkspace() {
                   <img
                     src={imgUrl}
                     alt={`Page ${lightboxActiveIndex + 1}`}
-                    className="max-w-full max-h-[75vh] object-contain rounded-xl border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
+                    className="max-w-full max-h-[75vh] object-contain rounded-lg border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
                   />
                 </div>
 
                 {/* Next Button */}
                 <button
                   onClick={handleNext}
-                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-2xl transition-all border border-white/10 cursor-pointer hidden md:flex"
+                  className="p-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl transition-all border border-white/10 cursor-pointer hidden md:flex"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
@@ -1853,7 +1850,7 @@ function TantouEditorWorkspace() {
                 <div className="flex items-center gap-4 md:hidden">
                   <button
                     onClick={handlePrev}
-                    className="py-1.5 px-3 bg-white/15 active:bg-white/20 rounded-lg text-white font-bold"
+                    className="py-1.5 px-3 bg-white/15 active:bg-white/20 rounded-md text-white font-bold"
                   >
                     Prev
                   </button>
@@ -1862,7 +1859,7 @@ function TantouEditorWorkspace() {
                   </span>
                   <button
                     onClick={handleNext}
-                    className="py-1.5 px-3 bg-white/15 active:bg-white/20 rounded-lg text-white font-bold"
+                    className="py-1.5 px-3 bg-white/15 active:bg-white/20 rounded-md text-white font-bold"
                   >
                     Next
                   </button>
