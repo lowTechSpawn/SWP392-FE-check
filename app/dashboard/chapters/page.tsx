@@ -220,6 +220,7 @@ export default function ChaptersPage() {
             submitDescription: latestSub?.note || undefined,
             submissionId: latestSub?.submissionId || latestSub?.id || undefined,
             feedback: latestSub?.rejectReason || undefined,
+            createdAt: t.createdAt || '',
             referenceFiles: t.taskReferences || t.referenceFiles || []
           }
         })
@@ -273,7 +274,9 @@ export default function ChaptersPage() {
 
           // Load tasks from backend
           const backendTasks = await fetchTasks(currentChapterId)
-          setChapterTasks(backendTasks)
+          setChapterTasks(
+            [...backendTasks].sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+          )
         } else {
           setSelectedChapter(null)
           setChapterTasks([])
