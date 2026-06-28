@@ -1,5 +1,5 @@
 'use client'
-import { calcTotalSalary, formatVND } from '@/lib/salary'
+import { calcTotalSalary, formatVND, getSalaryBreakdown } from '@/lib/salary'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
@@ -288,6 +288,7 @@ export default function AssistantDashboardPage() {
   const inProgressTasks = tasks.filter(t => t.status === 'In-Progress' || t.status === 'Rejected')
   const completedTasks = tasks.filter(t => t.status === 'Submitted' || t.status === 'Approved')
 const totalSalary = calcTotalSalary(tasks)
+const salaryRows = getSalaryBreakdown(tasks)
   const stats = {
     
     total: tasks.length,
@@ -394,6 +395,39 @@ const totalSalary = calcTotalSalary(tasks)
       </div>
 
       {/* Main Content Layout */}
+      {salaryRows.length > 0 && (
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <h3 className="text-sm font-extrabold mb-3">💰 Chi tiết lương (task đã duyệt)</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2 font-bold">Loại task</th>
+                  <th className="py-2 font-bold text-center">Số trang</th>
+                  <th className="py-2 font-bold text-right">Đơn giá/trang</th>
+                  <th className="py-2 font-bold text-right">Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salaryRows.map((row) => (
+                  <tr key={row.taskId} className="border-b border-border/50">
+                    <td className="py-2 font-semibold">{row.type}</td>
+                    <td className="py-2 text-center">{row.pages}</td>
+                    <td className="py-2 text-right">{formatVND(row.rate)}</td>
+                    <td className="py-2 text-right font-bold">{formatVND(row.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-border">
+                  <td className="py-2 font-extrabold" colSpan={3}>Tổng cộng</td>
+                  <td className="py-2 text-right font-extrabold text-green-600">{formatVND(totalSalary)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         {/* Active & Pending Tasks */}
