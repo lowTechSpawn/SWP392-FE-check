@@ -5,6 +5,7 @@ export interface ManuscriptVersion {
   reviewedAt?: string
   revisionNumber?: number // for BR-83 display, e.g. 1 for v1, 2 for v2
   feedback?: string
+  fileUrl?: string
 }
 
 export interface ManuscriptItem {
