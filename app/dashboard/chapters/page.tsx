@@ -312,7 +312,9 @@ export default function ChaptersPage() {
       // 4. Load tasks for assistant role
       if (role === 'Assistant' && selectedAssistantId) {
         const assTasks = allTasksList.filter(t => t.assistantId === selectedAssistantId)
-        setAssistantTasks(assTasks)
+        setAssistantTasks(
+          [...assTasks].sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+        )
       }
     } catch (error) {
       console.error("refreshData failed:", error)
