@@ -53,3 +53,83 @@ export async function compareImages(urlA: string, urlB: string): Promise<Compare
     diffDataUrl: diffCanvas.toDataURL()
   }
 }
+import JSZip from 'jszip'
+
+// Kiem tra file co phai anh khong (theo duoi)
+function isImageName(name: string): boolean {
+  return /\.(png|jpe?g|webp)$/i.test(name)
+}
+
+// Giai nen 1 zip tu URL -> tra ve danh sach { ten, dataUrl } cua cac anh, sort theo ten
+async function extractImagesFromZip(zipUrl: string): Promise<{ name: string; dataUrl: string }[]> {
+  const res = await fetch(zipUrl)
+  const blob = await res.blob()
+  const zip = await JSZip.loadAsync(blob)
+
+  const entries = Object.values(zip.files)
+    .filter(f => !f.dir && isImageName(f.name))
+    .sort((a, b) => a.name.localeCompare(b.name)) // sap xep theo ten de "thu tu" on dinh
+
+  const images: { name: string; dataUrl: string }[] = []
+  for (const entry of entries) {
+    const base64 = await entry.async('base64')
+    const ext = entry.name.split('.').pop()?.toLowerCase()
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg'
+    images.push({ name: entry.name, dataUrl: `data:${mime};base64,${base64}` })
+  }
+  return images
+}
+
+// Ket qua so sanh cho TUNG trang
+export interface PageCompareResult {
+  index: number
+  nameA?: string
+  nameB?: string
+  status: 'changed' | 'same' | 'added' | 'removed' // them moi / da xoa / giong / khac
+  diffPercent?: number
+  diffDataUrl?: string
+}
+
+// So sanh 2 zip -> ket qua tung trang (ghep theo THU TU) + % khac trung binh
+export async function compareZips(zipUrlOld: string, zipUrlNew: string): Promise<{
+  pages: PageCompareResult[]
+  avgDiffPercent: number
+}> {
+  const [imagesOld, imagesNew] = await Promise.all([
+    extractImagesFromZip(zipUrlOld),
+    extractImagesFromZip(zipUrlNew),
+  ])
+
+  const maxLen = Math.max(imagesOld.length, imagesNew.length)
+  const pages: PageCompareResult[] = []
+  let sumDiff = 0
+  let comparedCount = 0
+
+  for (let i = 0; i < maxLen; i++) {
+    const oldImg = imagesOld[i]
+    const newImg = imagesNew[i]
+
+    if (oldImg && !newImg) {
+      pages.push({ index: i, nameA: oldImg.name, status: 'removed' }) // trang da xoa
+    } else if (!oldImg && newImg) {
+      pages.push({ index: i, nameB: newImg.name, status: 'added' })   // trang moi them
+    } else if (oldImg && newImg) {
+      const result = await compareImages(oldImg.dataUrl, newImg.dataUrl)
+      sumDiff += result.diffPercent
+      comparedCount++
+      pages.push({
+        index: i,
+        nameA: oldImg.name,
+        nameB: newImg.name,
+        status: result.diffPercent > 0 ? 'changed' : 'same',
+        diffPercent: result.diffPercent,
+        diffDataUrl: result.diffDataUrl,
+      })
+    }
+  }
+
+  return {
+    pages,
+    avgDiffPercent: comparedCount > 0 ? Math.round((sumDiff / comparedCount) * 100) / 100 : 0,
+  }
+}
