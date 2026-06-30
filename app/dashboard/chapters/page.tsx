@@ -140,7 +140,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
 
   // Review states (Approve / Reject)
   const [reviewFeedback, setReviewFeedback] = useState('')
-
+  const [imagePins, setImagePins] = useState<{ x: number; y: number; note: string }[]>([])
   // --- State for Assistant Role ---
   const [selectedAssistantId, setSelectedAssistantId] = useState<string>('A01') // Sato Takashi by default
   const [assistantTasks, setAssistantTasks] = useState<Task[]>([])
@@ -781,18 +781,25 @@ const openEditTask = (task: Task) => {
       showToast('Không tìm thấy bản nộp để từ chối.', 'error')
       return
     }
-    if (!reviewFeedback.trim()) {
-      showToast('Vui lòng điền phản hồi (lý do từ chối)!', 'error')
+    const pinNotes = imagePins
+      .filter(p => p.note.trim())
+      .map((p, i) => `${i + 1}. ${p.note.trim()}`)
+      .join(' | ')
+    const fullFeedback = [reviewFeedback.trim(), pinNotes ? `[Góp ý trên ảnh] ${pinNotes}` : '']
+      .filter(Boolean).join(' — ')
+    if (!fullFeedback.trim()) {
+      showToast('Vui lòng điền phản hồi hoặc góp ý trên ảnh!', 'error')
       return
     }
     fetchAPI(`/api/page-tasks/submissions/${task.submissionId}/reject`, {
       method: 'POST',
-      body: JSON.stringify({ rejectReason: reviewFeedback, feedback: reviewFeedback })
+      body: JSON.stringify({ rejectReason: fullFeedback, feedback: fullFeedback })
     }).then(() => {
       showToast(`Đã từ chối và gửi phản hồi yêu cầu sửa đổi!`, 'error')
       setIsReviewModalOpen(false)
       setActiveTaskToReview(null)
       setReviewFeedback('')
+      setImagePins([])
       refreshData()
     }).catch((err: any) => {
       showToast(err.message || 'Failed to reject submission.', 'error')
@@ -2189,18 +2196,54 @@ const openEditTask = (task: Task) => {
               {/* Left Side: Mock Image Preview */}
               <div className="space-y-3">
                 <label className="text-xs font-bold text-muted-foreground">Xem trước sản phẩm đã nộp</label>
-                <div className="relative border border-border rounded-xl overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group shadow-inner">
+               <div
+                  className="relative border border-border rounded-xl overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group shadow-inner cursor-crosshair"
+                  onClick={(e) => {
+                    if (!activeTaskToReview.submittedWorkUrl) return
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const x = ((e.clientX - rect.left) / rect.width) * 100
+                    const y = ((e.clientY - rect.top) / rect.height) * 100
+                    setImagePins(prev => [...prev, { x, y, note: '' }])
+                  }}
+                >
                   {activeTaskToReview.submittedWorkUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={activeTaskToReview.submittedWorkUrl}
                       alt="Work deliverable"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
-                 )}
+                  )}
+                  {imagePins.map((pin, idx) => (
+                    <div
+                      key={idx}
+                      className="absolute w-6 h-6 -ml-3 -mt-3 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white"
+                      style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                    >
+                      {idx + 1}
+                    </div>
+                  ))}
                 </div>
+
+                {imagePins.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-foreground">Góp ý trên ảnh ({imagePins.length})</label>
+                    {imagePins.map((pin, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0">{idx + 1}</span>
+                        <input
+                          value={pin.note}
+                          onChange={(e) => setImagePins(prev => prev.map((p, i) => i === idx ? { ...p, note: e.target.value } : p))}
+                          placeholder="Nhập góp ý cho điểm này..."
+                          className="flex-1 text-xs px-2 py-1.5 border border-border rounded-lg bg-background"
+                        />
+                        <button onClick={() => setImagePins(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-red-500 shrink-0">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {activeTaskToReview.prevSubmittedWorkUrl && (
                   <div className="space-y-2">
