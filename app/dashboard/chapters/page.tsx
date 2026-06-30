@@ -141,6 +141,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
   // Review states (Approve / Reject)
   const [reviewFeedback, setReviewFeedback] = useState('')
   const [imagePins, setImagePins] = useState<{ x: number; y: number; note: string }[]>([])
+  const [pinOverlayOpen, setPinOverlayOpen] = useState(false)
   // --- State for Assistant Role ---
   const [selectedAssistantId, setSelectedAssistantId] = useState<string>('A01') // Sato Takashi by default
   const [assistantTasks, setAssistantTasks] = useState<Task[]>([])
@@ -2199,8 +2200,6 @@ const openEditTask = (task: Task) => {
                <div
                   className="relative border border-border rounded-xl overflow-hidden bg-muted min-h-[400px] max-h-[600px] flex items-center justify-center group shadow-inner cursor-crosshair"
                   onClick={(e) => {
-                    alert('clicked! url = ' + activeTaskToReview.submittedWorkUrl)
-                  
                     if (!activeTaskToReview.submittedWorkUrl) return
                     const rect = e.currentTarget.getBoundingClientRect()
                     const x = ((e.clientX - rect.left) / rect.width) * 100
@@ -2228,6 +2227,15 @@ const openEditTask = (task: Task) => {
                     </div>
                   ))}
                 </div>
+
+            {activeTaskToReview.submittedWorkUrl && (
+                  <button
+                    onClick={() => setPinOverlayOpen(true)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl"
+                  >
+                    🔍 Mở to để góp ý chi tiết
+                  </button>
+                )}
 
                 {imagePins.length > 0 && (
                   <div className="space-y-2">
