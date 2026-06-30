@@ -1,5 +1,4 @@
 'use client'
-import { compareZips, PageCompareResult } from '@/lib/imageCompare'
 import { useEffect, useState, useMemo } from 'react'
 import { useRole } from '@/context/RoleContext'
 import {
@@ -36,11 +35,6 @@ export default function ManuscriptsPage() {
   const [activeManuscriptId, setActiveManuscriptId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'ALL' | 'SUBMITTED' | 'APPROVED' | 'REVISION REQUIRED'>('ALL')
 
-  const [compareOpen, setCompareOpen] = useState(false)
-  const [compareLoading, setCompareLoading] = useState(false)
-  const [comparePages, setComparePages] = useState<PageCompareResult[]>([])
-  const [compareAvg, setCompareAvg] = useState(0)
-  const [compareError, setCompareError] = useState('')
   // Review Panel States
   const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [newAnnotationText, setNewAnnotationText] = useState('')
@@ -92,31 +86,6 @@ export default function ManuscriptsPage() {
   const handleBackToList = () => {
     setActiveManuscriptId(null)
     setManuscripts(manuscriptService.getManuscripts())
-  }
-  const handleCompareVersions = async () => {
-    if (!activeManuscript) return
-    // sap xep history cu -> moi theo submittedAt
-    const sorted = [...(activeManuscript.history || [])].sort(
-      (a: any, b: any) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime()
-    )
-    const currentUrl = activeManuscript.fileUrl
-    const prevUrl = sorted.length >= 2 ? sorted[sorted.length - 2]?.fileUrl : undefined
-
-    if (!currentUrl || !prevUrl) {
-      setCompareError('Cần ít nhất 2 phiên bản có file .zip để so sánh.')
-      setComparePages([]); setCompareOpen(true); return
-    }
-
-    setCompareError(''); setCompareLoading(true); setCompareOpen(true)
-    try {
-      const result = await compareZips(prevUrl, currentUrl)
-      setComparePages(result.pages)
-      setCompareAvg(result.avgDiffPercent)
-    } catch (err: any) {
-      setCompareError('Lỗi khi so sánh: ' + (err?.message || 'không đọc được file zip/ảnh'))
-    } finally {
-      setCompareLoading(false)
-    }
   }
   // Handle adding version-bound annotations (BR-78)
   const handleAddAnnotation = (e: React.FormEvent) => {
@@ -239,14 +208,7 @@ export default function ManuscriptsPage() {
                     >
                      <Download className="w-4 h-4" /> Tải về Bản thảo
                     </a>
-                    {(activeManuscript.history || []).length >= 2 && (
-                      <button
-                        onClick={handleCompareVersions}
-                        className="flex items-center gap-1.5 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex-shrink-0 cursor-pointer w-full sm:w-auto justify-center"
-                      >
-                        🔍 So sánh với bản trước
-                      </Button>
-                    )}
+                   
                   </div>
                 ) : (
                   <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs text-amber-600 font-medium">
@@ -532,42 +494,6 @@ export default function ManuscriptsPage() {
                 </Card>
               )
             })}
-          </div>
-        </div>
-      )}
-
-      {compareOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setCompareOpen(false)}>
-          <div className="bg-background rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto p-5" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-extrabold">So sánh phiên bản</h3>
-              <button onClick={() => setCompareOpen(false)} className="text-muted-foreground hover:text-foreground">✕</button>
-            </div>
-
-            {compareLoading && <p className="text-sm text-muted-foreground py-8 text-center">Đang giải nén & so sánh ảnh...</p>}
-            {compareError && <p className="text-sm text-red-600 py-4">{compareError}</p>}
-
-            {!compareLoading && !compareError && comparePages.length > 0 && (
-              <>
-                <p className="text-sm font-bold mb-3">Mức thay đổi trung bình: <span className="text-indigo-600">{compareAvg}%</span></p>
-                <div className="space-y-3">
-                  {comparePages.map((p) => (
-                    <div key={p.index} className="border border-border rounded-xl p-3">
-                      <p className="text-xs font-bold mb-1">
-                        Trang {p.index + 1}
-                        {p.status === 'added' && <span className="ml-2 text-green-600">(Mới thêm)</span>}
-                        {p.status === 'removed' && <span className="ml-2 text-red-600">(Đã xóa)</span>}
-                        {p.status === 'changed' && <span className="ml-2 text-amber-600">Khác {p.diffPercent}%</span>}
-                        {p.status === 'same' && <span className="ml-2 text-muted-foreground">Không đổi</span>}
-                      </p>
-                      {p.diffDataUrl && (
-                        <img src={p.diffDataUrl} alt={`diff trang ${p.index + 1}`} className="w-full max-w-xs border border-border rounded-lg" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
         </div>
       )}

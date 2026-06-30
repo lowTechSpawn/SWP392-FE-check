@@ -133,3 +133,17 @@ export async function compareZips(zipUrlOld: string, zipUrlNew: string): Promise
     avgDiffPercent: comparedCount > 0 ? Math.round((sumDiff / comparedCount) * 100) / 100 : 0,
   }
 }
+export async function compareAny(urlA: string, urlB: string): Promise<{
+  isZip: boolean
+  diffPercent: number
+  diffDataUrl?: string
+  pages?: PageCompareResult[]
+}> {
+  const isZip = (u: string) => /\.zip(\?|$)/i.test(u)
+  if (isZip(urlA) || isZip(urlB)) {
+    const r = await compareZips(urlA, urlB)
+    return { isZip: true, diffPercent: r.avgDiffPercent, pages: r.pages }
+  }
+  const r = await compareImages(urlA, urlB)
+  return { isZip: false, diffPercent: r.diffPercent, diffDataUrl: r.diffDataUrl }
+}

@@ -35,6 +35,7 @@ export interface Task {
   assistantName: string
   status: TaskStatus
   submittedWorkUrl?: string // Mock image url submitted by assistant
+  prevSubmittedWorkUrl?: string
   feedback?: string // Feedback comments from Mangaka
   assignedAt?: string
   updatedAt?: string
@@ -311,7 +312,6 @@ export function updateTaskStatus(
   status: TaskStatus, 
   feedback?: string, 
   submittedWorkUrl?: string,
-  prevSubmittedWorkUrl?: string,
   submitDescription?: string,
   submittedFiles?: { name: string; size: string; type: string }[]
 ): boolean {
