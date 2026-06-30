@@ -2197,8 +2197,10 @@ const openEditTask = (task: Task) => {
               <div className="space-y-3">
                 <label className="text-xs font-bold text-muted-foreground">Xem trước sản phẩm đã nộp</label>
                <div
-                  className="relative border border-border rounded-xl overflow-hidden bg-muted aspect-4/3 flex items-center justify-center group shadow-inner cursor-crosshair"
+                  className="relative border border-border rounded-xl overflow-hidden bg-muted min-h-[400px] max-h-[600px] flex items-center justify-center group shadow-inner cursor-crosshair"
                   onClick={(e) => {
+                    alert('clicked! url = ' + activeTaskToReview.submittedWorkUrl)
+                  
                     if (!activeTaskToReview.submittedWorkUrl) return
                     const rect = e.currentTarget.getBoundingClientRect()
                     const x = ((e.clientX - rect.left) / rect.width) * 100
@@ -2211,7 +2213,7 @@ const openEditTask = (task: Task) => {
                     <img
                       src={activeTaskToReview.submittedWorkUrl}
                       alt="Work deliverable"
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-contain pointer-events-none"
                     />
                   ) : (
                     <ImageIcon className="w-12 h-12 text-muted-foreground/30" />
