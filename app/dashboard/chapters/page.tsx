@@ -763,14 +763,7 @@ const openEditTask = (task: Task) => {
       setNewTaskDueDate('')
       setNewTaskAttachments([])
 
-      // Update chapter status to 'In Progress' if it is 'Draft'
-      if (selectedChapter && selectedChapter.status === 'Draft') {
-        chapterService.updateChapter(selectedChapterId, { status: 'In Progress' }).finally(() => {
-          refreshData()
-        })
-      } else {
-        refreshData()
-      }
+      refreshData()
     }).catch((err: any) => {
       const msg = err?.message || ''
       if (msg.includes('Conflict') || msg.includes('overlap') || msg.includes('409')) {
