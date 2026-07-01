@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { notificationStore, type AppNotification } from '@/store/notificationStore'
 import { useRole } from '@/context/RoleContext'
+import { startConnection, stopConnection, type RealtimeNotification } from '@/services/signalrService'
 
 export const useNotifications = () => {
   const { role } = useRole()
@@ -16,9 +17,27 @@ export const useNotifications = () => {
 
     return () => unsubscribe()
   }, [role])
+  // Ket noi SignalR nhan notification realtime tu BE
+  useEffect(() => {
+    let mounted = true
 
+    startConnection((data: RealtimeNotification) => {
+      if (!mounted) return
+      // chuyen type BE (string) -> type cua store
+      const t = data.type?.toLowerCase()
+      const mappedType: AppNotification['type'] =
+        t === 'success' ? 'success' : t === 'warning' ? 'warning' : t === 'error' ? 'error' : 'info'
+      // BE da gui dung nguoi/role roi -> hien cho user hien tai (role 'All' de khong bi filter mat)
+      notificationStore.addNotification(data.title, data.message, 'All', mappedType)
+    })
+
+    return () => {
+      mounted = false
+      stopConnection()
+    }
+  }, [])
   const unreadCount = notifications.filter((n) => !n.read).length
-
+  
   return {
     notifications,
     unreadCount,
