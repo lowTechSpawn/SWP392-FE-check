@@ -397,7 +397,7 @@ const salaryRows = getSalaryBreakdown(tasks)
       {/* Main Content Layout */}
       {salaryRows.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-5">
-          <h3 className="text-sm font-extrabold mb-3">💰 Chi tiết lương (task đã duyệt)</h3>
+         <h3 className="text-sm font-bold mb-3">Chi tiết lương (task đã duyệt)</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>

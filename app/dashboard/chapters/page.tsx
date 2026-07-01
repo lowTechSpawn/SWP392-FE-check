@@ -1306,7 +1306,7 @@ const openEditTask = (task: Task) => {
 
                       {salaryByAssistant.length > 0 && (
                         <div className="mt-4 pt-4 border-t border-border">
-                          <h4 className="text-xs font-extrabold mb-2">💰 Lương phải trả (task đã duyệt)</h4>
+                          <h4 className="text-sm font-bold mb-3 text-foreground">Lương phải trả cho trợ lý</h4>
                           <table className="w-full text-xs">
                             <thead>
                               <tr className="text-left text-muted-foreground border-b border-border">
@@ -2333,7 +2333,7 @@ const openEditTask = (task: Task) => {
                     onClick={openPinOverlay}
                     className="w-full flex items-center justify-center gap-1.5 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl"
                   >
-                    🔍 Mở to để góp ý chi tiết
+                    Mở to để góp ý chi tiết
                   </button>
                 )}
 
@@ -2361,7 +2361,7 @@ const openEditTask = (task: Task) => {
                       onClick={handleCompareSubmissions}
                       className="w-full flex items-center justify-center gap-1.5 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl"
                     >
-                      🔍 So sánh với lần nộp trước
+                      So sánh với lần nộp trước
                     </button>
                     {subCompareLoading && <p className="text-xs text-muted-foreground text-center">Đang so sánh...</p>}
                     {subCompareError && <p className="text-xs text-red-600">{subCompareError}</p>}
