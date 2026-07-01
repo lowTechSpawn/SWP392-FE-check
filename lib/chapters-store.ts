@@ -29,6 +29,7 @@ export interface Series {
 export interface Task {
   id: string
   chapterId: string
+  manuscriptId?: string
   type: string // e.g. "Line Art", "Coloring", "Backgrounds", "Toning"
   pages: string // e.g. "1-3", "4-7", "8"
   description: string
@@ -523,6 +524,7 @@ export async function syncTasksFromBackend(chapterId?: string): Promise<Task[]> 
         return {
           id: t.pageTaskId || t.id,
           chapterId: t.chapterId,
+          manuscriptId: t.manuscriptId,
           type: t.taskType,
           pages: `${t.pageStart}-${t.pageEnd}`,
           description: t.description || '',

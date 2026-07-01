@@ -129,8 +129,16 @@ export default function ChaptersPage() {
   const [taskAnnotations, setTaskAnnotations] = useState<Annotation[]>([])
 
   useEffect(() => {
-    const activeId = activeTaskToReview?.id || activeTaskToView?.id
-    if (activeId) {
+    const activeTask = activeTaskToReview || activeTaskToView
+    const activeId = activeTask?.id
+    const manuscriptId = activeTask?.manuscriptId
+
+    const loadLocalAnnotations = () => {
+      if (!activeId) {
+        setTaskAnnotations([])
+        return
+      }
+
       const saved = localStorage.getItem(`task_annotations_${activeId}`)
       if (saved) {
         try {
@@ -141,8 +149,49 @@ export default function ChaptersPage() {
       } else {
         setTaskAnnotations([])
       }
-    } else {
+    }
+
+    if (!activeId) {
       setTaskAnnotations([])
+      return
+    }
+
+    if (!manuscriptId) {
+      loadLocalAnnotations()
+      return
+    }
+
+    let cancelled = false
+    fetchAPI<any>(`/api/manuscripts/${manuscriptId}/annotations`)
+      .then((response) => {
+        if (cancelled) return
+        const raw = response.data || response.annotations || (Array.isArray(response) ? response : [])
+        if (!Array.isArray(raw)) {
+          setTaskAnnotations([])
+          return
+        }
+
+        const anns: Annotation[] = raw.map((a: any) => ({
+          id: a.annotationId || a.id,
+          manuscriptId: a.manuscriptId || manuscriptId,
+          versionName: a.versionName || (a.versionNo ? `v${a.versionNo}` : undefined),
+          pageNo: a.pageNo || 1,
+          positionX: Number(a.positionX ?? 0),
+          positionY: Number(a.positionY ?? 0),
+          text: a.content || a.text || '',
+          authorName: a.authorName,
+          createdAt: a.createdAt || new Date().toISOString()
+        }))
+
+        setTaskAnnotations(anns)
+        localStorage.setItem(`task_annotations_${activeId}`, JSON.stringify(anns))
+      })
+      .catch(() => {
+        if (!cancelled) loadLocalAnnotations()
+      })
+
+    return () => {
+      cancelled = true
     }
   }, [activeTaskToReview, activeTaskToView])
 
@@ -152,24 +201,60 @@ export default function ChaptersPage() {
     y: number,
     text: string
   ) => {
-    const activeId = activeTaskToReview?.id || activeTaskToView?.id
-    if (!activeId) return
+    const activeTask = activeTaskToReview || activeTaskToView
+    const activeId = activeTask?.id
+    let manuscriptId = activeTask?.manuscriptId
 
-    const newAnn: Annotation = {
-      id: `task_ann_${Date.now()}`,
-      manuscriptId: activeId,
-      pageNo,
-      positionX: x,
-      positionY: y,
-      text,
-      authorName: role === 'Mangaka' ? 'Mangaka' : 'Assistant',
-      createdAt: new Date().toISOString()
+    if (!manuscriptId && activeTask?.chapterId) {
+      try {
+        const response = await fetchAPI<{ data: any[] } | any[]>(`/api/chapters/${activeTask.chapterId}/manuscripts`)
+        const manuscripts = (response as any).data || response || []
+        if (Array.isArray(manuscripts) && manuscripts.length > 0) {
+          const latest = [...manuscripts].sort((a, b) => {
+            const aTime = new Date(a.submittedAt || a.createdAt || 0).getTime()
+            const bTime = new Date(b.submittedAt || b.createdAt || 0).getTime()
+            return bTime - aTime
+          })[0]
+          manuscriptId = latest?.manuscriptId || latest?.id
+        }
+      } catch { }
     }
 
-    const updated = [...taskAnnotations, newAnn]
-    setTaskAnnotations(updated)
-    localStorage.setItem(`task_annotations_${activeId}`, JSON.stringify(updated))
-    showToast('Đã thêm ghi chú trên ảnh!')
+    if (!activeId || !manuscriptId) {
+      showToast('Khong tim thay manuscript cua task nay, khong the luu annotation vao database.', 'error')
+      return
+    }
+
+    try {
+      const response = await fetchAPI<any>(`/api/manuscripts/${manuscriptId}/annotations`, {
+        method: 'POST',
+        body: JSON.stringify({
+          manuscriptId,
+          pageNo,
+          positionX: x,
+          positionY: y,
+          content: text
+        })
+      })
+      const data = response.data || response
+      const newAnn: Annotation = {
+        id: data.annotationId || data.id || `task_ann_${Date.now()}`,
+        manuscriptId: data.manuscriptId || manuscriptId,
+        pageNo: data.pageNo || pageNo,
+        positionX: Number(data.positionX ?? x),
+        positionY: Number(data.positionY ?? y),
+        text: data.content || text,
+        authorName: data.authorName || (role === 'Mangaka' ? 'Mangaka' : 'Assistant'),
+        createdAt: data.createdAt || new Date().toISOString()
+      }
+
+      const updated = [...taskAnnotations, newAnn]
+      setTaskAnnotations(updated)
+      localStorage.setItem(`task_annotations_${activeId}`, JSON.stringify(updated))
+      showToast('Da them ghi chu tren anh!')
+    } catch (error: any) {
+      showToast(error?.message || 'Khong the luu annotation vao database.', 'error')
+    }
   }
 
   // --- State for Assistant Role ---
@@ -274,6 +359,7 @@ export default function ChaptersPage() {
           return {
             id: t.pageTaskId || t.id,
             chapterId: t.chapterId,
+            manuscriptId: t.manuscriptId,
             type: t.taskType,
             pages: `${t.pageStart}-${t.pageEnd}`,
             description: t.description || '',
