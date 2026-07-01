@@ -486,23 +486,31 @@ export default function RankingPage() {
                   else scoreClass = 'text-rose-500 font-bold'
 
                   return (
-                    <TableRow key={row.seriesId} className="border-b border-border hover:bg-muted/15 transition-colors">
+                   <TableRow key={row.seriesId} className={`border-b border-border transition-colors ${
+                      row.rank === 1 ? 'bg-amber-50 dark:bg-amber-500/5 hover:bg-amber-100/60' :
+                      row.rank === 2 ? 'bg-slate-50 dark:bg-slate-500/5 hover:bg-slate-100/60' :
+                      row.rank === 3 ? 'bg-orange-50 dark:bg-orange-500/5 hover:bg-orange-100/60' :
+                      'hover:bg-muted/15'
+                    }`}>
                       {/* Rank Cell */}
                       <TableCell className="text-center font-bold">
                         {row.rank === 1 ? (
-                          <div className="flex justify-center" title="1st Place">
-                            <Trophy className="w-5 h-5 text-amber-500" />
+                          <div className="flex flex-col items-center" title="Hạng 1">
+                            <Trophy className="w-6 h-6 text-amber-500" />
+                            <span className="text-[10px] font-extrabold text-amber-600">TOP 1</span>
                           </div>
                         ) : row.rank === 2 ? (
-                          <div className="flex justify-center" title="2nd Place">
-                            <Medal className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                          <div className="flex flex-col items-center" title="Hạng 2">
+                            <Medal className="w-6 h-6 text-slate-400" />
+                            <span className="text-[10px] font-extrabold text-slate-500">TOP 2</span>
                           </div>
                         ) : row.rank === 3 ? (
-                          <div className="flex justify-center" title="3rd Place">
-                            <Medal className="w-5 h-5 text-amber-700" />
+                          <div className="flex flex-col items-center" title="Hạng 3">
+                            <Medal className="w-6 h-6 text-orange-600" />
+                            <span className="text-[10px] font-extrabold text-orange-600">TOP 3</span>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-slate-400 text-xs font-bold">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-slate-400 text-sm font-bold">
                             {row.rank}
                           </span>
                         )}
