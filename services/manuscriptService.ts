@@ -133,7 +133,9 @@ export const manuscriptService = {
           })
         )
 
-        const backendManuscripts: ManuscriptItem[] = allManuscripts.map(m => {
+        const backendManuscripts: ManuscriptItem[] = [...allManuscripts]
+          .sort((a: any, b: any) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime())
+          .map(m => {
           const historyList: ManuscriptVersion[] = (m.history || []).map((h: any) => ({
             version: h.versionLabel || `v${h.versionNo}`,
             status: mapBackendManuscriptStatus(h.status),
@@ -168,8 +170,15 @@ export const manuscriptService = {
           }
         })
 
-        memoryManuscripts = backendManuscripts
-        return backendManuscripts
+       // sort moi -> cu: theo thoi diem submit cua version moi nhat trong history
+        const sorted = [...backendManuscripts].sort((a, b) => {
+          const aTime = a.history?.length ? new Date(a.history[a.history.length - 1].submittedAt).getTime() : 0
+          const bTime = b.history?.length ? new Date(b.history[b.history.length - 1].submittedAt).getTime() : 0
+          if (bTime !== aTime) return bTime - aTime
+          return (b.chapterNumber || 0) - (a.chapterNumber || 0) // fallback: chuong lon len dau
+        })
+        memoryManuscripts = sorted
+        return sorted
       }
     } catch (error) {
       console.error("syncManuscriptsFromBackend failed:", error)
