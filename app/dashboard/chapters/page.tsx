@@ -132,6 +132,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
   const [editTaskPageEnd, setEditTaskPageEnd] = useState<number>(1)
   const [editTaskDescription, setEditTaskDescription] = useState<string>('')
   const [editTaskDueDate, setEditTaskDueDate] = useState<string>('')
+  const [editTaskAssistantId, setEditTaskAssistantId] = useState('')
   const [isSubmitManuscriptOpen, setIsSubmitManuscriptOpen] = useState(false)
   const [submitManuscriptFile, setSubmitManuscriptFile] = useState<File | null>(null)
   const [submitManuscriptNotes, setSubmitManuscriptNotes] = useState<string>('')
@@ -641,6 +642,7 @@ const openEditTask = (task: Task) => {
     setEditTaskPageEnd(task.pageEnd || 1)
     setEditTaskDescription(task.description || '')
     setEditTaskDueDate(task.dueDate ? task.dueDate.slice(0, 10) : '')
+    setEditTaskAssistantId(task.assistantId || '')
     setIsEditTaskOpen(true)
   }
 
@@ -652,11 +654,12 @@ const openEditTask = (task: Task) => {
     try {
       await fetchAPI(`/api/page-tasks/${editTaskId}`, {
         method: 'PUT',
-        body: JSON.stringify({
+       body: JSON.stringify({
           pageStart: editTaskPageStart,
           pageEnd: editTaskPageEnd,
           description: editTaskDescription,
-          dueDate: editTaskDueDate || null
+          dueDate: editTaskDueDate,
+          assistantId: editTaskAssistantId || undefined,
         })
       })
       showToast('Đã cập nhật task!')
@@ -2158,6 +2161,20 @@ const openEditTask = (task: Task) => {
             <div className="space-y-1">
               <label className="text-xs font-bold text-muted-foreground">Hạn nộp</label>
               <input type="date" value={editTaskDueDate} onChange={(e) => setEditTaskDueDate(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-muted-foreground">Giao cho (đổi trợ lý)</label>
+              <select
+                value={editTaskAssistantId}
+                onChange={(e) => setEditTaskAssistantId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm"
+              >
+                <option value="">-- Chọn trợ lý --</option>
+                {assistants.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground">Đổi trợ lý để giao lại nhiệm vụ này cho người khác.</p>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <button type="button" onClick={() => setIsEditTaskOpen(false)} className="px-4 py-2 rounded-xl border border-border text-sm font-bold hover:bg-muted">Hủy</button>
