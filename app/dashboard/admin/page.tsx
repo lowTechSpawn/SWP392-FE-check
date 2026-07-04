@@ -101,12 +101,7 @@ export default function AdminPage() {
   const [genresList, setGenresList] = useState<GenreResponse[]>([])
   const [systemLoading, setSystemLoading] = useState(false)
 
-  const [roleSearch, setRoleSearch] = useState('')
   const [genreSearch, setGenreSearch] = useState('')
-
-  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
-  const [editingRole, setEditingRole] = useState<RoleResponse | null>(null)
-  const [formRoleName, setFormRoleName] = useState('')
 
   const [isGenreModalOpen, setIsGenreModalOpen] = useState(false)
   const [editingGenre, setEditingGenre] = useState<GenreResponse | null>(null)
@@ -408,42 +403,6 @@ export default function AdminPage() {
     }
   }
 
-  // Handle Role Creation & Modification
-  const handleRoleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formRoleName.trim()) {
-      toast.error('Vui lòng nhập tên vai trò!')
-      return
-    }
-
-    try {
-      if (editingRole) {
-        await systemService.updateRole(editingRole.roleId, formRoleName.trim())
-        toast.success(`Đã cập nhật vai trò thành công!`)
-      } else {
-        await systemService.createRole(formRoleName.trim())
-        toast.success(`Đã tạo vai trò "${formRoleName}" thành công!`)
-      }
-      setIsRoleModalOpen(false)
-      setEditingRole(null)
-      setFormRoleName('')
-      refreshRolesAndGenres()
-    } catch (err: any) {
-      toast.error(err.message || 'Thao tác vai trò thất bại.')
-    }
-  }
-
-  // Handle Role Delete (soft-delete)
-  const handleDeleteRole = async (roleId: string, roleName: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa vai trò "${roleName}" không?`)) return
-    try {
-      await systemService.deleteRole(roleId)
-      toast.success(`Đã xóa vai trò "${roleName}" thành công!`)
-      refreshRolesAndGenres()
-    } catch (err: any) {
-      toast.error(err.message || 'Xóa vai trò thất bại.')
-    }
-  }
 
   // Handle Genre Creation & Modification
   const handleGenreSubmit = async (e: React.FormEvent) => {
@@ -910,215 +869,113 @@ export default function AdminPage() {
           </form>
         </Card>
       ) : (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* Roles Management Card */}
-            <Card className="p-6 bg-card border border-border rounded-xl shadow-sm flex flex-col space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
-                    <Shield className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-foreground">Quản lý Vai trò</h2>
-                    <p className="text-xs text-muted-foreground">Phân quyền vai trò hệ thống</p>
-                  </div>
+        <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
+          {/* Genres Management Card */}
+          <Card className="p-6 bg-card border border-border rounded-xl shadow-sm flex flex-col space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
+                  <Layers className="w-5 h-5" />
                 </div>
-                <Button
-                  onClick={() => {
-                    setEditingRole(null);
-                    setFormRoleName('');
-                    setIsRoleModalOpen(true);
-                  }}
-                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Thêm vai trò
-                </Button>
-              </div>
-
-              {/* Search Roles */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm vai trò..."
-                  value={roleSearch}
-                  onChange={(e) => setRoleSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
-                />
-              </div>
-
-              {/* Roles Table */}
-              <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
-                <Table>
-                  <TableHeader className="bg-muted/30 border-b border-border">
-                    <TableRow>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Tên Vai trò</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground w-1/3">UUID</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground text-center w-24">Hành động</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody className="divide-y divide-border">
-                    {systemLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground">
-                          Đang tải dữ liệu...
-                        </TableCell>
-                      </TableRow>
-                    ) : rolesList.filter(r => r.roleName.toLowerCase().includes(roleSearch.toLowerCase())).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground italic">
-                          Không tìm thấy vai trò nào.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      rolesList
-                        .filter(r => r.roleName.toLowerCase().includes(roleSearch.toLowerCase()))
-                        .map((r) => (
-                          <TableRow key={r.roleId} className="border-b border-border hover:bg-muted/10 transition-colors">
-                            <TableCell className="font-bold text-xs text-foreground py-3">{r.roleName}</TableCell>
-                            <TableCell className="text-[10px] font-mono text-muted-foreground py-3 max-w-[120px] truncate" title={r.roleId}>
-                              {r.roleId}
-                            </TableCell>
-                            <TableCell className="text-center py-3">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  onClick={() => {
-                                    setEditingRole(r);
-                                    setFormRoleName(r.roleName);
-                                    setIsRoleModalOpen(true);
-                                  }}
-                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
-                                  title="Chỉnh sửa"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteRole(r.roleId, r.roleName)}
-                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
-                                  title="Xóa"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-
-            {/* Genres Management Card */}
-            <Card className="p-6 bg-card border border-border rounded-xl shadow-sm flex flex-col space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-foreground">Quản lý Thể loại</h2>
-                    <p className="text-xs text-muted-foreground">Cấu hình thể loại manga</p>
-                  </div>
+                <div>
+                  <h2 className="text-base font-bold text-foreground">Quản lý Thể loại</h2>
+                  <p className="text-xs text-muted-foreground">Cấu hình thể loại manga</p>
                 </div>
-                <Button
-                  onClick={() => {
-                    setEditingGenre(null);
-                    setFormGenreTitle('');
-                    setIsGenreModalOpen(true);
-                  }}
-                  className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Thêm thể loại
-                </Button>
               </div>
+              <Button
+                onClick={() => {
+                  setEditingGenre(null);
+                  setFormGenreTitle('');
+                  setIsGenreModalOpen(true);
+                }}
+                className="bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" /> Thêm thể loại
+              </Button>
+            </div>
 
-              {/* Search Genres */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm thể loại..."
-                  value={genreSearch}
-                  onChange={(e) => setGenreSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
-                />
-              </div>
+            {/* Search Genres */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm thể loại..."
+                value={genreSearch}
+                onChange={(e) => setGenreSearch(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 bg-muted/50 border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+              />
+            </div>
 
-              {/* Genres Table */}
-              <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
-                <Table>
-                  <TableHeader className="bg-muted/30 border-b border-border">
+            {/* Genres Table */}
+            <div className="border border-border/80 rounded-xl overflow-hidden bg-muted/10 max-h-[400px] overflow-y-auto">
+              <Table>
+                <TableHeader className="bg-muted/30 border-b border-border">
+                  <TableRow>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Tên Thể loại</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground w-1/4">Trạng thái</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground text-center w-24">Hành động</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-border">
+                  {systemLoading ? (
                     <TableRow>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Tên Thể loại</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground w-1/4">Trạng thái</TableHead>
-                      <TableHead className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground text-center w-24">Hành động</TableHead>
+                      <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground">
+                        Đang tải dữ liệu...
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody className="divide-y divide-border">
-                    {systemLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground">
-                          Đang tải dữ liệu...
-                        </TableCell>
-                      </TableRow>
-                    ) : genresList.filter(g => g.title.toLowerCase().includes(genreSearch.toLowerCase())).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground italic">
-                          Không tìm thấy thể loại nào.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      genresList
-                        .filter(g => g.title.toLowerCase().includes(genreSearch.toLowerCase()))
-                        .map((g) => (
-                          <TableRow key={g.genreId} className="border-b border-border hover:bg-muted/10 transition-colors">
-                            <TableCell className="font-bold text-xs text-foreground py-3">{g.title}</TableCell>
-                            <TableCell className="py-3">
-                              {g.deletedAt ? (
-                                <Badge className="bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">
-                                  Đã ẩn (Deleted)
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">
-                                  Kích hoạt (Active)
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center py-3">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  onClick={() => {
-                                    setEditingGenre(g);
-                                    setFormGenreTitle(g.title);
-                                    setIsGenreModalOpen(true);
-                                  }}
-                                  className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
-                                  title="Chỉnh sửa"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteGenre(g.genreId, g.title)}
-                                  className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
-                                  title="Xóa"
-                                  disabled={g.deletedAt !== null}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-
-          </div>
+                  ) : genresList.filter(g => g.title.toLowerCase().includes(genreSearch.toLowerCase())).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="p-8 text-center text-xs text-muted-foreground italic">
+                        Không tìm thấy thể loại nào.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    genresList
+                      .filter(g => g.title.toLowerCase().includes(genreSearch.toLowerCase()))
+                      .map((g) => (
+                        <TableRow key={g.genreId} className="border-b border-border hover:bg-muted/10 transition-colors">
+                          <TableCell className="font-bold text-xs text-foreground py-3">{g.title}</TableCell>
+                          <TableCell className="py-3">
+                            {g.deletedAt ? (
+                              <Badge className="bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                Đã ẩn (Deleted)
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                Kích hoạt (Active)
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center py-3">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingGenre(g);
+                                  setFormGenreTitle(g.title);
+                                  setIsGenreModalOpen(true);
+                                }}
+                                className="p-1.5 hover:bg-muted border border-transparent hover:border-border rounded-lg text-slate-400 hover:text-foreground transition-all cursor-pointer"
+                                title="Chỉnh sửa"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteGenre(g.genreId, g.title)}
+                                className="p-1.5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
+                                title="Xóa"
+                                disabled={g.deletedAt !== null}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
         </div>
       )}
 
@@ -1211,50 +1068,6 @@ export default function AdminPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Role Add/Edit Dialog Modal */}
-      <Dialog open={isRoleModalOpen} onOpenChange={(open) => !open && setIsRoleModalOpen(false)}>
-        <DialogContent className="bg-card border border-border rounded-xl max-w-md p-6">
-          <DialogHeader>
-            <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
-              <Shield className="w-5 h-5 text-amber-500" />
-              {editingRole ? `Cập nhật vai trò "${editingRole.roleName}"` : 'Thêm vai trò mới'}
-            </DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleRoleSubmit} className="space-y-4 pt-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Tên vai trò <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Ví dụ: Moderator, Translator..."
-                value={formRoleName}
-                onChange={(e) => setFormRoleName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-muted/65 border border-border rounded-xl text-sm focus:outline-none text-foreground placeholder:text-muted-foreground/40 focus:border-primary/50"
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
-              <Button
-                type="button"
-                onClick={() => setIsRoleModalOpen(false)}
-                variant="outline"
-                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer"
-              >
-                Hủy
-              </Button>
-              <Button
-                type="submit"
-                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold rounded-xl cursor-pointer"
-              >
-                {editingRole ? 'Lưu thay đổi' : 'Thêm mới'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Genre Add/Edit Dialog Modal */}
       <Dialog open={isGenreModalOpen} onOpenChange={(open) => !open && setIsGenreModalOpen(false)}>

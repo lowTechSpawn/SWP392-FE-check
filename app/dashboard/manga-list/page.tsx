@@ -1,111 +1,99 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search, Filter, BookOpen, Star } from 'lucide-react'
+import { BookOpen, Filter, Search, Star, Tags, User, UserCheck } from 'lucide-react'
 import { proposalService } from '@/services/proposalService'
-import type { Proposal } from '@/types/proposal'
+
 const { getProposals } = proposalService
+
+const COVER_COLORS = [
+  'from-red-500 to-rose-700',
+  'from-emerald-500 to-teal-700',
+  'from-orange-500 to-red-600',
+  'from-sky-400 to-indigo-600',
+  'from-blue-600 to-cyan-700',
+  'from-pink-500 to-purple-600',
+]
 
 interface Manga {
   id: string
   title: string
   author: string
+  editor: string
   genre: string[]
   type: string
-  status: 'Active' | 'Proposed' | 'Deferred' | 'Rejected'
   description: string
   coverColor: string
   rating: number
   coverImageUrl?: string
 }
 
+function getCoverColor(title: string) {
+  const colorIdx = Math.abs(title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % COVER_COLORS.length
+  return COVER_COLORS[colorIdx]
+}
+
 export default function MangaListPage() {
   const [search, setSearch] = useState('')
-  const [filterType, setFilterType] = useState<string>('All')
+  const [filterType, setFilterType] = useState('All')
   const [mangaList, setMangaList] = useState<Manga[]>([])
 
   useEffect(() => {
     getProposals().then((proposals) => {
-      const list: Manga[] = proposals.map((p) => {
-        const authorName = p.author || 'Unknown Author'
+      const list: Manga[] = proposals
+        .filter((proposal) => proposal.status === 'Active')
+        .map((proposal) => ({
+          id: proposal.id,
+          title: proposal.title,
+          author: proposal.author || 'Unknown Author',
+          editor: proposal.tantouEditorName || 'Chua gan editor',
+          genre: proposal.genre ? proposal.genre.split(', ') : [],
+          type: proposal.publicationType,
+          description: proposal.synopsis,
+          coverColor: getCoverColor(proposal.title),
+          rating: 4.5 + (proposal.title.length % 5) * 0.1,
+          coverImageUrl: proposal.coverImageUrl,
+        }))
 
-        const statusMap: Record<Proposal['status'], Manga['status']> = {
-          Approved: 'Active',
-          'Pending Review': 'Proposed',
-          'Under Review': 'Proposed',
-          'Board Voting': 'Proposed',
-          Draft: 'Proposed',
-          Rejected: 'Rejected',
-          Active: 'Active',
-        }
-
-        const colors = [
-          'from-red-500 to-rose-700',
-          'from-emerald-500 to-teal-700',
-          'from-orange-500 to-red-600',
-          'from-sky-400 to-indigo-600',
-          'from-blue-600 to-cyan-700',
-          'from-pink-500 to-purple-600',
-        ]
-        const colorIdx = Math.abs(p.title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colors.length
-        const coverColor = colors[colorIdx]
-
-        return {
-          id: p.id,
-          title: p.title,
-          author: authorName,
-          genre: p.genre ? p.genre.split(', ') : [],
-          type: p.publicationType,
-          status: statusMap[p.status] || 'Proposed',
-          description: p.synopsis,
-          coverColor,
-          rating: 4.5 + (p.title.length % 5) * 0.1,
-          coverImageUrl: p.coverImageUrl,
-        }
-      })
       setMangaList(list)
     })
   }, [])
 
-  // Filter logic
   const filteredManga = mangaList.filter((manga) => {
+    const query = search.toLowerCase()
     const matchesSearch =
-      manga.title.toLowerCase().includes(search.toLowerCase()) ||
-      manga.author.toLowerCase().includes(search.toLowerCase())
+      manga.title.toLowerCase().includes(query) ||
+      manga.author.toLowerCase().includes(query) ||
+      manga.editor.toLowerCase().includes(query)
     const matchesType = filterType === 'All' || manga.type === filterType
+
     return matchesSearch && matchesType
   })
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <div className="space-y-5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
             <BookOpen className="w-8 h-8 text-primary" />
             Manga List
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Browse and manage all serialization proposals and active manga series
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Browse active manga series</p>
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search Input */}
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search by title, author..."
+            placeholder="Search by title, author, editor..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/60"
           />
         </div>
 
-        {/* Filter Dropdown */}
         <div className="relative shrink-0 flex items-center gap-2 bg-card border border-border rounded-lg px-3.5 py-2.5 text-sm">
           <Filter className="w-4 h-4 text-muted-foreground" />
           <select
@@ -121,77 +109,72 @@ export default function MangaListPage() {
         </div>
       </div>
 
-      {/* Manga Grid */}
       {filteredManga.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {filteredManga.map((manga) => (
-            <div
+            <article
               key={manga.id}
-              className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/25 hover:shadow-lg transition-all flex flex-col justify-between group"
+              className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/25 hover:shadow-md transition-all group"
             >
-              {/* Cover Card Mockup */}
-              <div className="h-40 p-5 flex flex-col justify-between text-white relative overflow-hidden bg-slate-900">
-                {manga.coverImageUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={manga.coverImageUrl}
-                    alt={manga.title}
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${manga.coverColor} opacity-90`} />
-                )}
-                {/* Background decorative elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
-
-                {/* Top badges */}
-                <div className="flex justify-between items-start z-10">
-                  <span className="bg-black/35 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase">
-                    {manga.type}
-                  </span>
-                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold z-10 ${manga.status === 'Active'
-                      ? 'bg-emerald-500/90 text-white'
-                      : 'bg-amber-500/90 text-white'
-                    }`}>
-                    {manga.status}
-                  </span>
+              <div className="grid grid-cols-[96px_1fr] min-h-36">
+                <div className="relative bg-slate-900 overflow-hidden">
+                  {manga.coverImageUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={manga.coverImageUrl}
+                      alt={manga.title}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${manga.coverColor}`} />
+                  )}
                 </div>
 
-                {/* Cover Title Info */}
-                <div className="z-10">
-                  <h3 className="font-extrabold text-lg leading-tight group-hover:underline cursor-pointer">
-                    {manga.title}
-                  </h3>
-                  <p className="text-xs text-white/80 font-semibold mt-1">by {manga.author}</p>
-                </div>
-              </div>
-
-              {/* Card Body */}
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                  {manga.description}
-                </p>
-
-                {/* Genres & Rating footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                  <div className="flex flex-wrap gap-1">
-                    {manga.genre.map((g) => (
-                      <span
-                        key={g}
-                        className="bg-muted text-muted-foreground text-[10px] font-semibold px-2 py-0.5 rounded"
-                      >
-                        {g}
+                <div className="min-w-0 p-3 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-extrabold leading-snug text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                        {manga.title}
+                      </h3>
+                      <span className="mt-1 inline-flex bg-muted text-muted-foreground px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                        {manga.type}
                       </span>
-                    ))}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 text-amber-500">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span className="text-xs font-extrabold text-foreground">{manga.rating.toFixed(1)}</span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0 text-amber-500">
-                    <Star className="w-3.5 h-3.5" />
-                    <span className="text-xs font-bold text-foreground">{manga.rating}</span>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <User className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="truncate">{manga.author}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <UserCheck className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                      <span className="truncate">{manga.editor}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto flex items-start gap-1.5 border-t border-border/50 pt-2">
+                    <Tags className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex flex-wrap gap-1 overflow-hidden max-h-10">
+                      {manga.genre.length > 0 ? manga.genre.slice(0, 3).map((genre) => (
+                        <span
+                          key={genre}
+                          className="bg-muted text-muted-foreground text-[10px] font-bold px-1.5 py-0.5 rounded"
+                        >
+                          {genre}
+                        </span>
+                      )) : (
+                        <span className="text-[10px] text-muted-foreground">No genre</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       ) : (
@@ -199,7 +182,7 @@ export default function MangaListPage() {
           <BookOpen className="w-12 h-12 text-muted-foreground/40 mx-auto" />
           <h3 className="font-bold text-lg text-foreground">No manga found</h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Try adjusting your search keywords or filter terms to find what you are looking for.
+            Try adjusting your search keywords or filter terms.
           </p>
         </div>
       )}

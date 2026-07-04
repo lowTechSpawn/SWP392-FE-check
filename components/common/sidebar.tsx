@@ -31,6 +31,7 @@ function SidebarInner() {
   const menuItems = {
     Mangaka: [
       { label: 'Bảng điều khiển', href: '/dashboard/mangaka', icon: LayoutDashboard },
+      { label: 'Danh sách truyện', href: '/dashboard/manga-list', icon: BookOpen },
       { label: 'Đề xuất của tôi', href: '/dashboard/series', icon: PencilLine },
       { label: 'Tạo đề xuất mới', href: '/dashboard/series/new', icon: UserPlus },
       { label: 'Bản thảo', href: '/dashboard/manuscripts', icon: Layers },

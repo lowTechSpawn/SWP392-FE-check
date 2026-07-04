@@ -2,7 +2,7 @@
 
 import { compareAny,extractImagesFromZip  } from '@/lib/imageCompare'
 import { getSalaryByAssistant, formatVND } from '@/lib/salary'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRole } from '@/context/RoleContext'
 import {
   ClipboardList,
@@ -127,7 +127,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
   const [newTaskPageStart, setNewTaskPageStart] = useState<number>(1)
   const [newTaskPageEnd, setNewTaskPageEnd] = useState<number>(3)
   const [newTaskDesc, setNewTaskDesc] = useState('')
-  const [newTaskAssistantId, setNewTaskAssistantId] = useState('Unassigned')
+  const [newTaskAssistantId, setNewTaskAssistantId] = useState('')
   const [newTaskDueDate, setNewTaskDueDate] = useState<string>('')
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false)
   const [editTaskId, setEditTaskId] = useState<string>('')
@@ -146,41 +146,31 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
   const [reviewFeedback, setReviewFeedback] = useState('')
   const [taskAnnotations, setTaskAnnotations] = useState<Annotation[]>([])
 
+  const getTaskPageNo = (task: Task | null | undefined, pageIndex = 0) => {
+    const start = task?.pageStart || 1
+    return start + pageIndex
+  }
+
+  const getTaskAnnotationEndpoint = useCallback((task: Task) => {
+    return task.submissionId ? '/api/submissions/' + task.submissionId + '/annotations' : null
+  }, [])
+
   useEffect(() => {
     const activeTask = activeTaskToReview || activeTaskToView
-    const activeId = activeTask?.id
-    const manuscriptId = activeTask?.manuscriptId
 
-    const loadLocalAnnotations = () => {
-      if (!activeId) {
-        setTaskAnnotations([])
-        return
-      }
-
-      const saved = localStorage.getItem(`task_annotations_${activeId}`)
-      if (saved) {
-        try {
-          setTaskAnnotations(JSON.parse(saved))
-        } catch {
-          setTaskAnnotations([])
-        }
-      } else {
-        setTaskAnnotations([])
-      }
-    }
-
-    if (!activeId) {
+    if (!activeTask?.id) {
       setTaskAnnotations([])
       return
     }
 
-    if (!manuscriptId) {
-      loadLocalAnnotations()
+    const endpoint = getTaskAnnotationEndpoint(activeTask)
+    if (!endpoint) {
+      setTaskAnnotations([])
       return
     }
 
     let cancelled = false
-    fetchAPI<any>(`/api/manuscripts/${manuscriptId}/annotations`)
+    fetchAPI<any>(endpoint)
       .then((response) => {
         if (cancelled) return
         const raw = response.data || response.annotations || (Array.isArray(response) ? response : [])
@@ -191,7 +181,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
 
         const anns: Annotation[] = raw.map((a: any) => ({
           id: a.annotationId || a.id,
-          manuscriptId: a.manuscriptId || manuscriptId,
+          manuscriptId: a.manuscriptId || '',
           versionName: a.versionName || (a.versionNo ? `v${a.versionNo}` : undefined),
           pageNo: a.pageNo || 1,
           positionX: Number(a.positionX ?? 0),
@@ -202,16 +192,15 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
         }))
 
         setTaskAnnotations(anns)
-        localStorage.setItem(`task_annotations_${activeId}`, JSON.stringify(anns))
       })
       .catch(() => {
-        if (!cancelled) loadLocalAnnotations()
+        if (!cancelled) setTaskAnnotations([])
       })
 
     return () => {
       cancelled = true
     }
-  }, [activeTaskToReview, activeTaskToView])
+  }, [activeTaskToReview, activeTaskToView, getTaskAnnotationEndpoint])
 
   const handleAddTaskAnnotation = async (
     pageNo: number,
@@ -221,33 +210,23 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
   ) => {
     const activeTask = activeTaskToReview || activeTaskToView
     const activeId = activeTask?.id
-    let manuscriptId = activeTask?.manuscriptId
 
-    if (!manuscriptId && activeTask?.chapterId) {
-      try {
-        const response = await fetchAPI<{ data: any[] } | any[]>(`/api/chapters/${activeTask.chapterId}/manuscripts`)
-        const manuscripts = (response as any).data || response || []
-        if (Array.isArray(manuscripts) && manuscripts.length > 0) {
-          const latest = [...manuscripts].sort((a, b) => {
-            const aTime = new Date(a.submittedAt || a.createdAt || 0).getTime()
-            const bTime = new Date(b.submittedAt || b.createdAt || 0).getTime()
-            return bTime - aTime
-          })[0]
-          manuscriptId = latest?.manuscriptId || latest?.id
-        }
-      } catch { }
+    if (!activeTask) {
+      showToast('Khong tim thay task dang review, khong the luu annotation.', 'error')
+      return
     }
 
-    if (!activeId || !manuscriptId) {
-      showToast('Khong tim thay manuscript cua task nay, khong the luu annotation vao database.', 'error')
+    const endpoint = getTaskAnnotationEndpoint(activeTask)
+
+    if (!activeId || !endpoint) {
+      showToast('Khong tim thay submission cua task nay, khong the luu annotation vao database.', 'error')
       return
     }
 
     try {
-      const response = await fetchAPI<any>(`/api/manuscripts/${manuscriptId}/annotations`, {
+      const response = await fetchAPI<any>(endpoint, {
         method: 'POST',
         body: JSON.stringify({
-          manuscriptId,
           pageNo,
           positionX: x,
           positionY: y,
@@ -256,8 +235,8 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
       })
       const data = response.data || response
       const newAnn: Annotation = {
-        id: data.annotationId || data.id || `task_ann_${Date.now()}`,
-        manuscriptId: data.manuscriptId || manuscriptId,
+        id: data.annotationId || data.id,
+        manuscriptId: data.manuscriptId || '',
         pageNo: data.pageNo || pageNo,
         positionX: Number(data.positionX ?? x),
         positionY: Number(data.positionY ?? y),
@@ -266,9 +245,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
         createdAt: data.createdAt || new Date().toISOString()
       }
 
-      const updated = [...taskAnnotations, newAnn]
-      setTaskAnnotations(updated)
-      localStorage.setItem(`task_annotations_${activeId}`, JSON.stringify(updated))
+      setTaskAnnotations(prev => [...prev, newAnn])
       showToast('Da them ghi chu tren anh!')
     } catch (error: any) {
       showToast(error?.message || 'Khong the luu annotation vao database.', 'error')
@@ -308,7 +285,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
   const [submitWorkFile, setSubmitWorkFile] = useState<File | null>(null)
   const [submitWorkUploading, setSubmitWorkUploading] = useState(false)
   const [submitComment, setSubmitComment] = useState('')
-  const [submittedFiles, setSubmittedFiles] = useState<{ name: string; size: string; type: string }[]>([])
 
   // Trigger Toast Notification helper
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -394,25 +370,16 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
           })
           const prevSub = sortedSubs.length >= 2 ? sortedSubs[sortedSubs.length - 2] : null;
 
-          let uiStatus = mapBackendTaskStatus(t.status, t.submissions)
-          if (uiStatus === 'Pending') {
-            try {
-              const started = JSON.parse(localStorage.getItem('started_tasks') || '[]')
-              if (started.includes(t.pageTaskId || t.id)) {
-                uiStatus = 'In-Progress'
-              }
-            } catch { }
-          }
+          const uiStatus = mapBackendTaskStatus(t.status, t.submissions)
 
           return {
             id: t.pageTaskId || t.id,
             chapterId: t.chapterId,
-            manuscriptId: t.manuscriptId,
             type: t.taskType,
             pages: `${t.pageStart}-${t.pageEnd}`,
             description: t.description || '',
-            assistantId: t.assistantId || 'Unassigned',
-            assistantName: t.assistantName || 'Assistant',
+            assistantId: t.assistantId,
+            assistantName: t.assistantName,
             status: uiStatus,
             dueDate: t.dueDate || undefined,
             pageStart: t.pageStart,
@@ -422,7 +389,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
             submittedFileAssetId: latestSub?.submittedFileAssetId || latestSub?.SubmittedFileAssetId || undefined,
             submitDescription: latestSub?.note || undefined,
             submissionId: latestSub?.submissionId || latestSub?.id || undefined,
-            feedback: latestSub?.feedback || latestSub?.rejectReason || undefined,
+            feedback: latestSub?.feedback || undefined,
             createdAt: t.createdAt || '',
             referenceFiles: t.taskReferences || t.referenceFiles || []
           }
@@ -554,35 +521,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
     return series.mangakaId === userId && series.status === 'Active'
   }
 
-  // Upload giả lập
-  const handleMockUpload = (field: 'storyboardFiles' | 'manuscriptFiles') => {
-    const extensions = { storyboardFiles: ['pdf', 'jpg'], manuscriptFiles: ['zip', 'tif', 'jpg'] }
-    const list = field === 'storyboardFiles' ? newChapterStoryboardFiles : newChapterManuscriptFiles
-    const ext = extensions[field][Math.floor(Math.random() * extensions[field].length)]
-
-    const chapterNoVal = newChapterNo || 'X'
-    const name = field === 'storyboardFiles'
-      ? `Ch${chapterNoVal}_Storyboard_p${list.length + 1}.${ext}`
-      : `Ch${chapterNoVal}_Pages_${list.length * 5 + 1}-${(list.length + 1) * 5}.${ext}`
-
-    const newFile = {
-      name,
-      size: `${Math.floor(Math.random() * 30) + 5} MB`,
-      type: ext
-    }
-
-    if (field === 'storyboardFiles') {
-      setNewChapterStoryboardFiles(prev => [...prev, newFile])
-    } else {
-      setNewChapterManuscriptFiles(prev => [...prev, newFile])
-      setErrors(prev => {
-        const copy = { ...prev }
-        delete copy.manuscriptFiles
-        return copy
-      })
-    }
-  }
-
   // Xóa file giả lập
   const removeFile = (field: 'storyboardFiles' | 'manuscriptFiles', index: number) => {
     if (field === 'storyboardFiles') {
@@ -590,19 +528,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
     } else {
       setNewChapterManuscriptFiles(prev => prev.filter((_, i) => i !== index))
     }
-  }
-
-  // Upload giả lập cho Task
-  const handleTaskMockUpload = () => {
-    const extensions = ['pdf', 'jpg', 'zip', 'png']
-    const ext = extensions[Math.floor(Math.random() * extensions.length)]
-    const name = `Ref_${selectedChapter?.title.replace(/\s+/g, '_') || 'Chapter'}_Task_${newTaskAttachments.length + 1}.${ext}`
-    const newFile = {
-      name,
-      size: `${Math.floor(Math.random() * 5) + 1} MB`,
-      type: ext
-    }
-    setNewTaskAttachments(prev => [...prev, newFile])
   }
 
   const removeTaskAttachment = (index: number) => {
@@ -622,64 +547,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
     const chapter = allChapters.find(c => c.id === task.chapterId)
     if (!chapter) return ''
     return `Ch. ${chapter.number}: ${chapter.title}`
-  }
-
-  // Giả lập tải lên file sản phẩm của Assistant.
-  // Tạo ngẫu nhiên định dạng (jpg, png, zip, psd, clip), dung lượng và tên file mô phỏng theo Task.
-  const handleAssistantMockUpload = () => {
-    const extensions = ['jpg', 'png', 'zip', 'psd', 'clip']
-    const ext = extensions[Math.floor(Math.random() * extensions.length)]
-    const name = `Work_${activeTaskToSubmit?.type.replace(/[\s,]+/g, '_') || 'Task'}_Page_${activeTaskToSubmit?.pages || '1'}_v1.${ext}`
-    const newFile = {
-      name,
-      size: `${Math.floor(Math.random() * 15) + 5} MB`,
-      type: ext
-    }
-    setSubmittedFiles(prev => [...prev, newFile])
-  }
-
-  // Xóa file vẽ sản phẩm khỏi danh sách chuẩn bị nộp của Assistant
-  const removeAssistantSubmittedFile = (index: number) => {
-    setSubmittedFiles(prev => prev.filter((_, i) => i !== index))
-  }
-
-  // Điền dữ liệu mẫu (demo quy trình thực)
-  const handleFillSample = () => {
-    const activeSeriesList = mangakaSeries.filter(s => s.status === 'Active')
-    if (activeSeriesList.length === 0) {
-      showToast('Bạn cần có series đang Active để thử demo.', 'error')
-      return
-    }
-
-    const futureDate = new Date()
-    futureDate.setDate(futureDate.getDate() + 30)
-    const dateStr = futureDate.toISOString().split('T')[0]
-
-    setNewChapterSeriesId(activeSeriesList[0].id)
-    setNewChapterNo('12')
-    setNewChapterTitle('Sự Thức Tỉnh Của Rồng Thần')
-    setNewChapterPages(24)
-    setNewChapterPubDate(dateStr)
-    setNewChapterSynopsis(
-      'Trong chương này, nhân vật chính Ryuu lần đầu tiên giải phóng sức mạnh rồng thần tiềm ẩn khi phải đối đầu trực tiếp với hội đồng hắc ám. ' +
-      'Bí mật về nguồn gốc của thanh gươm ánh sáng dần được hé lộ qua flashback. ' +
-      'Cú twist lớn cuối chương: người đồng đội cũ mà Ryuu tưởng đã mất 3 năm trước bất ngờ xuất hiện để giải vây.'
-    )
-    setNewChapterNotes(
-      'Gửi Editor Nakamura: Trang 12–13 là cảnh chiến đấu dùng DOUBLE-SPREAD (trang đôi). ' +
-      'Vui lòng lưu ý khi dàn trang in ấn không cắt đứt giữa. ' +
-      'Trang 20: lời thoại của nhân vật phụ dùng font italic để phân biệt với nhân vật chính.'
-    )
-    setNewChapterStoryboardFiles([
-      { name: 'Ch12_Storyboard_v2.pdf', size: '3.2 MB', type: 'pdf' }
-    ])
-    setNewChapterManuscriptFiles([
-      { name: 'Ch12_Page_01-11_Pencil.zip', size: '28 MB', type: 'zip' },
-      { name: 'Ch12_Page_12-13_Spread_Ink.tif', size: '18 MB', type: 'tif' },
-      { name: 'Ch12_Page_14-24_Pencil.zip', size: '31 MB', type: 'zip' }
-    ])
-    setErrors({})
-    showToast('Đã điền dữ liệu mẫu (demo quy trình thực)!', 'success')
   }
   const openEditChapter = () => {
     const chap = chapters.find(c => c.id === selectedChapterId) as any
@@ -876,30 +743,23 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
       showToast('Vui lòng nhập mô tả công việc!', 'error')
       return
     }
-    if (!newTaskAssistantId || newTaskAssistantId === 'Unassigned') {
+    if (!newTaskAssistantId) {
       showToast('Vui lòng chọn một assistant để giao việc!', 'error')
       return
     }
-    // Fetch latest manuscript for chapter
-    fetchAPI<{ data: any[] } | any[]>(`/api/chapters/${selectedChapterId}/manuscripts`).then((res) => {
-      const list = (res as any).data || res
-      const latestManuscript = Array.isArray(list) && list.length > 0 ? list[0] : null
-      const manuscriptId = latestManuscript?.manuscriptId || latestManuscript?.id || '77777777-7777-7777-7777-777777777777'
+    const payload = {
+      chapterId: selectedChapterId,
+      assistantId: newTaskAssistantId,
+      pageStart: newTaskPageStart,
+      pageEnd: newTaskPageEnd,
+      taskType: newTaskType.trim(),
+      description: newTaskDesc,
+      dueDate: newTaskDueDate ? new Date(newTaskDueDate).toISOString() : null
+    }
 
-      const payload = {
-        chapterId: selectedChapterId,
-        assistantId: newTaskAssistantId,
-        pageStart: newTaskPageStart,
-        pageEnd: newTaskPageEnd,
-        taskType: newTaskType.trim(),
-        description: newTaskDesc,
-        dueDate: newTaskDueDate ? new Date(newTaskDueDate).toISOString() : null
-      }
-
-      return fetchAPI('/api/page-tasks', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
+    fetchAPI('/api/page-tasks', {
+      method: 'POST',
+      body: JSON.stringify(payload)
     }).then(async (taskRes: any) => {
       const created = (taskRes as any)?.data || taskRes
       const newTaskId = created?.pageTaskId || created?.id
@@ -972,7 +832,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
     }
     fetchAPI(`/api/page-tasks/submissions/${task.submissionId}/reject`, {
       method: 'POST',
-      body: JSON.stringify({ rejectReason: fullFeedback, feedback: fullFeedback })
+      body: JSON.stringify({ feedback: fullFeedback })
     }).then(() => {
       showToast(`Đã từ chối và gửi phản hồi yêu cầu sửa đổi!`, 'error')
       setIsReviewModalOpen(false)
@@ -986,21 +846,11 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
       showToast(err.message || 'Failed to reject submission.', 'error')
     })
   }
-
-  // --- Action Handlers for Assistant ---
-
-  // 1. Nhận việc / Bắt đầu làm (In-Progress)
   const handleStartTask = (taskId: string) => {
-    showToast('Đã chuyển trạng thái sang Đang làm việc (In-Progress)!')
-    try {
-      const started = JSON.parse(localStorage.getItem('started_tasks') || '[]')
-      if (!started.includes(taskId)) {
-        started.push(taskId)
-        localStorage.setItem('started_tasks', JSON.stringify(started))
-      }
-    } catch { }
-    refreshData()
+    void taskId
+    showToast('Backend ch?a h? tr? chuy?n tr?ng th?i In-Progress.', 'error')
   }
+
 
   // 2. Nộp bài làm (Submit Work)
   const handleSubmitWork = async (e: React.FormEvent) => {
@@ -1033,7 +883,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
       setActiveTaskToSubmit(null)
       setSubmitWorkUrl('')
       setSubmitComment('')
-      setSubmittedFiles([])
       setSubmitWorkFile(null)
       refreshData()
     } catch (err: any) {
@@ -1063,7 +912,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
 
   const getTaskStatusClass = (status: TaskStatus) => {
     switch (status) {
-      case 'Unassigned': return 'bg-slate-100 text-slate-600 dark:bg-slate-900/30 dark:text-slate-400'
       case 'Pending': return 'bg-amber-50 text-amber-700 dark:bg-amber-900/10 dark:text-amber-500'
       case 'In-Progress': return 'bg-blue-50 text-blue-700 dark:bg-blue-900/10 dark:text-blue-400'
       case 'Submitted': return 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/10 dark:text-indigo-400'
@@ -1074,7 +922,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
 
   const getTaskStatusLabel = (status: TaskStatus) => {
     switch (status) {
-      case 'Unassigned': return 'Chưa phân công'
       case 'Pending': return 'Chờ nhận việc'
       case 'In-Progress': return 'Đang thực hiện'
       case 'Submitted': return 'Đã nộp bài'
@@ -1772,13 +1619,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                 <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
                   <PlusCircle className="w-5 h-5 text-primary" /> Đăng Ký Chapter Mới (P3)
                 </h3>
-                <button
-                  type="button"
-                  onClick={handleFillSample}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg hover:bg-primary/20 transition-all cursor-pointer"
-                >
-                  <PencilLine className="w-3.5 h-3.5" /> Điền Dữ Liệu Mẫu
-                </button>
               </div>
               <button
                 onClick={() => setIsChapterModalOpen(false)}
@@ -2216,7 +2056,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                     onChange={(e) => setNewTaskAssistantId(e.target.value)}
                     className="w-full px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
                   >
-                    <option value="Unassigned">Để trống (Chưa phân công)</option>
                     {assistants.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.name} ({a.specialty}) — Số task đang làm: {a.activeTasks}
@@ -2462,7 +2301,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Left Side: Mock Image Preview */}
+              {/* Left Side: Image Preview */}
               <div className="space-y-3">
                 <label className="text-xs font-bold text-muted-foreground">Xem trước sản phẩm đã nộp</label>
                 <div
@@ -2487,7 +2326,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                   ) : (
                     <ImageCommentLayer
                       imageUrl={activeTaskToReview.submittedWorkUrl}
-                      pageNo={1}
+                      pageNo={getTaskPageNo(activeTaskToReview)}
                       annotations={taskAnnotations}
                       onAddAnnotation={handleAddTaskAnnotation}
                     />
@@ -2670,8 +2509,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                   setActiveTaskToSubmit(null)
                   setSubmitWorkUrl('')
                   setSubmitComment('')
-                  setSubmittedFiles([])
-                }}
+                            }}
                 className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -2685,39 +2523,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                 </p>
                 <p className="font-bold text-foreground">Nhiệm vụ: {activeTaskToSubmit.type} (Trang {activeTaskToSubmit.pages})</p>
                 <p className="text-muted-foreground mt-0.5">{activeTaskToSubmit.description}</p>
-              </div>
-
-              {/* Upload area for submittedFiles */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
-                  <Upload className="w-3.5 h-3.5 text-primary" /> Tải lên tệp bản vẽ (Upload Work Files)
-                </label>
-                <div className="p-3 border-2 border-dashed border-primary/20 hover:border-primary/45 bg-primary/5 rounded-xl text-center transition-colors">
-                  <p className="text-xs text-muted-foreground">Kéo thả file vẽ hoặc click để chọn</p>
-                  <button
-                    type="button"
-                    onClick={handleAssistantMockUpload}
-                    className="mt-1.5 inline-flex items-center justify-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    <Upload className="w-3.5 h-3.5" /> Đính kèm tệp bản vẽ
-                  </button>
-                </div>
-                {submittedFiles.length > 0 && (
-                  <div className="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
-                    {submittedFiles.map((file, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-muted/70 rounded-xl border border-border text-xs">
-                        <span className="truncate max-w-[280px] font-medium text-foreground">🖼️ {file.name} ({file.size})</span>
-                        <button
-                          type="button"
-                          onClick={() => removeAssistantSubmittedFile(idx)}
-                          className="text-red-500 hover:text-red-700 font-bold hover:underline cursor-pointer"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="space-y-1.5">
@@ -2748,7 +2553,6 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                     setActiveTaskToSubmit(null)
                     setSubmitWorkUrl('')
                     setSubmitComment('')
-                    setSubmittedFiles([])
                   }}
                   className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
                 >
@@ -2866,7 +2670,7 @@ const [subCompareLoading, setSubCompareLoading] = useState(false)
                   <div className="overflow-hidden group shadow-inner">
                     <ImageCommentLayer
                       imageUrl={activeTaskToView.submittedWorkUrl}
-                      pageNo={1}
+                      pageNo={getTaskPageNo(activeTaskToView)}
                       annotations={taskAnnotations}
                       readOnly={true}
                     />
