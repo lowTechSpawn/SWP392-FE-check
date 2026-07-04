@@ -1,0 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MangaManagementSystem.DataAccess.Entities.Models
+{
+    public class Role
+    {
+        public Guid RoleId { get; set; }
+        public string RoleName { get; set; } = null!;
+        public DateTime? DeletedAt { get; set; }
+
+        public ICollection<User> Users { get; set; } = new List<User>();
+    }
+}

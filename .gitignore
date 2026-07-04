@@ -40,7 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/MangaManagementSystem/
+
 
 # guides, previews, and reviews
 *guide*
@@ -50,3 +50,6 @@ next-env.d.ts
 *review*
 *REVIEW*
 *NOTION_PREP*
+
+**/.git-backup/
+
